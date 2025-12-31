@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+*.min.js
+
+# Coverage
+coverage/
+
+# Caches
+.eslintcache
+*.tsbuildinfo
+
+# Editor
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Reports
+reports/
+
+# Lock files (allow any package manager)
+# Uncomment the ones you want to ignore:
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+# bun.lockb
+
+# Deno
+.deno/

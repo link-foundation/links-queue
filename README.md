@@ -1,182 +1,102 @@
-# js-ai-driven-development-pipeline-template
+# links-mq
 
-A comprehensive template for AI-driven JavaScript/TypeScript development with full CI/CD pipeline support.
-
-## Features
-
-- **Multi-runtime support**: Works with Node.js, Bun, and Deno
-- **Universal testing**: Uses [test-anywhere](https://github.com/link-foundation/test-anywhere) for cross-runtime tests
-- **Automated releases**: Changesets-based versioning with GitHub Actions
-- **Code quality**: ESLint + Prettier with pre-commit hooks via Husky
-- **Package manager agnostic**: Works with npm, yarn, bun, deno, and pnpm
-
-## Quick Start
-
-### Using This Template
-
-1. Click "Use this template" on GitHub to create a new repository
-2. Clone your new repository
-3. Update `package.json` with your package name and description
-4. Update the `PACKAGE_NAME` constant in these scripts:
-   - `scripts/validate-changeset.mjs`
-   - `scripts/publish-to-npm.mjs`
-   - `scripts/format-release-notes.mjs`
-   - `scripts/create-manual-changeset.mjs`
-5. Install dependencies: `npm install`
-6. Start developing!
-
-### Development
-
-```bash
-# Install dependencies
-npm install
-
-# Run tests
-npm test
-
-# Or with other runtimes:
-bun test
-deno test --allow-read
-
-# Lint code
-npm run lint
-
-# Format code
-npm run format
-
-# Check all (lint + format + file size)
-npm run check
-```
+A multi-language repository with AI-driven development pipeline support for both JavaScript/TypeScript and Rust.
 
 ## Project Structure
 
 ```
 .
-├── .changeset/           # Changeset configuration
-├── .github/workflows/    # GitHub Actions CI/CD
-├── .husky/               # Git hooks (pre-commit)
-├── examples/             # Usage examples
-├── scripts/              # Build and release scripts
-├── src/                  # Source code
-│   ├── index.js          # Main entry point
-│   └── index.d.ts        # TypeScript definitions
-├── tests/                # Test files
-├── .eslintrc.js          # ESLint configuration
-├── .prettierrc           # Prettier configuration
-├── bunfig.toml           # Bun configuration
-├── deno.json             # Deno configuration
-└── package.json          # Node.js package manifest
+├── js/                   # JavaScript/TypeScript implementation
+│   ├── .changeset/       # Changeset configuration
+│   ├── .husky/           # Git hooks
+│   ├── examples/         # Usage examples
+│   ├── scripts/          # Build and release scripts
+│   ├── src/              # Source code
+│   ├── tests/            # Test files
+│   ├── package.json      # Node.js package manifest
+│   └── README.md         # JS-specific documentation
+│
+├── rust/                 # Rust implementation
+│   ├── changelog.d/      # Changelog fragments
+│   ├── examples/         # Usage examples
+│   ├── scripts/          # Build and release scripts
+│   ├── src/              # Source code
+│   ├── tests/            # Integration tests
+│   ├── Cargo.toml        # Rust package manifest
+│   └── README.md         # Rust-specific documentation
+│
+├── .github/workflows/    # CI/CD workflows
+│   ├── js.yml            # JavaScript CI/CD pipeline
+│   └── rust.yml          # Rust CI/CD pipeline
+│
+└── LICENSE               # Unlicense (Public Domain)
 ```
 
-## Design Choices
+## Language-Specific Documentation
 
-### Multi-Runtime Support
+- **JavaScript/TypeScript**: See [js/README.md](js/README.md)
+- **Rust**: See [rust/README.md](rust/README.md)
 
-This template is designed to work seamlessly with all major JavaScript runtimes:
+## Features
 
-- **Node.js**: Primary runtime, uses built-in test runner (`node --test`)
-- **Bun**: Fast alternative runtime with native test support (`bun test`)
-- **Deno**: Secure runtime with built-in TypeScript support (`deno test`)
+### JavaScript
 
-The [test-anywhere](https://github.com/link-foundation/test-anywhere) framework provides a unified testing API that works identically across all runtimes.
+- Multi-runtime support (Node.js, Bun, Deno)
+- Universal testing with [test-anywhere](https://github.com/link-foundation/test-anywhere)
+- Automated releases via Changesets
+- ESLint + Prettier with pre-commit hooks
 
-### Package Manager Agnostic
+### Rust
 
-While `package.json` is the source of truth for dependencies, the template supports:
+- Cross-platform support (Linux, macOS, Windows)
+- Async support with Tokio
+- Pedantic Clippy lints
+- Changelog fragments for automated releases
 
-- **npm**: Default, generates `package-lock.json`
-- **yarn**: Uses `yarn.lock`
-- **bun**: Uses `bun.lockb`
-- **pnpm**: Uses `pnpm-lock.yaml`
-- **deno**: Uses `deno.json` for configuration
+## Development
 
-Note: `package-lock.json` is not committed by default to allow any package manager.
+### JavaScript
 
-### Code Quality
+```bash
+cd js
+npm install
+npm test
+npm run lint
+```
 
-- **ESLint**: Configured with recommended rules + Prettier integration
-- **Prettier**: Consistent code formatting
-- **Husky + lint-staged**: Pre-commit hooks ensure code quality
-- **File size limit**: Scripts must stay under 1000 lines for maintainability
+### Rust
 
-### Release Workflow
+```bash
+cd rust
+cargo build
+cargo test
+cargo clippy
+```
 
-The release workflow uses [Changesets](https://github.com/changesets/changesets) for version management:
+## CI/CD
 
-1. **Creating a changeset**: Run `npm run changeset` to document changes
-2. **PR validation**: CI checks for valid changeset in each PR
-3. **Automated versioning**: Merging to `main` triggers version bump
-4. **npm publishing**: Automated via OIDC trusted publishing (no tokens needed)
-5. **GitHub releases**: Auto-created with formatted release notes
+Each language has its own CI/CD workflow:
 
-#### Manual Releases
+- **js.yml**: Handles JavaScript testing, linting, and npm publishing
+- **rust.yml**: Handles Rust testing, linting, and GitHub releases
 
-Two manual release modes are available via GitHub Actions:
+Changes to files in `js/` trigger the JS workflow, and changes to files in `rust/` trigger the Rust workflow.
 
-- **Instant release**: Immediately bump version and publish
-- **Changeset PR**: Create a PR with changeset for review
+## Release Process
 
-### CI/CD Pipeline
+### JavaScript
 
-The GitHub Actions workflow (`.github/workflows/release.yml`) provides:
+1. Create a changeset: `cd js && npm run changeset`
+2. Commit and push to a branch
+3. Open a PR and merge to main
+4. The workflow will automatically version and publish to npm
 
-1. **Changeset check**: Validates PR has exactly one changeset
-2. **Lint & format**: Ensures code quality standards
-3. **Test matrix**: 3 runtimes × 3 OS = 9 test combinations
-4. **Release**: Automated versioning and npm publishing
+### Rust
 
-## Configuration
-
-### Updating Package Name
-
-After creating a repository from this template, update the package name in:
-
-1. `package.json`: `"name": "your-package-name"`
-2. `.changeset/config.json`: Package references
-3. Scripts that reference the package name (see Quick Start)
-
-### ESLint Rules
-
-Customize ESLint in `eslint.config.js`. Current configuration:
-
-- ES Modules support
-- Prettier integration
-- No console restrictions (common in CLI tools)
-- Strict equality enforcement
-- Async/await best practices
-- **Strict unused variables rule**: No exceptions - all unused variables, arguments, and caught errors must be removed (no `_` prefix exceptions)
-
-### Prettier Options
-
-Configured in `.prettierrc`:
-
-- Single quotes
-- Semicolons
-- 2-space indentation
-- 80-character line width
-- ES5 trailing commas
-- LF line endings
-
-## Scripts Reference
-
-| Script                 | Description                             |
-| ---------------------- | --------------------------------------- |
-| `npm test`             | Run tests with Node.js                  |
-| `npm run lint`         | Check code with ESLint                  |
-| `npm run lint:fix`     | Fix ESLint issues automatically         |
-| `npm run format`       | Format code with Prettier               |
-| `npm run format:check` | Check formatting without changing files |
-| `npm run check`        | Run all checks (lint + format)          |
-| `npm run changeset`    | Create a new changeset                  |
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/my-feature`
-3. Make your changes
-4. Create a changeset: `npm run changeset`
-5. Commit your changes (pre-commit hooks will run automatically)
-6. Push and create a Pull Request
+1. Add a changelog fragment in `rust/changelog.d/`
+2. Commit and push to a branch
+3. Open a PR and merge to main
+4. The workflow will automatically bump version and create a GitHub release
 
 ## License
 
