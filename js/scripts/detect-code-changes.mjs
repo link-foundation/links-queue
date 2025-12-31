@@ -128,12 +128,7 @@ function isExcludedFromCodeChanges(filePath) {
   }
 
   // Exclude specific folders from code changes
-  const excludedFolders = [
-    '.changeset/',
-    'docs/',
-    'experiments/',
-    'examples/',
-  ];
+  const excludedFolders = ['.changeset/', 'docs/', 'experiments/', 'examples/'];
 
   for (const folder of excludedFolders) {
     if (relativePath.startsWith(folder)) {
@@ -153,9 +148,7 @@ function detectChanges() {
   const changedFiles = getChangedFiles();
 
   // Filter to only js/ folder files
-  const jsChangedFiles = changedFiles.filter((file) =>
-    file.startsWith('js/')
-  );
+  const jsChangedFiles = changedFiles.filter((file) => file.startsWith('js/'));
 
   console.log('Changed files in js/:');
   if (jsChangedFiles.length === 0) {
@@ -185,8 +178,7 @@ function detectChanges() {
 
   // Detect workflow changes
   const workflowChanged = changedFiles.some(
-    (file) =>
-      file.startsWith('.github/workflows/') && file.includes('js')
+    (file) => file.startsWith('.github/workflows/') && file.includes('js')
   );
   setOutput('workflow-changed', workflowChanged ? 'true' : 'false');
 
