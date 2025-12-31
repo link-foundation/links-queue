@@ -1,6 +1,6 @@
 {
   "name": "links-mq-js",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "A JavaScript/TypeScript package template for AI-driven development",
   "type": "module",
   "main": "src/index.js",
