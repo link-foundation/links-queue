@@ -1,10 +1,10 @@
-//! Basic usage example for links-mq.
+//! Basic usage example for links-queue.
 //!
 //! This example demonstrates the basic functionality of the package.
 //!
 //! Run with: `cargo run --example basic_usage`
 
-use links_mq::{add, delay, multiply};
+use links_queue::{add, delay, multiply};
 
 #[tokio::main]
 async fn main() {

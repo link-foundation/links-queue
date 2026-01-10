@@ -1,4 +1,4 @@
-# links-mq-js
+# links-queue-js
 
 ## 0.1.5
 

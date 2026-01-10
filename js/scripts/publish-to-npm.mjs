@@ -13,7 +13,7 @@
 
 import { readFileSync, appendFileSync } from 'fs';
 
-const PACKAGE_NAME = 'links-mq-js';
+const PACKAGE_NAME = 'links-queue-js';
 
 // Load use-m dynamically
 const { use } = eval(

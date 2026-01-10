@@ -1,10 +1,16 @@
-# links-mq
+# Links Queue
 
-A lightweight, multi-language message queue implementation designed for simplicity and ease of use, supporting both JavaScript/TypeScript and Rust.
+A universal queue system that works with **links** instead of traditional messages, events, or tasks. Each queue item is represented as a link—the fundamental unit of information. Supports both JavaScript/TypeScript and Rust implementations.
 
-## Why links-mq?
+## Why Links Queue?
 
-See our [comprehensive comparison](COMPARISON.md) with existing message brokers (RabbitMQ, Celery, BullMQ, Kafka) to understand where links-mq fits in the messaging ecosystem.
+See our [comprehensive comparison](COMPARISON.md) with existing message brokers (RabbitMQ, Celery, BullMQ, Kafka) to understand where Links Queue fits in the messaging ecosystem.
+
+For detailed planning documents, see:
+- [VISION.md](VISION.md) - Project vision and goals
+- [REQUIREMENTS.md](REQUIREMENTS.md) - Detailed requirements specification
+- [ARCHITECTURE.md](ARCHITECTURE.md) - System architecture design
+- [ROADMAP.md](ROADMAP.md) - Development phases and milestones
 
 ## Project Structure
 

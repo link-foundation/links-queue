@@ -1,6 +1,12 @@
-# Message Broker Comparison: links-mq vs Existing Solutions
+# Message Broker Comparison: Links Queue vs Existing Solutions
 
-This document provides a comprehensive comparison between links-mq (JavaScript and Rust implementations) and established message brokers: RabbitMQ, Celery, Redis + BullMQ, and Apache Kafka.
+This document provides a comprehensive comparison between Links Queue (JavaScript and Rust implementations) and established message brokers: RabbitMQ, Celery, Redis + BullMQ, and Apache Kafka.
+
+> **Note**: For detailed planning documents, see:
+> - [VISION.md](VISION.md) - Project vision and goals
+> - [REQUIREMENTS.md](REQUIREMENTS.md) - Detailed requirements specification
+> - [ARCHITECTURE.md](ARCHITECTURE.md) - System architecture design
+> - [ROADMAP.md](ROADMAP.md) - Development phases and milestones
 
 ## Table of Contents
 
@@ -10,19 +16,22 @@ This document provides a comprehensive comparison between links-mq (JavaScript a
 - [Architecture Comparison](#architecture-comparison)
 - [Performance Characteristics](#performance-characteristics)
 - [Use Case Recommendations](#use-case-recommendations)
-- [links-mq Roadmap](#links-mq-roadmap)
+- [Links Queue Roadmap](#links-queue-roadmap)
 - [References](#references)
 
 ## Overview
 
-### links-mq (JavaScript & Rust)
+### Links Queue (JavaScript & Rust)
 
-links-mq is a lightweight, multi-language message queue implementation designed for simplicity and ease of use. It provides both JavaScript/TypeScript (supporting Node.js, Bun, and Deno) and Rust implementations with a focus on:
+Links Queue is a universal queue system that works with **links** instead of traditional messages, events, or tasks. Each queue item is a link—the fundamental unit of information represented as ordered pairs. It provides both JavaScript/TypeScript (supporting Node.js, Bun, and Deno) and Rust implementations with a focus on:
 
-- **Simplicity**: Minimal configuration and easy integration
+- **Link-Based Data Model**: Universal representation using links instead of arbitrary messages
+- **Configuration Over Code**: Scale from single in-memory to distributed storage by changing config, not code
+- **Deployment Flexibility**: Use as embedded library or standalone server
 - **Multi-runtime**: JavaScript version works across Node.js, Bun, and Deno
 - **Cross-platform**: Rust version supports Linux, macOS, and Windows
-- **Developer experience**: Clean API with TypeScript definitions
+- **Extensible Storage**: Pluggable storage backends (memory, link-cli, custom)
+- **Links Notation Protocol**: Native data exchange format with future binary protocol support
 
 ### Existing Solutions
 
@@ -35,7 +44,7 @@ links-mq is a lightweight, multi-language message queue implementation designed 
 
 ## Quick Comparison Matrix
 
-| Feature | links-mq JS | links-mq Rust | RabbitMQ | Celery | BullMQ | Kafka |
+| Feature | Links Queue JS | Links Queue Rust | RabbitMQ | Celery | BullMQ | Kafka |
 |---------|-------------|---------------|----------|--------|--------|-------|
 | **Core Messaging** |
 | Point-to-Point | Planned | Planned | Yes | Yes | Yes | Yes |
@@ -158,21 +167,25 @@ links-mq is a lightweight, multi-language message queue implementation designed 
 - Event sourcing architectures
 - Large-scale distributed systems
 
-### links-mq (Planned Features)
+### Links Queue
 
 **Design Goals:**
-- Zero external dependencies for basic usage
-- Simple API with sensible defaults
-- Multi-language support (JS and Rust first-class)
-- Progressive complexity (simple to start, powerful when needed)
-- Modern async/await patterns
+- Work with **links** as the universal data unit (not arbitrary messages)
+- Scale from embedded to distributed by configuration alone
+- Support multiple operating modes: single-memory, single-stored, multi-memory, multi-stored
+- Use Links Notation as the native data exchange protocol
+- Provide pluggable, extensible storage backends
+- Zero external dependencies for basic in-memory usage
 
 **Planned Strengths:**
-- Minimal setup and configuration
+- Universal link-based data model for semantic relationships
+- Same code runs across all deployment modes
+- Minimal setup for development, robust options for production
 - Consistent API across JavaScript and Rust
+- Native integration with link-cli for persistent storage
 - Built-in TypeScript support
 - Cross-runtime JavaScript (Node.js, Bun, Deno)
-- Lightweight footprint
+- Lightweight footprint with extensibility when needed
 
 ## Architecture Comparison
 
@@ -215,7 +228,7 @@ links-mq is a lightweight, multi-language message queue implementation designed 
 │                    Dependency Requirements                           │
 ├─────────────────────────────────────────────────────────────────────┤
 │                                                                      │
-│  links-mq:        [Application] ─── links-mq (embedded)             │
+│  Links Queue:     [Application] ─── links-queue (embedded)          │
 │                                                                      │
 │  RabbitMQ:        [Application] ─── [AMQP Client] ─── [RabbitMQ]    │
 │                                                          │          │
@@ -248,7 +261,7 @@ links-mq is a lightweight, multi-language message queue implementation designed 
 | Redis/BullMQ | ~100,000-500,000 | In-memory, single-threaded Redis |
 | RabbitMQ | ~20,000-50,000 | Depends on persistence settings |
 | Celery | ~10,000-50,000 | Depends on broker and workers |
-| links-mq | TBD | Target: competitive with BullMQ |
+| Links Queue | TBD | Target: competitive with BullMQ |
 
 ### Latency Comparison
 
@@ -258,14 +271,14 @@ links-mq is a lightweight, multi-language message queue implementation designed 
 | RabbitMQ | 1-5ms | 10-50ms | Network + persistence |
 | Apache Kafka | 2-10ms | 20-100ms | Batching trade-offs |
 | Celery | 5-50ms | 100-500ms | Python overhead + broker |
-| links-mq | TBD | TBD | Target: sub-millisecond |
+| Links Queue | TBD | TBD | Target: sub-millisecond |
 
 ### Resource Usage
 
 | Broker | Memory (Idle) | Memory (Active) | Disk Usage |
 |--------|---------------|-----------------|------------|
-| links-mq JS | ~20MB | ~50-100MB | Optional |
-| links-mq Rust | ~5MB | ~20-50MB | Optional |
+| Links Queue JS | ~20MB | ~50-100MB | Optional |
+| Links Queue Rust | ~5MB | ~20-50MB | Optional |
 | RabbitMQ | ~100MB | ~500MB-2GB | Per-queue |
 | Celery Worker | ~50MB | ~200MB-1GB | Via backend |
 | BullMQ | ~30MB | ~100-500MB | Redis-dependent |
@@ -277,16 +290,16 @@ links-mq is a lightweight, multi-language message queue implementation designed 
 
 | Use Case | Recommended | Alternatives |
 |----------|-------------|--------------|
-| **Simple task queue** | links-mq, BullMQ | Celery, RabbitMQ |
+| **Simple task queue** | Links Queue, BullMQ | Celery, RabbitMQ |
 | **Python application** | Celery | RabbitMQ |
-| **Node.js application** | links-mq JS, BullMQ | RabbitMQ |
-| **Rust application** | links-mq Rust | RabbitMQ (via lapin) |
+| **Node.js application** | Links Queue JS, BullMQ | RabbitMQ |
+| **Rust application** | Links Queue Rust | RabbitMQ (via lapin) |
 | **High throughput streaming** | Kafka | RabbitMQ Streams |
 | **Complex routing** | RabbitMQ | Kafka |
 | **Event sourcing** | Kafka | RabbitMQ |
-| **Scheduled jobs** | Celery, BullMQ | links-mq (planned) |
-| **Multi-language** | RabbitMQ, Kafka | links-mq (JS/Rust) |
-| **Minimal setup** | links-mq, BullMQ | - |
+| **Scheduled jobs** | Celery, BullMQ | Links Queue (planned) |
+| **Multi-language** | RabbitMQ, Kafka | Links Queue (JS/Rust) |
+| **Minimal setup** | Links Queue, BullMQ | - |
 | **Enterprise/Compliance** | RabbitMQ, Kafka | - |
 
 ### Decision Tree
@@ -302,49 +315,53 @@ Start
   │
   ├─► Node.js with Redis already? ─────────────────────► BullMQ
   │
-  ├─► Multi-runtime JS (Node/Bun/Deno)? ───────────────► links-mq JS
+  ├─► Multi-runtime JS (Node/Bun/Deno)? ───────────────► Links Queue JS
   │
-  ├─► Rust application, minimal deps? ─────────────────► links-mq Rust
+  ├─► Rust application, minimal deps? ─────────────────► Links Queue Rust
   │
-  └─► Simple job queue, quick start? ──────────────────► links-mq
+  └─► Simple job queue, quick start? ──────────────────► Links Queue
 ```
 
-## links-mq Roadmap
+## Links Queue Roadmap
 
-### Current Status (v0.1.x)
+For the complete development roadmap, see [ROADMAP.md](ROADMAP.md).
+
+### Current Status
 
 - [x] Project structure (JS and Rust)
 - [x] Multi-runtime support (Node.js, Bun, Deno)
 - [x] Cross-platform Rust (Linux, macOS, Windows)
 - [x] Async/await patterns
 - [x] TypeScript definitions
-- [ ] Core message queue implementation
+- [x] Vision and planning documentation
+- [ ] Core link-based queue implementation
 
-### Planned Features
+### Operating Modes (Planned)
 
-#### Phase 1: Core Messaging
-- [ ] In-memory message queue
-- [ ] Basic producer/consumer API
-- [ ] Message acknowledgment
-- [ ] Simple routing
+Links Queue will support four operating modes, selectable by configuration:
 
-#### Phase 2: Reliability
-- [ ] Message persistence (optional)
-- [ ] At-least-once delivery
-- [ ] Dead letter queue
-- [ ] Retry mechanisms
+| Mode | Persistence | Distribution | Use Case |
+|------|-------------|--------------|----------|
+| `single-memory` | None | Single node | Development, testing |
+| `single-stored` | link-cli | Single node | Production single-node |
+| `multi-memory` | None | Distributed | Ephemeral high-throughput |
+| `multi-stored` | link-cli | Distributed | Production distributed |
 
-#### Phase 3: Scalability
-- [ ] Worker pools
-- [ ] Priority queues
-- [ ] Rate limiting
-- [ ] Delayed messages
+### Development Phases
 
-#### Phase 4: Advanced Features
-- [ ] Pub/Sub support
-- [ ] Message scheduling
-- [ ] Web UI for monitoring
-- [ ] Metrics and observability
+| Phase | Focus | Status |
+|-------|-------|--------|
+| Phase 0 | Foundation & Planning | In Progress |
+| Phase 1 | Core Link Operations | Planned |
+| Phase 2 | Single-Node Queue | Planned |
+| Phase 3 | Persistence (link-cli) | Planned |
+| Phase 4 | Links Notation Protocol | Planned |
+| Phase 5 | Server Mode | Planned |
+| Phase 6 | Multi-Node Clustering | Planned |
+| Phase 7 | Advanced Features | Planned |
+| Phase 8 | Observability | Planned |
+| Phase 9 | Binary Protocol | Planned |
+| Phase 10 | Ecosystem & Integrations | Planned |
 
 ## References
 
@@ -364,4 +381,4 @@ Start
 
 ---
 
-*This comparison document is maintained as part of the links-mq project. For updates and corrections, please open an issue or pull request.*
+*This comparison document is maintained as part of the Links Queue project. For updates and corrections, please open an issue or pull request.*
