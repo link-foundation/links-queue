@@ -1,6 +1,10 @@
 # links-mq
 
-A multi-language repository with AI-driven development pipeline support for both JavaScript/TypeScript and Rust.
+A lightweight, multi-language message queue implementation designed for simplicity and ease of use, supporting both JavaScript/TypeScript and Rust.
+
+## Why links-mq?
+
+See our [comprehensive comparison](COMPARISON.md) with existing message brokers (RabbitMQ, Celery, BullMQ, Kafka) to understand where links-mq fits in the messaging ecosystem.
 
 ## Project Structure
 
