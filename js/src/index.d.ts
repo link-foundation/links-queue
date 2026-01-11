@@ -136,7 +136,10 @@ export declare const createLink: (
 /**
  * Checks if a pattern matches a link.
  */
-export declare const matchesPattern: (link: Link, pattern: LinkPattern) => boolean;
+export declare const matchesPattern: (
+  link: Link,
+  pattern: LinkPattern
+) => boolean;
 
 // =============================================================================
 // Deprecated exports (keep for backward compatibility)
