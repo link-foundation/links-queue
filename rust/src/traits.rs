@@ -742,6 +742,7 @@ pub trait LinkStore<T: LinkType>: Send + Sync {
 // =============================================================================
 
 #[cfg(test)]
+#[allow(clippy::redundant_clone)]
 mod tests {
     use super::*;
 
