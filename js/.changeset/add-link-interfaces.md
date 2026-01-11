@@ -1,5 +1,5 @@
 ---
-'links-mq-js': minor
+'links-queue-js': minor
 ---
 
 Add Link and LinkStore interfaces for Phase 1 API contract

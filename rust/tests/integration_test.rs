@@ -237,6 +237,7 @@ mod link_type_tests {
 // Backward Compatibility Tests
 // =============================================================================
 
+#[allow(deprecated)]
 mod add_integration_tests {
     use super::*;
 
@@ -256,6 +257,7 @@ mod add_integration_tests {
     }
 }
 
+#[allow(deprecated)]
 mod multiply_integration_tests {
     use super::*;
 
@@ -275,6 +277,7 @@ mod multiply_integration_tests {
     }
 }
 
+#[allow(deprecated)]
 mod delay_integration_tests {
     use super::*;
 
