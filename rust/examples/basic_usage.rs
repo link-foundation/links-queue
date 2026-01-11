@@ -58,8 +58,8 @@ fn main() {
     // Universal link with additional values beyond source/target
     let universal = Link::with_values(
         100u64,
-        LinkRef::Id(1), // subject
-        LinkRef::Id(2), // predicate
+        LinkRef::Id(1),                                       // subject
+        LinkRef::Id(2),                                       // predicate
         vec![LinkRef::Id(3), LinkRef::Id(4), LinkRef::Id(5)], // objects
     );
     println!("Universal link: {:?}", universal);
@@ -142,21 +142,19 @@ fn main() {
     println!("Links with target=30: {:?}", with_target_30); // [2, 3]
 
     // Match with Any wildcard (builder pattern)
-    let any_source_pattern = LinkPattern::<u64>::new()
-        .source(Any)
-        .target(30u64);
+    let any_source_pattern = LinkPattern::<u64>::new().source(Any).target(30u64);
     let any_source_target_30: Vec<_> = links
         .iter()
         .filter(|l| any_source_pattern.matches(l))
         .map(|l| l.id)
         .collect();
-    println!("Links with Any source, target=30: {:?}", any_source_target_30); // [2, 3]
+    println!(
+        "Links with Any source, target=30: {:?}",
+        any_source_target_30
+    ); // [2, 3]
 
     // Match by source AND target
-    let exact_pattern = LinkPattern::with_source_target(
-        LinkRef::Id(10u64),
-        LinkRef::Id(20u64),
-    );
+    let exact_pattern = LinkPattern::with_source_target(LinkRef::Id(10u64), LinkRef::Id(20u64));
     let exact_match: Vec<_> = links
         .iter()
         .filter(|l| exact_pattern.matches(l))

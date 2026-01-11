@@ -279,7 +279,11 @@ impl<T: LinkType> Link<T> {
             id,
             source,
             target,
-            values: if values.is_empty() { None } else { Some(values) },
+            values: if values.is_empty() {
+                None
+            } else {
+                Some(values)
+            },
         }
     }
 
@@ -313,7 +317,7 @@ impl<T: LinkType> Link<T> {
     /// assert!(null_link.is_null());
     /// ```
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn nothing() -> Self {
         let zero = T::zero();
         Self::new(zero, LinkRef::Id(zero), LinkRef::Id(zero))
@@ -364,8 +368,7 @@ impl<T: LinkType> Default for Link<T> {
 pub struct Any;
 
 /// A pattern field that can match a specific value or any value.
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-#[derive(Default)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Default)]
 pub enum PatternField<T: LinkType> {
     /// Match any value.
     #[default]
@@ -373,7 +376,6 @@ pub enum PatternField<T: LinkType> {
     /// Match a specific value.
     Value(LinkRef<T>),
 }
-
 
 impl<T: LinkType> PatternField<T> {
     /// Returns true if this field matches the given reference.
@@ -437,14 +439,14 @@ pub struct LinkPattern<T: LinkType> {
 impl<T: LinkType> LinkPattern<T> {
     /// Creates a new empty pattern (matches all links).
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
 
     /// Creates a pattern that matches all links.
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn all() -> Self {
         Self::default()
     }
@@ -683,12 +685,7 @@ pub trait LinkStore<T: LinkType>: Send + Sync {
     /// # Returns
     ///
     /// The updated Link, or an error if the link doesn't exist.
-    fn update(
-        &mut self,
-        id: T,
-        source: LinkRef<T>,
-        target: LinkRef<T>,
-    ) -> LinkResult<T, Link<T>>;
+    fn update(&mut self, id: T, source: LinkRef<T>, target: LinkRef<T>) -> LinkResult<T, Link<T>>;
 
     // -------------------------------------------------------------------------
     // Delete Operations
@@ -881,19 +878,14 @@ mod tests {
 
         #[test]
         fn test_pattern_builder() {
-            let pattern = LinkPattern::<u64>::new()
-                .source(2u64)
-                .target(Any);
+            let pattern = LinkPattern::<u64>::new().source(2u64).target(Any);
             let link = Link::new(1u64, LinkRef::Id(2), LinkRef::Id(3));
             assert!(pattern.matches(&link));
         }
 
         #[test]
         fn test_pattern_with_source_target() {
-            let pattern = LinkPattern::with_source_target(
-                LinkRef::Id(2u64),
-                LinkRef::Id(3u64),
-            );
+            let pattern = LinkPattern::with_source_target(LinkRef::Id(2u64), LinkRef::Id(3u64));
             let link1 = Link::new(1u64, LinkRef::Id(2), LinkRef::Id(3));
             let link2 = Link::new(1u64, LinkRef::Id(2), LinkRef::Id(5));
             assert!(pattern.matches(&link1));

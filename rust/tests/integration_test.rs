@@ -177,10 +177,7 @@ mod pattern_integration_tests {
 
     #[test]
     fn test_builder_pattern() {
-        let pattern = LinkPattern::<u64>::new()
-            .id(1u64)
-            .source(Any)
-            .target(10u64);
+        let pattern = LinkPattern::<u64>::new().id(1u64).source(Any).target(10u64);
 
         assert!(pattern.matches(&Link::new(1, LinkRef::Id(5), LinkRef::Id(10))));
         assert!(pattern.matches(&Link::new(1, LinkRef::Id(999), LinkRef::Id(10))));

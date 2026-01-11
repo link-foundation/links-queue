@@ -46,15 +46,7 @@ mod traits;
 // =============================================================================
 
 pub use traits::{
-    Any,
-    Link,
-    LinkError,
-    LinkPattern,
-    LinkRef,
-    LinkResult,
-    LinkStore,
-    LinkType,
-    PatternField,
+    Any, Link, LinkError, LinkPattern, LinkRef, LinkResult, LinkStore, LinkType, PatternField,
 };
 
 // =============================================================================
