@@ -13,7 +13,7 @@
 import { writeFileSync } from 'fs';
 import { randomBytes } from 'crypto';
 
-const PACKAGE_NAME = 'links-mq-js';
+const PACKAGE_NAME = 'links-queue-js';
 
 // Load use-m dynamically
 const { use } = eval(

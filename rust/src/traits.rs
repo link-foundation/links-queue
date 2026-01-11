@@ -14,7 +14,7 @@
 //! # Example
 //!
 //! ```rust
-//! use links_mq::{Link, LinkStore, LinkRef, LinkPattern, Any};
+//! use links_queue::{Link, LinkStore, LinkRef, LinkPattern, Any};
 //!
 //! // Create a simple link
 //! let link = Link::new(1u64, LinkRef::Id(2), LinkRef::Id(3));
@@ -90,7 +90,7 @@ impl_link_type!(i8, i16, i32, i64, i128, isize);
 /// # Examples
 ///
 /// ```rust
-/// use links_mq::{Link, LinkRef};
+/// use links_queue::{Link, LinkRef};
 ///
 /// // Direct reference by ID
 /// let ref1: LinkRef<u64> = LinkRef::Id(42);
@@ -190,7 +190,7 @@ impl<T: LinkType> From<Link<T>> for LinkRef<T> {
 /// # Examples
 ///
 /// ```rust
-/// use links_mq::{Link, LinkRef};
+/// use links_queue::{Link, LinkRef};
 ///
 /// // Simple doublet-style link
 /// let link = Link::new(1u64, LinkRef::Id(2), LinkRef::Id(3));
@@ -231,7 +231,7 @@ impl<T: LinkType> Link<T> {
     /// # Examples
     ///
     /// ```rust
-    /// use links_mq::{Link, LinkRef};
+    /// use links_queue::{Link, LinkRef};
     ///
     /// let link = Link::new(1u64, LinkRef::Id(2), LinkRef::Id(3));
     /// assert_eq!(link.id, 1);
@@ -258,7 +258,7 @@ impl<T: LinkType> Link<T> {
     /// # Examples
     ///
     /// ```rust
-    /// use links_mq::{Link, LinkRef};
+    /// use links_queue::{Link, LinkRef};
     ///
     /// let link = Link::with_values(
     ///     1u64,
@@ -290,7 +290,7 @@ impl<T: LinkType> Link<T> {
     /// # Examples
     ///
     /// ```rust
-    /// use links_mq::Link;
+    /// use links_queue::Link;
     ///
     /// let point = Link::<u64>::point(42);
     /// assert_eq!(point.source.get_id(), 42);
@@ -307,7 +307,7 @@ impl<T: LinkType> Link<T> {
     /// # Examples
     ///
     /// ```rust
-    /// use links_mq::Link;
+    /// use links_queue::Link;
     ///
     /// let null_link = Link::<u64>::nothing();
     /// assert!(null_link.is_null());
@@ -411,7 +411,7 @@ impl<T: LinkType> From<Any> for PatternField<T> {
 /// # Examples
 ///
 /// ```rust
-/// use links_mq::{LinkPattern, LinkRef, Any};
+/// use links_queue::{LinkPattern, LinkRef, Any};
 ///
 /// // Match all links with source = 5
 /// let pattern = LinkPattern::<u64>::with_source(LinkRef::Id(5));
@@ -561,7 +561,7 @@ pub type LinkResult<T, V> = Result<V, LinkError<T>>;
 /// # Example Implementation
 ///
 /// ```rust,ignore
-/// use links_mq::{LinkStore, Link, LinkRef, LinkPattern, LinkResult, LinkError};
+/// use links_queue::{LinkStore, Link, LinkRef, LinkPattern, LinkResult, LinkError};
 ///
 /// struct InMemoryLinkStore<T: LinkType> {
 ///     links: std::collections::HashMap<T, Link<T>>,

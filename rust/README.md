@@ -1,6 +1,6 @@
-# links-mq (Rust)
+# Links Queue (Rust)
 
-Rust implementation of links-mq.
+Rust implementation of Links Queue - a universal queue system using links.
 
 ## Features
 

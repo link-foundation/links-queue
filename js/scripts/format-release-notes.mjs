@@ -21,7 +21,7 @@
  * Note: Uses --release-version instead of --version to avoid conflict with yargs' built-in --version flag.
  */
 
-const PACKAGE_NAME = 'links-mq-js';
+const PACKAGE_NAME = 'links-queue-js';
 
 // Load use-m dynamically
 const { use } = eval(

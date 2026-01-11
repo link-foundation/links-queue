@@ -1,10 +1,15 @@
-//! Basic usage example for links-mq.
+//! Basic usage example for links-queue.
 //!
-//! This example demonstrates the core Link and LinkStore interfaces.
+//! This example demonstrates the core Link and `LinkStore` interfaces.
 //!
 //! Run with: `cargo run --example basic_usage`
 
-use links_mq::{Any, Link, LinkPattern, LinkRef};
+#![allow(clippy::uninlined_format_args)]
+#![allow(clippy::redundant_clone)]
+#![allow(clippy::useless_vec)]
+#![allow(clippy::needless_collect)]
+
+use links_queue::{Any, Link, LinkPattern, LinkRef};
 
 fn main() {
     // =========================================================================

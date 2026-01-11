@@ -1,10 +1,10 @@
-//! Integration tests for links-mq.
+//! Integration tests for links-queue.
 //!
 //! These tests verify the public API works correctly.
 
 #[allow(deprecated)]
-use links_mq::{add, delay, multiply};
-use links_mq::{Any, Link, LinkPattern, LinkRef, LinkType, VERSION};
+use links_queue::{add, delay, multiply};
+use links_queue::{Any, Link, LinkPattern, LinkRef, LinkType, VERSION};
 
 // =============================================================================
 // Link and LinkRef Integration Tests

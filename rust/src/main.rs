@@ -2,11 +2,12 @@
 //!
 //! This is a simple CLI that demonstrates the library functionality.
 
-use links_mq::{add, delay, multiply};
+#[allow(deprecated)]
+use links_queue::{add, delay, multiply};
 
 #[tokio::main]
 async fn main() {
-    println!("links-mq v{}", links_mq::VERSION);
+    println!("links-queue v{}", links_queue::VERSION);
     println!();
 
     // Example 1: Basic arithmetic
