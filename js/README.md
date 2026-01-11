@@ -1,6 +1,6 @@
-# links-mq-js
+# Links Queue (JavaScript)
 
-JavaScript/TypeScript implementation of links-mq.
+JavaScript/TypeScript implementation of Links Queue - a universal queue system using links.
 
 ## Features
 

@@ -1,8 +1,8 @@
-//! Integration tests for links-mq.
+//! Integration tests for links-queue.
 //!
 //! These tests verify the public API works correctly.
 
-use links_mq::{add, delay, multiply};
+use links_queue::{add, delay, multiply};
 
 mod add_integration_tests {
     use super::*;
@@ -73,7 +73,7 @@ mod delay_integration_tests {
 }
 
 mod version_tests {
-    use links_mq::VERSION;
+    use links_queue::VERSION;
 
     #[test]
     fn test_version_is_not_empty() {

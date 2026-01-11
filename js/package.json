@@ -1,7 +1,7 @@
 {
-  "name": "links-mq-js",
+  "name": "links-queue-js",
   "version": "0.1.5",
-  "description": "A JavaScript/TypeScript package template for AI-driven development",
+  "description": "Links Queue - a universal queue system using links (JavaScript implementation)",
   "type": "module",
   "main": "src/index.js",
   "types": "src/index.d.ts",
@@ -26,17 +26,17 @@
     "changeset:status": "changeset status --since=origin/main"
   },
   "keywords": [
-    "links-mq",
-    "template",
+    "links-queue",
+    "queue",
+    "links",
     "javascript",
-    "typescript",
-    "ai-driven"
+    "typescript"
   ],
   "author": "",
   "license": "Unlicense",
   "repository": {
     "type": "git",
-    "url": "https://github.com/link-foundation/links-mq",
+    "url": "https://github.com/link-foundation/links-queue",
     "directory": "js"
   },
   "engines": {

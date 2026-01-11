@@ -7,7 +7,7 @@
 import { readdirSync, readFileSync } from 'fs';
 import { join } from 'path';
 
-const PACKAGE_NAME = 'links-mq-js';
+const PACKAGE_NAME = 'links-queue-js';
 
 try {
   // Count changeset files (excluding README.md and config.json)

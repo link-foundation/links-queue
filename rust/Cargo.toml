@@ -1,22 +1,22 @@
 [package]
-name = "links-mq"
+name = "links-queue"
 version = "0.1.0"
 edition = "2021"
-description = "A Rust implementation of links-mq"
+description = "A Rust implementation of Links Queue - universal queue system using links"
 readme = "README.md"
 license = "Unlicense"
-keywords = ["links-mq", "rust", "ai-driven"]
+keywords = ["links-queue", "queue", "links", "rust"]
 categories = ["development-tools"]
-repository = "https://github.com/link-foundation/links-mq"
-documentation = "https://github.com/link-foundation/links-mq"
+repository = "https://github.com/link-foundation/links-queue"
+documentation = "https://github.com/link-foundation/links-queue"
 rust-version = "1.70"
 
 [lib]
-name = "links_mq"
+name = "links_queue"
 path = "src/lib.rs"
 
 [[bin]]
-name = "links-mq"
+name = "links-queue"
 path = "src/main.rs"
 
 [dependencies]

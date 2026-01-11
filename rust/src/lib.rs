@@ -19,7 +19,7 @@ pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 /// # Examples
 ///
 /// ```
-/// use links_mq::add;
+/// use links_queue::add;
 /// assert_eq!(add(2, 3), 5);
 /// ```
 #[must_use]
@@ -41,7 +41,7 @@ pub const fn add(a: i64, b: i64) -> i64 {
 /// # Examples
 ///
 /// ```
-/// use links_mq::multiply;
+/// use links_queue::multiply;
 /// assert_eq!(multiply(2, 3), 6);
 /// ```
 #[must_use]
@@ -58,7 +58,7 @@ pub const fn multiply(a: i64, b: i64) -> i64 {
 /// # Examples
 ///
 /// ```
-/// use links_mq::delay;
+/// use links_queue::delay;
 ///
 /// #[tokio::main]
 /// async fn main() {
