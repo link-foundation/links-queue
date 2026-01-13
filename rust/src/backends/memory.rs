@@ -66,11 +66,17 @@ struct LinkKey<T: LinkType> {
 }
 
 impl<T: LinkType> LinkKey<T> {
-    fn from_refs(source: &LinkRef<T>, target: &LinkRef<T>, values: &Option<Vec<LinkRef<T>>>) -> Self {
+    fn from_refs(
+        source: &LinkRef<T>,
+        target: &LinkRef<T>,
+        values: &Option<Vec<LinkRef<T>>>,
+    ) -> Self {
         Self {
             source_id: source.get_id(),
             target_id: target.get_id(),
-            values: values.as_ref().map(|v| v.iter().map(LinkRef::get_id).collect()),
+            values: values
+                .as_ref()
+                .map(|v| v.iter().map(LinkRef::get_id).collect()),
         }
     }
 }
@@ -332,7 +338,11 @@ impl<T: LinkType> LinkStore<T> for MemoryLinkStore<T> {
         target: LinkRef<T>,
         values: Vec<LinkRef<T>>,
     ) -> LinkResult<T, Link<T>> {
-        let values_opt = if values.is_empty() { None } else { Some(values) };
+        let values_opt = if values.is_empty() {
+            None
+        } else {
+            Some(values)
+        };
         self.create_link_internal(source, target, values_opt)
     }
 
@@ -404,8 +414,15 @@ impl<T: LinkType> LinkStore<T> for MemoryLinkStore<T> {
         count
     }
 
-    fn iter<'a>(&'a self, pattern: &'a LinkPattern<T>) -> Box<dyn Iterator<Item = &'a Link<T>> + 'a> {
-        Box::new(self.links.values().filter(move |link| pattern.matches(link)))
+    fn iter<'a>(
+        &'a self,
+        pattern: &'a LinkPattern<T>,
+    ) -> Box<dyn Iterator<Item = &'a Link<T>> + 'a> {
+        Box::new(
+            self.links
+                .values()
+                .filter(move |link| pattern.matches(link)),
+        )
     }
 
     fn iter_all(&self) -> Box<dyn Iterator<Item = &Link<T>> + '_> {
@@ -510,9 +527,7 @@ mod tests {
         fn test_create_with_nested_link_ref() {
             let mut store = MemoryLinkStore::<u64>::new();
             let inner = Link::new(100u64, LinkRef::Id(10), LinkRef::Id(20));
-            let link = store
-                .create(LinkRef::link(inner), LinkRef::Id(30))
-                .unwrap();
+            let link = store.create(LinkRef::link(inner), LinkRef::Id(30)).unwrap();
 
             assert_eq!(link.source_id(), 100);
             assert_eq!(link.target_id(), 30);

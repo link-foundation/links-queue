@@ -160,8 +160,15 @@ fn benchmark_deduplication() {
     );
 
     // Verify deduplication worked
-    assert_eq!(store.total_count(), 1, "Deduplication should prevent duplicates");
-    println!("Store count after {} creates: 1 (deduplication verified)\n", iterations);
+    assert_eq!(
+        store.total_count(),
+        1,
+        "Deduplication should prevent duplicates"
+    );
+    println!(
+        "Store count after {} creates: 1 (deduplication verified)\n",
+        iterations
+    );
 }
 
 fn benchmark_pattern_matching() {
@@ -200,7 +207,11 @@ fn benchmark_pattern_matching() {
         elapsed,
         iterations as f64 / elapsed.as_secs_f64()
     );
-    println!("Pattern matched {} links out of {}\n", results.len(), link_count);
+    println!(
+        "Pattern matched {} links out of {}\n",
+        results.len(),
+        link_count
+    );
 
     // Benchmark count with pattern
     let start = Instant::now();

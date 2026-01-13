@@ -736,7 +736,10 @@ pub trait LinkStore<T: LinkType>: Send + Sync {
     /// # Returns
     ///
     /// Iterator of references to matching links.
-    fn iter<'a>(&'a self, pattern: &'a LinkPattern<T>) -> Box<dyn Iterator<Item = &'a Link<T>> + 'a>;
+    fn iter<'a>(
+        &'a self,
+        pattern: &'a LinkPattern<T>,
+    ) -> Box<dyn Iterator<Item = &'a Link<T>> + 'a>;
 
     /// Returns an iterator over all links.
     ///
