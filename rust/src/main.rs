@@ -2,6 +2,8 @@
 //!
 //! This is a simple CLI that demonstrates the library functionality.
 
+#![allow(deprecated)]
+
 use links_queue::{add, delay, multiply};
 
 #[tokio::main]

@@ -1,9 +1,64 @@
-//! Example module entry point.
+//! links-queue - A lightweight message queue implementation.
 //!
-//! Replace this with your actual implementation.
+//! This crate provides the core Link and `LinkStore` abstractions for
+//! building associative data structures and message queues.
+//!
+//! # Core Concepts
+//!
+//! - **Link**: A directed relationship from source to target, identified by a unique ID.
+//! - **`LinkStore`**: A storage backend for managing links with CRUD operations.
+//! - **`LinkPattern`**: A pattern for querying links with wildcard support.
+//!
+//! # Design Goals
+//!
+//! - Compatible with [links-notation](https://github.com/link-foundation/links-notation)
+//! - Compatible with [doublets-rs](https://github.com/linksplatform/doublets-rs) patterns
+//! - Extensible for universal links with any number of references
+//!
+//! # Example
+//!
+//! ```rust
+//! use links_queue::{Link, LinkRef, LinkPattern, Any};
+//!
+//! // Create a simple link
+//! let link = Link::new(1u64, LinkRef::Id(2), LinkRef::Id(3));
+//! assert_eq!(link.id, 1);
+//! assert_eq!(link.source_id(), 2);
+//! assert_eq!(link.target_id(), 3);
+//!
+//! // Create a nested link structure
+//! let inner = Link::new(2u64, LinkRef::Id(3), LinkRef::Id(4));
+//! let outer = Link::new(1u64, LinkRef::link(inner), LinkRef::Id(5));
+//!
+//! // Pattern matching
+//! let pattern = LinkPattern::with_source(LinkRef::Id(2u64));
+//! assert!(pattern.matches(&Link::new(1u64, LinkRef::Id(2), LinkRef::Id(3))));
+//! ```
+
+// =============================================================================
+// Module Declarations
+// =============================================================================
+
+mod traits;
+
+// =============================================================================
+// Public Re-exports
+// =============================================================================
+
+pub use traits::{
+    Any, Link, LinkError, LinkPattern, LinkRef, LinkResult, LinkStore, LinkType, PatternField,
+};
+
+// =============================================================================
+// Package Version
+// =============================================================================
 
 /// Package version (matches Cargo.toml version).
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
+
+// =============================================================================
+// Backward Compatible Exports (deprecated)
+// =============================================================================
 
 /// Adds two numbers together.
 ///
@@ -22,6 +77,7 @@ pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 /// use links_queue::add;
 /// assert_eq!(add(2, 3), 5);
 /// ```
+#[deprecated(since = "0.2.0", note = "Use the Link and LinkStore traits instead")]
 #[must_use]
 pub const fn add(a: i64, b: i64) -> i64 {
     a + b
@@ -44,6 +100,7 @@ pub const fn add(a: i64, b: i64) -> i64 {
 /// use links_queue::multiply;
 /// assert_eq!(multiply(2, 3), 6);
 /// ```
+#[deprecated(since = "0.2.0", note = "Use the Link and LinkStore traits instead")]
 #[must_use]
 pub const fn multiply(a: i64, b: i64) -> i64 {
     a * b
@@ -65,16 +122,68 @@ pub const fn multiply(a: i64, b: i64) -> i64 {
 ///     delay(0.1).await;
 /// }
 /// ```
+#[deprecated(since = "0.2.0", note = "Will be removed in future versions")]
 pub async fn delay(seconds: f64) {
     let duration = std::time::Duration::from_secs_f64(seconds);
     tokio::time::sleep(duration).await;
 }
 
+// =============================================================================
+// Unit Tests
+// =============================================================================
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    mod add_tests {
+    mod link_api_tests {
+        use super::*;
+
+        #[test]
+        fn test_link_creation() {
+            let link = Link::new(1u64, LinkRef::Id(2), LinkRef::Id(3));
+            assert_eq!(link.id, 1);
+            assert_eq!(link.source_id(), 2);
+            assert_eq!(link.target_id(), 3);
+        }
+
+        #[test]
+        fn test_link_with_values() {
+            let link = Link::with_values(
+                1u64,
+                LinkRef::Id(2),
+                LinkRef::Id(3),
+                vec![LinkRef::Id(4), LinkRef::Id(5)],
+            );
+            assert!(link.has_values());
+        }
+
+        #[test]
+        fn test_nested_link() {
+            let inner = Link::new(2u64, LinkRef::Id(3), LinkRef::Id(4));
+            let outer = Link::new(1u64, LinkRef::link(inner), LinkRef::Id(5));
+            assert_eq!(outer.source_id(), 2);
+        }
+
+        #[test]
+        fn test_pattern_matching() {
+            let pattern = LinkPattern::with_source(LinkRef::Id(2u64));
+            let link1 = Link::new(1u64, LinkRef::Id(2), LinkRef::Id(3));
+            let link2 = Link::new(1u64, LinkRef::Id(5), LinkRef::Id(3));
+            assert!(pattern.matches(&link1));
+            assert!(!pattern.matches(&link2));
+        }
+
+        #[test]
+        fn test_any_pattern() {
+            let pattern = LinkPattern::<u64>::new().source(Any).target(3u64);
+            let link = Link::new(1u64, LinkRef::Id(999), LinkRef::Id(3));
+            assert!(pattern.matches(&link));
+        }
+    }
+
+    #[allow(deprecated)]
+    mod backward_compat_tests {
         use super::*;
 
         #[test]
@@ -96,10 +205,6 @@ mod tests {
         fn test_add_large_numbers() {
             assert_eq!(add(1_000_000, 2_000_000), 3_000_000);
         }
-    }
-
-    mod multiply_tests {
-        use super::*;
 
         #[test]
         fn test_multiply_positive_numbers() {
@@ -126,6 +231,7 @@ mod tests {
         use super::*;
 
         #[tokio::test]
+        #[allow(deprecated)]
         async fn test_delay() {
             let start = std::time::Instant::now();
             delay(0.1).await;

@@ -1,27 +1,161 @@
 /**
- * Example module type definitions
- * Replace this with your actual type definitions
+ * links-queue - Core type definitions
+ *
+ * This module exports the Link and LinkStore interfaces that form
+ * the API contract for all implementations.
  */
 
+// =============================================================================
+// ID and Reference Types
+// =============================================================================
+
 /**
- * Adds two numbers
- * @param a - First number
- * @param b - Second number
- * @returns Sum of a and b
+ * A link identifier. Can be a number, bigint, or string.
+ */
+export type LinkId = number | bigint | string;
+
+/**
+ * A reference to a link, which can be an ID or a nested Link object.
+ */
+export type LinkRef = LinkId | Link;
+
+// =============================================================================
+// Link Interface
+// =============================================================================
+
+/**
+ * Represents a link (associative data structure) connecting source to target.
+ */
+export interface Link {
+  readonly id: LinkId;
+  readonly source: LinkRef;
+  readonly target: LinkRef;
+  readonly values?: readonly LinkRef[];
+}
+
+// =============================================================================
+// Pattern Matching
+// =============================================================================
+
+/**
+ * Special value indicating "any" match in pattern queries.
+ */
+export declare const Any: unique symbol;
+export type AnyType = typeof Any;
+
+/**
+ * Pattern for matching links in queries.
+ */
+export interface LinkPattern {
+  readonly id?: LinkId | AnyType;
+  readonly source?: LinkRef | AnyType;
+  readonly target?: LinkRef | AnyType;
+}
+
+// =============================================================================
+// LinkStore Interface
+// =============================================================================
+
+/**
+ * Interface for link storage operations.
+ */
+export interface LinkStore {
+  create(source: LinkRef, target: LinkRef): Promise<Link>;
+  createWithValues(
+    source: LinkRef,
+    target: LinkRef,
+    values: readonly LinkRef[]
+  ): Promise<Link>;
+  get(id: LinkId): Promise<Link | null>;
+  exists(id: LinkId): Promise<boolean>;
+  find(pattern: LinkPattern): Promise<Link[]>;
+  count(pattern?: LinkPattern): Promise<number>;
+  update(id: LinkId, source: LinkRef, target: LinkRef): Promise<Link>;
+  delete(id: LinkId): Promise<boolean>;
+  deleteMatching(pattern: LinkPattern): Promise<number>;
+  iterate(pattern?: LinkPattern): AsyncIterable<Link>;
+}
+
+// =============================================================================
+// Utility Types
+// =============================================================================
+
+export type LinkIdOf<L extends Link> = L['id'];
+
+export interface MutableLink {
+  id: LinkId;
+  source: LinkRef;
+  target: LinkRef;
+  values?: LinkRef[];
+}
+
+export interface CreateLinkOptions {
+  source: LinkRef;
+  target: LinkRef;
+  values?: LinkRef[];
+}
+
+export type LinkResult<T> =
+  | { success: true; value: T }
+  | { success: false; error: string };
+
+// =============================================================================
+// Utility Functions
+// =============================================================================
+
+/**
+ * Checks if a value is a Link object.
+ */
+export declare const isLink: (value: unknown) => value is Link;
+
+/**
+ * Checks if a value is a valid LinkId.
+ */
+export declare const isLinkId: (value: unknown) => value is LinkId;
+
+/**
+ * Checks if a value is a valid LinkRef.
+ */
+export declare const isLinkRef: (value: unknown) => value is LinkRef;
+
+/**
+ * Extracts the LinkId from a LinkRef.
+ */
+export declare const getLinkId: (ref: LinkRef) => LinkId;
+
+/**
+ * Creates a Link object from source and target references.
+ */
+export declare const createLink: (
+  id: LinkId,
+  source: LinkRef,
+  target: LinkRef,
+  values?: LinkRef[]
+) => Link;
+
+/**
+ * Checks if a pattern matches a link.
+ */
+export declare const matchesPattern: (
+  link: Link,
+  pattern: LinkPattern
+) => boolean;
+
+// =============================================================================
+// Deprecated exports (keep for backward compatibility)
+// =============================================================================
+
+/**
+ * @deprecated Use the new Link interface
  */
 export declare const add: (a: number, b: number) => number;
 
 /**
- * Multiplies two numbers
- * @param a - First number
- * @param b - Second number
- * @returns Product of a and b
+ * @deprecated Use the new Link interface
  */
 export declare const multiply: (a: number, b: number) => number;
 
 /**
- * Delays execution for specified milliseconds
- * @param ms - Milliseconds to wait
- * @returns Promise that resolves after the delay
+ * @deprecated Will be removed in future versions
  */
 export declare const delay: (ms: number) => Promise<void>;
