@@ -169,3 +169,9 @@ export const multiply = (a, b) => a * b;
  */
 export const delay = (ms) =>
   new Promise((resolve) => globalThis.setTimeout(resolve, ms));
+
+// =============================================================================
+// Backend Exports
+// =============================================================================
+
+export { MemoryLinkStore } from './backends/memory.js';

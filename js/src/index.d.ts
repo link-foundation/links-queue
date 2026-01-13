@@ -159,3 +159,9 @@ export declare const multiply: (a: number, b: number) => number;
  * @deprecated Will be removed in future versions
  */
 export declare const delay: (ms: number) => Promise<void>;
+
+// =============================================================================
+// Backend Exports
+// =============================================================================
+
+export { MemoryLinkStore } from './backends/memory.d.ts';
