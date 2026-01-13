@@ -1,4 +1,4 @@
-//! Performance benchmark example for MemoryLinkStore.
+//! Performance benchmark example for `MemoryLinkStore`.
 //!
 //! This example demonstrates and validates the O(1) lookup performance
 //! of the in-memory link store implementation.
@@ -6,6 +6,9 @@
 //! Run with: `cargo run --example memory_store_benchmark --release`
 
 #![allow(clippy::uninlined_format_args)]
+#![allow(clippy::cast_precision_loss)]
+#![allow(clippy::cast_sign_loss)]
+#![allow(clippy::cast_lossless)]
 
 use links_queue::{LinkPattern, LinkRef, LinkStore, MemoryLinkStore};
 use std::time::Instant;

@@ -69,14 +69,12 @@ impl<T: LinkType> LinkKey<T> {
     fn from_refs(
         source: &LinkRef<T>,
         target: &LinkRef<T>,
-        values: &Option<Vec<LinkRef<T>>>,
+        values: Option<&Vec<LinkRef<T>>>,
     ) -> Self {
         Self {
             source_id: source.get_id(),
             target_id: target.get_id(),
-            values: values
-                .as_ref()
-                .map(|v| v.iter().map(LinkRef::get_id).collect()),
+            values: values.map(|v| v.iter().map(LinkRef::get_id).collect()),
         }
     }
 }
@@ -297,13 +295,13 @@ impl<T: LinkType> MemoryLinkStore<T> {
         source: LinkRef<T>,
         target: LinkRef<T>,
         values: Option<Vec<LinkRef<T>>>,
-    ) -> LinkResult<T, Link<T>> {
-        let key = LinkKey::from_refs(&source, &target, &values);
+    ) -> Link<T> {
+        let key = LinkKey::from_refs(&source, &target, values.as_ref());
 
         // Check for existing link with same structure (deduplication)
         if let Some(&existing_id) = self.dedup_index.get(&key) {
             if let Some(existing_link) = self.links.get(&existing_id) {
-                return Ok(existing_link.clone());
+                return existing_link.clone();
             }
         }
 
@@ -319,7 +317,7 @@ impl<T: LinkType> MemoryLinkStore<T> {
         self.links.insert(id, link.clone());
         self.dedup_index.insert(key, id);
 
-        Ok(link)
+        link
     }
 }
 
@@ -329,7 +327,7 @@ impl<T: LinkType> MemoryLinkStore<T> {
 
 impl<T: LinkType> LinkStore<T> for MemoryLinkStore<T> {
     fn create(&mut self, source: LinkRef<T>, target: LinkRef<T>) -> LinkResult<T, Link<T>> {
-        self.create_link_internal(source, target, None)
+        Ok(self.create_link_internal(source, target, None))
     }
 
     fn create_with_values(
@@ -343,7 +341,7 @@ impl<T: LinkType> LinkStore<T> for MemoryLinkStore<T> {
         } else {
             Some(values)
         };
-        self.create_link_internal(source, target, values_opt)
+        Ok(self.create_link_internal(source, target, values_opt))
     }
 
     fn get(&self, id: T) -> Option<&Link<T>> {
@@ -362,11 +360,12 @@ impl<T: LinkType> LinkStore<T> for MemoryLinkStore<T> {
         let old_link = self.links.get(&id).ok_or(LinkError::NotFound(id))?.clone();
 
         // Remove old dedup entry
-        let old_key = LinkKey::from_refs(&old_link.source, &old_link.target, &old_link.values);
+        let old_key =
+            LinkKey::from_refs(&old_link.source, &old_link.target, old_link.values.as_ref());
         self.dedup_index.remove(&old_key);
 
         // Check if new structure already exists (would create duplicate)
-        let new_key = LinkKey::from_refs(&source, &target, &old_link.values);
+        let new_key = LinkKey::from_refs(&source, &target, old_link.values.as_ref());
         if let Some(&existing_id) = self.dedup_index.get(&new_key) {
             if existing_id != id {
                 // Restore old dedup entry before returning error
@@ -390,7 +389,7 @@ impl<T: LinkType> LinkStore<T> for MemoryLinkStore<T> {
 
     fn delete(&mut self, id: T) -> bool {
         if let Some(link) = self.links.remove(&id) {
-            let key = LinkKey::from_refs(&link.source, &link.target, &link.values);
+            let key = LinkKey::from_refs(&link.source, &link.target, link.values.as_ref());
             self.dedup_index.remove(&key);
             true
         } else {

@@ -54,6 +54,7 @@ pub trait LinkType:
     /// Increments this value by one and returns the result.
     ///
     /// This is used for auto-generating unique IDs in storage backends.
+    #[must_use]
     fn increment(self) -> Self;
 }
 
