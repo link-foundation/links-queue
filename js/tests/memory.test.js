@@ -1,31 +1,48 @@
 /**
  * Tests for MemoryLinkStore implementation.
  * Works with Node.js, Bun, and Deno via test-anywhere.
+ *
+ * Note: Each test creates its own store instance for Deno compatibility.
+ * Deno's test-anywhere doesn't properly scope beforeEach hooks.
  */
 
 /* eslint-disable max-lines-per-function */
 
-import { describe, it, expect, beforeEach } from 'test-anywhere';
+import { describe, it, expect } from 'test-anywhere';
 import { MemoryLinkStore, Any, createLink } from '../src/index.js';
 
+/**
+ * Helper function to create a fresh store for each test.
+ * @returns {MemoryLinkStore} A new MemoryLinkStore instance
+ */
+const createStore = () => new MemoryLinkStore();
+
+/**
+ * Helper function to create a store pre-populated with test data.
+ * @returns {Promise<MemoryLinkStore>} Store with 4 links: (1,10), (1,20), (2,10), (2,20)
+ */
+const createPopulatedStore = async () => {
+  const store = new MemoryLinkStore();
+  await store.create(1, 10);
+  await store.create(1, 20);
+  await store.create(2, 10);
+  await store.create(2, 20);
+  return store;
+};
+
 describe('MemoryLinkStore', () => {
-  /** @type {MemoryLinkStore} */
-  let store;
-
-  beforeEach(() => {
-    store = new MemoryLinkStore();
-  });
-
   // ===========================================================================
   // Constructor Tests
   // ===========================================================================
 
   describe('constructor', () => {
     it('should create an empty store', async () => {
+      const store = createStore();
       expect(await store.count()).toBe(0);
     });
 
     it('should initialize with sequential IDs starting from 1', async () => {
+      const store = createStore();
       const link = await store.create(10, 20);
       expect(link.id).toBe(1);
     });
@@ -37,6 +54,7 @@ describe('MemoryLinkStore', () => {
 
   describe('create', () => {
     it('should create a link with auto-generated ID', async () => {
+      const store = createStore();
       const link = await store.create(1, 2);
       expect(link.id).toBe(1);
       expect(link.source).toBe(1);
@@ -44,6 +62,7 @@ describe('MemoryLinkStore', () => {
     });
 
     it('should create sequential IDs', async () => {
+      const store = createStore();
       const link1 = await store.create(1, 2);
       const link2 = await store.create(3, 4);
       const link3 = await store.create(5, 6);
@@ -54,18 +73,21 @@ describe('MemoryLinkStore', () => {
     });
 
     it('should support string sources and targets', async () => {
+      const store = createStore();
       const link = await store.create('hello', 'world');
       expect(link.source).toBe('hello');
       expect(link.target).toBe('world');
     });
 
     it('should support bigint sources and targets', async () => {
+      const store = createStore();
       const link = await store.create(1n, 2n);
       expect(link.source).toBe(1n);
       expect(link.target).toBe(2n);
     });
 
     it('should support nested Link as source', async () => {
+      const store = createStore();
       const inner = createLink(100, 10, 20);
       const link = await store.create(inner, 5);
       expect(link.source).toEqual(inner);
@@ -73,6 +95,7 @@ describe('MemoryLinkStore', () => {
     });
 
     it('should support nested Link as target', async () => {
+      const store = createStore();
       const inner = createLink(100, 10, 20);
       const link = await store.create(5, inner);
       expect(link.source).toBe(5);
@@ -80,6 +103,7 @@ describe('MemoryLinkStore', () => {
     });
 
     it('should freeze the created link', async () => {
+      const store = createStore();
       const link = await store.create(1, 2);
       expect(Object.isFrozen(link)).toBe(true);
     });
@@ -91,6 +115,7 @@ describe('MemoryLinkStore', () => {
 
   describe('deduplication', () => {
     it('should return existing link for identical source/target', async () => {
+      const store = createStore();
       const link1 = await store.create('hello', 'world');
       const link2 = await store.create('hello', 'world');
 
@@ -100,6 +125,7 @@ describe('MemoryLinkStore', () => {
     });
 
     it('should not deduplicate different source/target pairs', async () => {
+      const store = createStore();
       const link1 = await store.create('hello', 'world');
       const link2 = await store.create('hello', 'universe');
 
@@ -108,6 +134,7 @@ describe('MemoryLinkStore', () => {
     });
 
     it('should handle deduplication with number IDs', async () => {
+      const store = createStore();
       const link1 = await store.create(1, 2);
       const link2 = await store.create(1, 2);
 
@@ -116,6 +143,7 @@ describe('MemoryLinkStore', () => {
     });
 
     it('should handle deduplication with bigint IDs', async () => {
+      const store = createStore();
       const link1 = await store.create(1n, 2n);
       const link2 = await store.create(1n, 2n);
 
@@ -124,6 +152,7 @@ describe('MemoryLinkStore', () => {
     });
 
     it('should handle deduplication with mixed ID types', async () => {
+      const store = createStore();
       // Different types should NOT deduplicate
       const link1 = await store.create(1, 2);
       const link2 = await store.create('1', '2');
@@ -133,6 +162,7 @@ describe('MemoryLinkStore', () => {
     });
 
     it('should handle deduplication with nested Link references', async () => {
+      const store = createStore();
       const inner = createLink(100, 10, 20);
       const link1 = await store.create(inner, 5);
       const link2 = await store.create(inner, 5);
@@ -148,6 +178,7 @@ describe('MemoryLinkStore', () => {
 
   describe('createWithValues', () => {
     it('should create a link with additional values', async () => {
+      const store = createStore();
       const link = await store.createWithValues(1, 2, [3, 4, 5]);
       expect(link.id).toBe(1);
       expect(link.source).toBe(1);
@@ -156,6 +187,7 @@ describe('MemoryLinkStore', () => {
     });
 
     it('should NOT deduplicate links with values', async () => {
+      const store = createStore();
       const link1 = await store.createWithValues(1, 2, [3]);
       const link2 = await store.createWithValues(1, 2, [3]);
 
@@ -164,12 +196,14 @@ describe('MemoryLinkStore', () => {
     });
 
     it('should support nested Link values', async () => {
+      const store = createStore();
       const inner = createLink(100, 10, 20);
       const link = await store.createWithValues(1, 2, [inner, 5]);
       expect(link.values).toEqual([inner, 5]);
     });
 
     it('should create link with empty values array', async () => {
+      const store = createStore();
       const link = await store.createWithValues(1, 2, []);
       expect(link.values).toBeUndefined();
     });
@@ -181,6 +215,7 @@ describe('MemoryLinkStore', () => {
 
   describe('get', () => {
     it('should retrieve an existing link by ID', async () => {
+      const store = createStore();
       const created = await store.create(1, 2);
       const retrieved = await store.get(created.id);
 
@@ -188,11 +223,13 @@ describe('MemoryLinkStore', () => {
     });
 
     it('should return null for non-existent ID', async () => {
+      const store = createStore();
       const result = await store.get(999);
       expect(result).toBeNull();
     });
 
     it('should handle string IDs', async () => {
+      const store = createStore();
       await store.create('hello', 'world');
       const link = await store.get(1);
       expect(link).not.toBeNull();
@@ -205,15 +242,18 @@ describe('MemoryLinkStore', () => {
 
   describe('exists', () => {
     it('should return true for existing link', async () => {
+      const store = createStore();
       const link = await store.create(1, 2);
       expect(await store.exists(link.id)).toBe(true);
     });
 
     it('should return false for non-existent link', async () => {
+      const store = createStore();
       expect(await store.exists(999)).toBe(false);
     });
 
     it('should return false after deletion', async () => {
+      const store = createStore();
       const link = await store.create(1, 2);
       await store.delete(link.id);
       expect(await store.exists(link.id)).toBe(false);
@@ -225,31 +265,28 @@ describe('MemoryLinkStore', () => {
   // ===========================================================================
 
   describe('find', () => {
-    beforeEach(async () => {
-      await store.create(1, 10);
-      await store.create(1, 20);
-      await store.create(2, 10);
-      await store.create(2, 20);
-    });
-
     it('should find all links with empty pattern', async () => {
+      const store = await createPopulatedStore();
       const results = await store.find({});
       expect(results.length).toBe(4);
     });
 
     it('should find links by source', async () => {
+      const store = await createPopulatedStore();
       const results = await store.find({ source: 1 });
       expect(results.length).toBe(2);
       expect(results.every((l) => l.source === 1)).toBe(true);
     });
 
     it('should find links by target', async () => {
+      const store = await createPopulatedStore();
       const results = await store.find({ target: 10 });
       expect(results.length).toBe(2);
       expect(results.every((l) => l.target === 10)).toBe(true);
     });
 
     it('should find links by source and target', async () => {
+      const store = await createPopulatedStore();
       const results = await store.find({ source: 1, target: 10 });
       expect(results.length).toBe(1);
       expect(results[0].source).toBe(1);
@@ -257,29 +294,34 @@ describe('MemoryLinkStore', () => {
     });
 
     it('should find links by id', async () => {
+      const store = await createPopulatedStore();
       const results = await store.find({ id: 1 });
       expect(results.length).toBe(1);
       expect(results[0].id).toBe(1);
     });
 
     it('should find links with Any wildcard for source', async () => {
+      const store = await createPopulatedStore();
       const results = await store.find({ source: Any, target: 10 });
       expect(results.length).toBe(2);
       expect(results.every((l) => l.target === 10)).toBe(true);
     });
 
     it('should find links with Any wildcard for target', async () => {
+      const store = await createPopulatedStore();
       const results = await store.find({ source: 1, target: Any });
       expect(results.length).toBe(2);
       expect(results.every((l) => l.source === 1)).toBe(true);
     });
 
     it('should find all links with Any wildcards', async () => {
+      const store = await createPopulatedStore();
       const results = await store.find({ source: Any, target: Any });
       expect(results.length).toBe(4);
     });
 
     it('should return empty array for no matches', async () => {
+      const store = await createPopulatedStore();
       const results = await store.find({ source: 999 });
       expect(results.length).toBe(0);
     });
@@ -291,10 +333,12 @@ describe('MemoryLinkStore', () => {
 
   describe('count', () => {
     it('should return 0 for empty store', async () => {
+      const store = createStore();
       expect(await store.count()).toBe(0);
     });
 
     it('should return total count without pattern', async () => {
+      const store = createStore();
       await store.create(1, 2);
       await store.create(3, 4);
       await store.create(5, 6);
@@ -302,21 +346,18 @@ describe('MemoryLinkStore', () => {
     });
 
     it('should return count matching pattern', async () => {
-      await store.create(1, 10);
-      await store.create(1, 20);
-      await store.create(2, 10);
+      const store = await createPopulatedStore();
       expect(await store.count({ source: 1 })).toBe(2);
     });
 
     it('should return 0 for no matches', async () => {
+      const store = createStore();
       await store.create(1, 2);
       expect(await store.count({ source: 999 })).toBe(0);
     });
 
     it('should count with Any wildcard', async () => {
-      await store.create(1, 10);
-      await store.create(1, 20);
-      await store.create(2, 10);
+      const store = await createPopulatedStore();
       expect(await store.count({ source: Any, target: 10 })).toBe(2);
     });
   });
@@ -327,6 +368,7 @@ describe('MemoryLinkStore', () => {
 
   describe('update', () => {
     it('should update source and target', async () => {
+      const store = createStore();
       const link = await store.create(1, 2);
       const updated = await store.update(link.id, 10, 20);
 
@@ -336,6 +378,7 @@ describe('MemoryLinkStore', () => {
     });
 
     it('should update deduplication index', async () => {
+      const store = createStore();
       const link = await store.create(1, 2);
       await store.update(link.id, 10, 20);
 
@@ -349,6 +392,7 @@ describe('MemoryLinkStore', () => {
     });
 
     it('should preserve values when updating', async () => {
+      const store = createStore();
       const link = await store.createWithValues(1, 2, [3, 4]);
       const updated = await store.update(link.id, 10, 20);
 
@@ -356,6 +400,7 @@ describe('MemoryLinkStore', () => {
     });
 
     it('should throw for non-existent ID', async () => {
+      const store = createStore();
       let thrownError = null;
       try {
         await store.update(999, 1, 2);
@@ -367,6 +412,7 @@ describe('MemoryLinkStore', () => {
     });
 
     it('should freeze the updated link', async () => {
+      const store = createStore();
       const link = await store.create(1, 2);
       const updated = await store.update(link.id, 10, 20);
       expect(Object.isFrozen(updated)).toBe(true);
@@ -379,6 +425,7 @@ describe('MemoryLinkStore', () => {
 
   describe('delete', () => {
     it('should delete an existing link', async () => {
+      const store = createStore();
       const link = await store.create(1, 2);
       const result = await store.delete(link.id);
 
@@ -388,11 +435,13 @@ describe('MemoryLinkStore', () => {
     });
 
     it('should return false for non-existent ID', async () => {
+      const store = createStore();
       const result = await store.delete(999);
       expect(result).toBe(false);
     });
 
     it('should remove from deduplication index', async () => {
+      const store = createStore();
       const link = await store.create(1, 2);
       await store.delete(link.id);
 
@@ -402,6 +451,7 @@ describe('MemoryLinkStore', () => {
     });
 
     it('should handle deletion of link with values', async () => {
+      const store = createStore();
       const link = await store.createWithValues(1, 2, [3, 4]);
       const result = await store.delete(link.id);
 
@@ -415,38 +465,36 @@ describe('MemoryLinkStore', () => {
   // ===========================================================================
 
   describe('deleteMatching', () => {
-    beforeEach(async () => {
-      await store.create(1, 10);
-      await store.create(1, 20);
-      await store.create(2, 10);
-      await store.create(2, 20);
-    });
-
     it('should delete all matching links', async () => {
+      const store = await createPopulatedStore();
       const count = await store.deleteMatching({ source: 1 });
       expect(count).toBe(2);
       expect(await store.count()).toBe(2);
     });
 
     it('should return 0 for no matches', async () => {
+      const store = await createPopulatedStore();
       const count = await store.deleteMatching({ source: 999 });
       expect(count).toBe(0);
       expect(await store.count()).toBe(4);
     });
 
     it('should delete all with empty pattern', async () => {
+      const store = await createPopulatedStore();
       const count = await store.deleteMatching({});
       expect(count).toBe(4);
       expect(await store.count()).toBe(0);
     });
 
     it('should delete with Any wildcard', async () => {
+      const store = await createPopulatedStore();
       const count = await store.deleteMatching({ source: Any, target: 10 });
       expect(count).toBe(2);
       expect(await store.count()).toBe(2);
     });
 
     it('should update deduplication index after deletion', async () => {
+      const store = await createPopulatedStore();
       await store.deleteMatching({ source: 1, target: 10 });
 
       // Should be able to create a new link with deleted source/target
@@ -460,13 +508,12 @@ describe('MemoryLinkStore', () => {
   // ===========================================================================
 
   describe('iterate', () => {
-    beforeEach(async () => {
+    it('should iterate over all links without pattern', async () => {
+      const store = createStore();
       await store.create(1, 10);
       await store.create(1, 20);
       await store.create(2, 10);
-    });
 
-    it('should iterate over all links without pattern', async () => {
       const links = [];
       for await (const link of store.iterate()) {
         links.push(link);
@@ -475,6 +522,11 @@ describe('MemoryLinkStore', () => {
     });
 
     it('should iterate over matching links', async () => {
+      const store = createStore();
+      await store.create(1, 10);
+      await store.create(1, 20);
+      await store.create(2, 10);
+
       const links = [];
       for await (const link of store.iterate({ source: 1 })) {
         links.push(link);
@@ -484,15 +536,20 @@ describe('MemoryLinkStore', () => {
     });
 
     it('should iterate over empty store', async () => {
-      const emptyStore = new MemoryLinkStore();
+      const store = createStore();
       const links = [];
-      for await (const link of emptyStore.iterate()) {
+      for await (const link of store.iterate()) {
         links.push(link);
       }
       expect(links.length).toBe(0);
     });
 
     it('should iterate with Any wildcard', async () => {
+      const store = createStore();
+      await store.create(1, 10);
+      await store.create(1, 20);
+      await store.create(2, 10);
+
       const links = [];
       for await (const link of store.iterate({ source: Any, target: 10 })) {
         links.push(link);
@@ -501,6 +558,11 @@ describe('MemoryLinkStore', () => {
     });
 
     it('should return no results for non-matching pattern', async () => {
+      const store = createStore();
+      await store.create(1, 10);
+      await store.create(1, 20);
+      await store.create(2, 10);
+
       const links = [];
       for await (const link of store.iterate({ source: 999 })) {
         links.push(link);
@@ -515,6 +577,7 @@ describe('MemoryLinkStore', () => {
 
   describe('clear', () => {
     it('should remove all links', async () => {
+      const store = createStore();
       await store.create(1, 2);
       await store.create(3, 4);
       await store.create(5, 6);
@@ -525,6 +588,7 @@ describe('MemoryLinkStore', () => {
     });
 
     it('should reset ID counter', async () => {
+      const store = createStore();
       await store.create(1, 2);
       await store.create(3, 4);
 
@@ -535,6 +599,7 @@ describe('MemoryLinkStore', () => {
     });
 
     it('should clear deduplication index', async () => {
+      const store = createStore();
       const link = await store.create(1, 2);
       const originalId = link.id;
 
@@ -547,6 +612,7 @@ describe('MemoryLinkStore', () => {
     });
 
     it('should work on empty store', async () => {
+      const store = createStore();
       await store.clear();
       expect(await store.count()).toBe(0);
     });
@@ -558,23 +624,27 @@ describe('MemoryLinkStore', () => {
 
   describe('edge cases', () => {
     it('should handle empty string IDs', async () => {
+      const store = createStore();
       const link = await store.create('', 'target');
       expect(link.source).toBe('');
     });
 
     it('should handle zero as source/target', async () => {
+      const store = createStore();
       const link = await store.create(0, 0);
       expect(link.source).toBe(0);
       expect(link.target).toBe(0);
     });
 
     it('should handle negative numbers', async () => {
+      const store = createStore();
       const link = await store.create(-1, -2);
       expect(link.source).toBe(-1);
       expect(link.target).toBe(-2);
     });
 
     it('should handle very large bigints', async () => {
+      const store = createStore();
       const bigSource = 9007199254740993n;
       const bigTarget = 9007199254740994n;
       const link = await store.create(bigSource, bigTarget);
@@ -583,12 +653,14 @@ describe('MemoryLinkStore', () => {
     });
 
     it('should handle self-referential links', async () => {
+      const store = createStore();
       const link = await store.create(1, 1);
       expect(link.source).toBe(1);
       expect(link.target).toBe(1);
     });
 
     it('should handle deeply nested links', async () => {
+      const store = createStore();
       const level3 = createLink(3, 30, 31);
       const level2 = createLink(2, level3, 21);
       const level1 = await store.create(level2, 10);
@@ -597,6 +669,7 @@ describe('MemoryLinkStore', () => {
     });
 
     it('should handle concurrent creates', async () => {
+      const store = createStore();
       const promises = [];
       for (let i = 0; i < 100; i++) {
         promises.push(store.create(i, i + 1));
