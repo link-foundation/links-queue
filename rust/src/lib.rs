@@ -8,6 +8,7 @@
 //! - **Link**: A directed relationship from source to target, identified by a unique ID.
 //! - **`LinkStore`**: A storage backend for managing links with CRUD operations.
 //! - **`LinkPattern`**: A pattern for querying links with wildcard support.
+//! - **[`MemoryLinkStore`]**: In-memory storage backend with O(1) lookups.
 //!
 //! # Design Goals
 //!
@@ -34,17 +35,39 @@
 //! let pattern = LinkPattern::with_source(LinkRef::Id(2u64));
 //! assert!(pattern.matches(&Link::new(1u64, LinkRef::Id(2), LinkRef::Id(3))));
 //! ```
+//!
+//! # Using the In-Memory Backend
+//!
+//! ```rust
+//! use links_queue::{MemoryLinkStore, LinkStore, LinkRef, LinkPattern};
+//!
+//! let mut store = MemoryLinkStore::<u64>::new();
+//!
+//! // Create a link
+//! let link = store.create(LinkRef::Id(2), LinkRef::Id(3)).unwrap();
+//! println!("Created link: {:?}", link); // Link { id: 1, source: Id(2), target: Id(3) }
+//!
+//! // Deduplication - same structure returns existing link
+//! let duplicate = store.create(LinkRef::Id(2), LinkRef::Id(3)).unwrap();
+//! assert_eq!(duplicate.id, link.id);
+//!
+//! // Find links by pattern
+//! let results = store.find(&LinkPattern::with_source(LinkRef::Id(2)));
+//! assert_eq!(results.len(), 1);
+//! ```
 
 // =============================================================================
 // Module Declarations
 // =============================================================================
 
+pub mod backends;
 mod traits;
 
 // =============================================================================
 // Public Re-exports
 // =============================================================================
 
+pub use backends::MemoryLinkStore;
 pub use traits::{
     Any, Link, LinkError, LinkPattern, LinkRef, LinkResult, LinkStore, LinkType, PatternField,
 };

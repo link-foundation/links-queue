@@ -50,6 +50,12 @@ pub trait LinkType:
 
     /// Checks if this value represents "nothing" (typically zero).
     fn is_nothing(&self) -> bool;
+
+    /// Increments this value by one and returns the result.
+    ///
+    /// This is used for auto-generating unique IDs in storage backends.
+    #[must_use]
+    fn increment(self) -> Self;
 }
 
 // Implement LinkType for common numeric types
@@ -65,6 +71,11 @@ macro_rules! impl_link_type {
                 #[inline]
                 fn is_nothing(&self) -> bool {
                     *self == 0
+                }
+
+                #[inline]
+                fn increment(self) -> Self {
+                    self.wrapping_add(1)
                 }
             }
         )*
@@ -726,12 +737,15 @@ pub trait LinkStore<T: LinkType>: Send + Sync {
     /// # Returns
     ///
     /// Iterator of references to matching links.
-    fn iter(&self, pattern: &LinkPattern<T>) -> Box<dyn Iterator<Item = &Link<T>> + '_>;
+    fn iter<'a>(
+        &'a self,
+        pattern: &'a LinkPattern<T>,
+    ) -> Box<dyn Iterator<Item = &'a Link<T>> + 'a>;
 
     /// Returns an iterator over all links.
-    fn iter_all(&self) -> Box<dyn Iterator<Item = &Link<T>> + '_> {
-        self.iter(&LinkPattern::all())
-    }
+    ///
+    /// This is equivalent to calling `iter` with `LinkPattern::all()`.
+    fn iter_all(&self) -> Box<dyn Iterator<Item = &Link<T>> + '_>;
 }
 
 // =============================================================================
