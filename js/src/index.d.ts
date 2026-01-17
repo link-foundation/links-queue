@@ -167,6 +167,23 @@ export declare const delay: (ms: number) => Promise<void>;
 export { MemoryLinkStore } from './backends/memory.d.ts';
 
 // =============================================================================
+// Queue Exports
+// =============================================================================
+
+export {
+  EnqueueResult,
+  QueueStats,
+  QueueOptions,
+  Queue,
+  QueueInfo,
+  QueueManager,
+  QueueErrorCode,
+  QueueError,
+  QueueHandler,
+  QueueSubscription,
+} from './queue/index.d.ts';
+
+// =============================================================================
 // Protocol Exports
 // =============================================================================
 

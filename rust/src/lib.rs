@@ -9,6 +9,8 @@
 //! - **`LinkStore`**: A storage backend for managing links with CRUD operations.
 //! - **`LinkPattern`**: A pattern for querying links with wildcard support.
 //! - **[`MemoryLinkStore`]**: In-memory storage backend with O(1) lookups.
+//! - **[`Queue`]**: A message queue built on top of Links for queue operations.
+//! - **[`QueueManager`]**: Manager for creating and managing queue instances.
 //!
 //! # Design Goals
 //!
@@ -61,6 +63,7 @@
 // =============================================================================
 
 pub mod backends;
+pub mod queue;
 mod traits;
 
 // =============================================================================
@@ -68,6 +71,10 @@ mod traits;
 // =============================================================================
 
 pub use backends::MemoryLinkStore;
+pub use queue::{
+    EnqueueResult, Queue, QueueError, QueueErrorCode, QueueInfo, QueueManager, QueueOptions,
+    QueueResult, QueueStats,
+};
 pub use traits::{
     Any, Link, LinkError, LinkPattern, LinkRef, LinkResult, LinkStore, LinkType, PatternField,
 };
