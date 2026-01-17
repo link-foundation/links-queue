@@ -32,23 +32,23 @@
 mod traits;
 
 pub use traits::{
-    // Traits
-    ClusterCoordinator,
-    ClusterNode,
-    ReplicationManager,
-    // Event types
-    ClusterEvent,
-    // Status and mode enums
-    NodeStatus,
-    SyncMode,
-    DiscoveryMethod,
     // Configuration types
     ClusterConfig,
-    ReplicationConfig,
-    // Statistics
-    ClusterStats,
+    // Traits
+    ClusterCoordinator,
     // Error types
     ClusterError,
     ClusterErrorCode,
+    // Event types
+    ClusterEvent,
+    ClusterNode,
     ClusterResult,
+    // Statistics
+    ClusterStats,
+    DiscoveryMethod,
+    // Status and mode enums
+    NodeStatus,
+    ReplicationConfig,
+    ReplicationManager,
+    SyncMode,
 };

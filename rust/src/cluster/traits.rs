@@ -823,7 +823,10 @@ impl ClusterError {
     #[inline]
     #[must_use]
     pub fn already_joined() -> Self {
-        Self::new(ClusterErrorCode::AlreadyJoined, "Already joined to a cluster")
+        Self::new(
+            ClusterErrorCode::AlreadyJoined,
+            "Already joined to a cluster",
+        )
     }
 
     /// Creates a "node not found" error.
@@ -1009,10 +1012,7 @@ mod tests {
             assert_eq!(config.suspect_threshold, 5);
             assert_eq!(config.dead_threshold, 10);
             assert_eq!(config.node_id, Some("my-node".to_string()));
-            assert_eq!(
-                config.advertise_address,
-                Some("192.168.1.1".to_string())
-            );
+            assert_eq!(config.advertise_address, Some("192.168.1.1".to_string()));
             assert_eq!(config.advertise_port, Some(5001));
         }
 

@@ -89,8 +89,8 @@ pub use backends::{
 // Re-export cluster types
 pub use cluster::{
     ClusterConfig, ClusterCoordinator, ClusterError, ClusterErrorCode, ClusterEvent, ClusterNode,
-    ClusterResult, ClusterStats, DiscoveryMethod, NodeStatus, ReplicationConfig, ReplicationManager,
-    SyncMode,
+    ClusterResult, ClusterStats, DiscoveryMethod, NodeStatus, ReplicationConfig,
+    ReplicationManager, SyncMode,
 };
 
 // =============================================================================
