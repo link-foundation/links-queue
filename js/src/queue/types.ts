@@ -17,7 +17,7 @@
  * @see REQUIREMENTS.md - REQ-API-001 through REQ-API-022
  */
 
-import type { Link, LinkId } from '../types.js';
+import type { Link, LinkId } from '../index.d.ts';
 
 // =============================================================================
 // Queue Result Types

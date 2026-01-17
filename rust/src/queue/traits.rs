@@ -144,6 +144,7 @@ impl QueueStats {
 ///     .with_priority(true);
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Default)]
 pub struct QueueOptions {
     /// Maximum queue depth. Enqueue operations will fail if this limit is reached.
     /// Defaults to `usize::MAX` (unlimited).
@@ -160,7 +161,7 @@ pub struct QueueOptions {
     pub retry_limit: Option<u32>,
 
     /// Name of the dead letter queue for failed messages.
-    /// If not specified, failed messages after retry_limit are dropped.
+    /// If not specified, failed messages after `retry_limit` are dropped.
     pub dead_letter_queue: Option<String>,
 
     /// Enable priority ordering. When true, items with lower source ID values
@@ -169,17 +170,6 @@ pub struct QueueOptions {
     pub priority: Option<bool>,
 }
 
-impl Default for QueueOptions {
-    fn default() -> Self {
-        Self {
-            max_size: None,
-            visibility_timeout: None,
-            retry_limit: None,
-            dead_letter_queue: None,
-            priority: None,
-        }
-    }
-}
 
 impl QueueOptions {
     /// Creates new `QueueOptions` with all defaults.
@@ -229,21 +219,21 @@ impl QueueOptions {
         self
     }
 
-    /// Returns the max_size or the default value.
+    /// Returns the `max_size` or the default value.
     #[inline]
     #[must_use]
     pub fn max_size_or_default(&self) -> usize {
         self.max_size.unwrap_or(usize::MAX)
     }
 
-    /// Returns the visibility_timeout or the default value (30 seconds).
+    /// Returns the `visibility_timeout` or the default value (30 seconds).
     #[inline]
     #[must_use]
     pub fn visibility_timeout_or_default(&self) -> u64 {
         self.visibility_timeout.unwrap_or(30)
     }
 
-    /// Returns the retry_limit or the default value (3).
+    /// Returns the `retry_limit` or the default value (3).
     #[inline]
     #[must_use]
     pub fn retry_limit_or_default(&self) -> u32 {
@@ -329,7 +319,7 @@ impl QueueError {
     pub fn queue_full(queue_name: &str) -> Self {
         Self::new(
             QueueErrorCode::QueueFull,
-            format!("Queue '{}' is at maximum capacity", queue_name),
+            format!("Queue '{queue_name}' is at maximum capacity"),
         )
     }
 
@@ -339,7 +329,7 @@ impl QueueError {
     pub fn queue_not_found(queue_name: &str) -> Self {
         Self::new(
             QueueErrorCode::QueueNotFound,
-            format!("Queue '{}' not found", queue_name),
+            format!("Queue '{queue_name}' not found"),
         )
     }
 
@@ -349,7 +339,7 @@ impl QueueError {
     pub fn queue_already_exists(queue_name: &str) -> Self {
         Self::new(
             QueueErrorCode::QueueAlreadyExists,
-            format!("Queue '{}' already exists", queue_name),
+            format!("Queue '{queue_name}' already exists"),
         )
     }
 
@@ -359,7 +349,7 @@ impl QueueError {
     pub fn item_not_found<T: Debug>(item_id: T) -> Self {
         Self::new(
             QueueErrorCode::ItemNotFound,
-            format!("Item with ID {:?} not found", item_id),
+            format!("Item with ID {item_id:?} not found"),
         )
     }
 
@@ -369,7 +359,7 @@ impl QueueError {
     pub fn item_not_in_flight<T: Debug>(item_id: T) -> Self {
         Self::new(
             QueueErrorCode::ItemNotInFlight,
-            format!("Item with ID {:?} is not in flight", item_id),
+            format!("Item with ID {item_id:?} is not in flight"),
         )
     }
 }
@@ -395,7 +385,7 @@ pub type QueueResult<T> = Result<T, QueueError>;
 /// Link data model. Each queue item is represented as a Link.
 ///
 /// The design follows the message queue patterns established by systems like
-/// RabbitMQ and SQS, adapted for the link-based data model.
+/// `RabbitMQ` and SQS, adapted for the link-based data model.
 ///
 /// # Type Parameters
 ///
@@ -486,7 +476,7 @@ pub trait Queue<T: LinkType>: Send + Sync {
     /// Rejects a dequeued item, optionally requeuing it.
     ///
     /// If requeue is true, the item is placed back in the queue for redelivery.
-    /// The delivery count is incremented. If the delivery count exceeds retry_limit,
+    /// The delivery count is incremented. If the delivery count exceeds `retry_limit`,
     /// the item is moved to the dead letter queue (if configured) or dropped.
     ///
     /// If requeue is false, the item is permanently removed.
@@ -552,7 +542,8 @@ pub struct QueueInfo {
 impl QueueInfo {
     /// Creates a new `QueueInfo`.
     #[inline]
-    pub fn new(name: String, depth: usize, created_at: u64, options: QueueOptions) -> Self {
+    #[must_use] 
+    pub const fn new(name: String, depth: usize, created_at: u64, options: QueueOptions) -> Self {
         Self {
             name,
             depth,
@@ -791,7 +782,7 @@ mod tests {
         #[test]
         fn test_queue_error_display() {
             let err = QueueError::queue_full("my-queue");
-            let display = format!("{}", err);
+            let display = format!("{err}");
             assert!(display.contains("QUEUE_FULL"));
             assert!(display.contains("my-queue"));
         }
@@ -805,12 +796,12 @@ mod tests {
             let info = QueueInfo::new(
                 "test-queue".to_string(),
                 100,
-                1704067200000,
+                1_704_067_200_000,
                 QueueOptions::new().with_max_size(1000),
             );
             assert_eq!(info.name, "test-queue");
             assert_eq!(info.depth, 100);
-            assert_eq!(info.created_at, 1704067200000);
+            assert_eq!(info.created_at, 1_704_067_200_000);
             assert_eq!(info.options.max_size, Some(1000));
         }
     }

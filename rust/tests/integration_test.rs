@@ -479,7 +479,7 @@ mod queue_error_tests {
     #[test]
     fn test_queue_error_display() {
         let err = QueueError::queue_full("my-queue");
-        let display = format!("{}", err);
+        let display = format!("{err}");
         assert!(display.contains("QUEUE_FULL"));
         assert!(display.contains("my-queue"));
     }
@@ -497,11 +497,11 @@ mod queue_info_tests {
     #[test]
     fn test_queue_info_creation() {
         let options = QueueOptions::new().with_max_size(1000);
-        let info = QueueInfo::new("tasks".to_string(), 42, 1704067200000, options);
+        let info = QueueInfo::new("tasks".to_string(), 42, 1_704_067_200_000, options);
 
         assert_eq!(info.name, "tasks");
         assert_eq!(info.depth, 42);
-        assert_eq!(info.created_at, 1704067200000);
+        assert_eq!(info.created_at, 1_704_067_200_000);
         assert_eq!(info.options.max_size, Some(1000));
     }
 }
@@ -578,7 +578,7 @@ mod queue_trait_contract_tests {
 mod api_parity_tests {
     use super::*;
 
-    /// Verify that QueueStats has all required fields matching JS interface
+    /// Verify that `QueueStats` has all required fields matching JS interface
     #[test]
     fn test_queue_stats_matches_js_interface() {
         let stats = QueueStats {
@@ -599,7 +599,7 @@ mod api_parity_tests {
         let _ = stats.in_flight;
     }
 
-    /// Verify that QueueOptions has all optional fields matching JS interface
+    /// Verify that `QueueOptions` has all optional fields matching JS interface
     #[test]
     fn test_queue_options_matches_js_interface() {
         let options = QueueOptions {
@@ -618,7 +618,7 @@ mod api_parity_tests {
         let _ = options.priority;
     }
 
-    /// Verify that EnqueueResult has all required fields matching JS interface
+    /// Verify that `EnqueueResult` has all required fields matching JS interface
     #[test]
     fn test_enqueue_result_matches_js_interface() {
         let result = EnqueueResult::new(1u64, 0);
@@ -628,7 +628,7 @@ mod api_parity_tests {
         let _ = result.position;
     }
 
-    /// Verify that QueueInfo has all required fields matching JS interface
+    /// Verify that `QueueInfo` has all required fields matching JS interface
     #[test]
     fn test_queue_info_matches_js_interface() {
         let info = QueueInfo::new("test".to_string(), 0, 0, QueueOptions::default());
@@ -640,7 +640,7 @@ mod api_parity_tests {
         let _ = info.options;
     }
 
-    /// Verify that QueueError codes match JS error codes
+    /// Verify that `QueueError` codes match JS error codes
     #[test]
     fn test_queue_error_codes_match_js() {
         // These should match the JS QueueErrorCode type
