@@ -175,3 +175,34 @@ export const delay = (ms) =>
 // =============================================================================
 
 export { MemoryLinkStore } from './backends/memory.js';
+
+// =============================================================================
+// Protocol Exports
+// =============================================================================
+
+export {
+  LinksNotation,
+  NotationParser,
+  NotationStreamParser,
+  NotationParseError,
+} from './protocol/notation.js';
+
+export {
+  Message,
+  MessageBuilder,
+  RequestType,
+  ResponseStatus,
+  ErrorCode,
+  createOkResponse,
+  createErrorResponse,
+  createEnqueueRequest,
+  createDequeueRequest,
+  createPeekRequest,
+  createAckRequest,
+  createRejectRequest,
+  createQueryRequest,
+  createGetStatsRequest,
+  createListQueuesRequest,
+  createCreateQueueRequest,
+  createDeleteQueueRequest,
+} from './protocol/messages.js';
