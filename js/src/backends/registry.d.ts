@@ -11,7 +11,7 @@ import type {
   BackendStats,
   MemoryBackendOptions,
 } from './types.ts';
-import type { Link, LinkId, LinkPattern } from '../index.d.ts';
+import type { Link, LinkId, LinkPattern } from '../types.ts';
 
 /**
  * Memory backend adapter that wraps MemoryLinkStore with StorageBackend interface.

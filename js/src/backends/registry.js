@@ -94,8 +94,8 @@ class MemoryBackendAdapter {
   /**
    * Saves a link to storage.
    *
-   * @param {import('../types.js').Link} link - The link to save
-   * @returns {Promise<import('../types.js').LinkId>}
+   * @param {import('../index.js').Link} link - The link to save
+   * @returns {Promise<import('../index.js').LinkId>}
    */
   async save(link) {
     this._ensureConnected();
@@ -139,8 +139,8 @@ class MemoryBackendAdapter {
   /**
    * Loads a link by ID.
    *
-   * @param {import('../types.js').LinkId} id - The link ID
-   * @returns {Promise<import('../types.js').Link | null>}
+   * @param {import('../index.js').LinkId} id - The link ID
+   * @returns {Promise<import('../index.js').Link | null>}
    */
   // eslint-disable-next-line require-await
   async load(id) {
@@ -152,7 +152,7 @@ class MemoryBackendAdapter {
   /**
    * Deletes a link by ID.
    *
-   * @param {import('../types.js').LinkId} id - The link ID
+   * @param {import('../index.js').LinkId} id - The link ID
    * @returns {Promise<boolean>}
    */
   // eslint-disable-next-line require-await
@@ -165,8 +165,8 @@ class MemoryBackendAdapter {
   /**
    * Queries links by pattern.
    *
-   * @param {import('../types.js').LinkPattern} pattern - The pattern to match
-   * @returns {Promise<import('../types.js').Link[]>}
+   * @param {import('../index.js').LinkPattern} pattern - The pattern to match
+   * @returns {Promise<import('../index.js').Link[]>}
    */
   // eslint-disable-next-line require-await
   async query(pattern) {
@@ -178,8 +178,8 @@ class MemoryBackendAdapter {
   /**
    * Saves multiple links in batch.
    *
-   * @param {readonly import('../types.js').Link[]} links - Links to save
-   * @returns {Promise<import('../types.js').LinkId[]>}
+   * @param {readonly import('../index.js').Link[]} links - Links to save
+   * @returns {Promise<import('../index.js').LinkId[]>}
    */
   async saveBatch(links) {
     this._ensureConnected();
@@ -194,7 +194,7 @@ class MemoryBackendAdapter {
   /**
    * Deletes multiple links in batch.
    *
-   * @param {readonly import('../types.js').LinkId[]} ids - IDs to delete
+   * @param {readonly import('../index.js').LinkId[]} ids - IDs to delete
    * @returns {Promise<boolean[]>}
    */
   async deleteBatch(ids) {

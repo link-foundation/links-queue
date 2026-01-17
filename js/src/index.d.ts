@@ -181,6 +181,9 @@ export type {
   BackendFactory,
 } from './backends/types.ts';
 
-export { BackendRegistry, MemoryBackendAdapter } from './backends/registry.d.ts';
+export {
+  BackendRegistry,
+  MemoryBackendAdapter,
+} from './backends/registry.d.ts';
 
 export type { BackendRegistryInterface } from './backends/registry.d.ts';
