@@ -413,4 +413,7 @@ export type LinkResult<T> =
 // Re-exports for convenience
 // =============================================================================
 
-export type { Link as ILink } from './types.js';
+/**
+ * @deprecated Use Link instead. ILink is provided for backward compatibility.
+ */
+export type ILink = Link;
