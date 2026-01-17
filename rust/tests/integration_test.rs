@@ -439,7 +439,10 @@ mod queue_error_tests {
             format!("{}", QueueErrorCode::QueueAlreadyExists),
             "QUEUE_ALREADY_EXISTS"
         );
-        assert_eq!(format!("{}", QueueErrorCode::ItemNotFound), "ITEM_NOT_FOUND");
+        assert_eq!(
+            format!("{}", QueueErrorCode::ItemNotFound),
+            "ITEM_NOT_FOUND"
+        );
         assert_eq!(
             format!("{}", QueueErrorCode::ItemNotInFlight),
             "ITEM_NOT_IN_FLIGHT"
@@ -628,12 +631,7 @@ mod api_parity_tests {
     /// Verify that QueueInfo has all required fields matching JS interface
     #[test]
     fn test_queue_info_matches_js_interface() {
-        let info = QueueInfo::new(
-            "test".to_string(),
-            0,
-            0,
-            QueueOptions::default(),
-        );
+        let info = QueueInfo::new("test".to_string(), 0, 0, QueueOptions::default());
 
         // All fields from JS interface are present
         let _ = info.name;
@@ -655,7 +653,10 @@ mod api_parity_tests {
             format!("{}", QueueErrorCode::QueueAlreadyExists),
             "QUEUE_ALREADY_EXISTS"
         );
-        assert_eq!(format!("{}", QueueErrorCode::ItemNotFound), "ITEM_NOT_FOUND");
+        assert_eq!(
+            format!("{}", QueueErrorCode::ItemNotFound),
+            "ITEM_NOT_FOUND"
+        );
         assert_eq!(
             format!("{}", QueueErrorCode::ItemNotInFlight),
             "ITEM_NOT_IN_FLIGHT"

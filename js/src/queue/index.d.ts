@@ -18,4 +18,4 @@ export {
   QueueError,
   QueueHandler,
   QueueSubscription,
-} from './types.js';
+} from './types.ts';

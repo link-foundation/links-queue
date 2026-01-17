@@ -635,8 +635,10 @@ pub trait QueueManager<T: LinkType, Q: Queue<T>>: Send + Sync {
     /// # Returns
     ///
     /// `true` if the queue was deleted, `false` if not found.
-    fn delete_queue(&self, name: &str)
-        -> impl std::future::Future<Output = QueueResult<bool>> + Send;
+    fn delete_queue(
+        &self,
+        name: &str,
+    ) -> impl std::future::Future<Output = QueueResult<bool>> + Send;
 
     /// Retrieves an existing queue by name.
     ///
@@ -753,7 +755,10 @@ mod tests {
                 format!("{}", QueueErrorCode::QueueAlreadyExists),
                 "QUEUE_ALREADY_EXISTS"
             );
-            assert_eq!(format!("{}", QueueErrorCode::ItemNotFound), "ITEM_NOT_FOUND");
+            assert_eq!(
+                format!("{}", QueueErrorCode::ItemNotFound),
+                "ITEM_NOT_FOUND"
+            );
             assert_eq!(
                 format!("{}", QueueErrorCode::ItemNotInFlight),
                 "ITEM_NOT_IN_FLIGHT"
