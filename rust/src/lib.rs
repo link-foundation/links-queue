@@ -72,6 +72,12 @@ pub use traits::{
     Any, Link, LinkError, LinkPattern, LinkRef, LinkResult, LinkStore, LinkType, PatternField,
 };
 
+// Re-export storage backend types
+pub use backends::{
+    BackendCapabilities, BackendConfig, BackendError, BackendRegistry, BackendResult, BackendStats,
+    DurabilityLevel, MemoryBackend, OperationStats, StorageBackend, StorageBackendDyn,
+};
+
 // =============================================================================
 // Package Version
 // =============================================================================

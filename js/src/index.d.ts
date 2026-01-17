@@ -165,3 +165,22 @@ export declare const delay: (ms: number) => Promise<void>;
 // =============================================================================
 
 export { MemoryLinkStore } from './backends/memory.d.ts';
+
+// Storage backend interface and registry
+export type {
+  StorageBackend,
+  BackendCapabilities,
+  BackendStats,
+  OperationStats,
+  DurabilityLevel,
+  BackendOptions,
+  MemoryBackendOptions,
+  LinkCliBackendOptions,
+  CustomBackendOptions,
+  BackendConstructor,
+  BackendFactory,
+} from './backends/types.js';
+
+export { BackendRegistry, MemoryBackendAdapter } from './backends/registry.js';
+
+export type { BackendRegistryInterface } from './backends/registry.d.ts';

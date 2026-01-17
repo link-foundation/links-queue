@@ -175,3 +175,6 @@ export const delay = (ms) =>
 // =============================================================================
 
 export { MemoryLinkStore } from './backends/memory.js';
+
+// Storage backend interface and registry
+export { BackendRegistry, MemoryBackendAdapter } from './backends/registry.js';
