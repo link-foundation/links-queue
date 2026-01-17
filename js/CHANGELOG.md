@@ -1,5 +1,28 @@
 # links-queue-js
 
+## 0.5.0
+
+### Minor Changes
+
+- 20a50af: Integrate links-notation library for parsing and serialization
+  - Add `links-notation` as a production dependency
+  - Add `LinksNotation` class with `parse()` and `stringify()` methods
+  - Add `NotationParser` for custom parser configurations
+  - Add `NotationStreamParser` for streaming large inputs
+  - Add `NotationParseError` for detailed parse error information
+  - Add protocol message types (`RequestType`, `ResponseStatus`, `ErrorCode`)
+  - Add `Message` and `MessageBuilder` classes for protocol communication
+  - Add helper functions for creating request/response messages
+  - Full TypeScript type definitions for all new exports
+  - Comprehensive unit tests for parsing, serialization, and messages
+
+- 1f1be69: Add pluggable StorageBackend interface for switching between storage backends via configuration
+  - Add `StorageBackend` interface with lifecycle, CRUD, batch, and metadata operations
+  - Add `BackendCapabilities` and `BackendStats` types for backend introspection
+  - Add `MemoryBackendAdapter` wrapping `MemoryLinkStore` with `StorageBackend` interface
+  - Add `BackendRegistry` for registering and creating backends by configuration
+  - Add comprehensive tests for backend registry and adapter
+
 ## 0.4.0
 
 ### Minor Changes
