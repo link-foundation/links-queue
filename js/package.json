@@ -63,5 +63,8 @@
       "prettier --write",
       "prettier --check"
     ]
+  },
+  "dependencies": {
+    "links-notation": "^0.13.0"
   }
 }

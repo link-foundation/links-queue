@@ -204,3 +204,47 @@ export {
   QueueHandler,
   QueueSubscription,
 } from './queue/index.d.ts';
+
+// =============================================================================
+// Protocol Exports
+// =============================================================================
+
+export {
+  LinksNotation,
+  NotationParser,
+  NotationStreamParser,
+  NotationParseError,
+  ParseOptions,
+  StringifyOptions,
+  ParserOptions,
+  StreamParserOptions,
+  ParseLocation,
+  StreamParserEvent,
+  StreamParserHandler,
+} from './protocol/notation.d.ts';
+
+export {
+  Message,
+  MessageBuilder,
+  RequestType,
+  ResponseStatus,
+  ErrorCode,
+  RequestTypeValue,
+  ResponseStatusValue,
+  ErrorCodeValue,
+  MessageData,
+  ErrorInfo,
+  EnqueueOptions,
+  createOkResponse,
+  createErrorResponse,
+  createEnqueueRequest,
+  createDequeueRequest,
+  createPeekRequest,
+  createAckRequest,
+  createRejectRequest,
+  createQueryRequest,
+  createGetStatsRequest,
+  createListQueuesRequest,
+  createCreateQueueRequest,
+  createDeleteQueueRequest,
+} from './protocol/messages.d.ts';
