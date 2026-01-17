@@ -187,3 +187,20 @@ export {
 } from './backends/registry.d.ts';
 
 export type { BackendRegistryInterface } from './backends/registry.d.ts';
+
+// =============================================================================
+// Queue Exports
+// =============================================================================
+
+export {
+  EnqueueResult,
+  QueueStats,
+  QueueOptions,
+  Queue,
+  QueueInfo,
+  QueueManager,
+  QueueErrorCode,
+  QueueError,
+  QueueHandler,
+  QueueSubscription,
+} from './queue/index.d.ts';

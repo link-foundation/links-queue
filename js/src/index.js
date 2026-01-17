@@ -178,3 +178,9 @@ export { MemoryLinkStore } from './backends/memory.js';
 
 // Storage backend interface and registry
 export { BackendRegistry, MemoryBackendAdapter } from './backends/registry.js';
+
+// =============================================================================
+// Queue Exports
+// =============================================================================
+
+export { QueueError } from './queue/index.js';
