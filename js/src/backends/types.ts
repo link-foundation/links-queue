@@ -11,7 +11,7 @@
  * @see REQUIREMENTS.md - REQ-STORE-001 through REQ-STORE-022
  */
 
-import type { Link, LinkId, LinkPattern, LinkRef } from '../types.js';
+import type { Link, LinkId, LinkPattern, LinkRef } from '../types.ts';
 
 // =============================================================================
 // Backend Capabilities

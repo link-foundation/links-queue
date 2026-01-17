@@ -179,8 +179,8 @@ export type {
   CustomBackendOptions,
   BackendConstructor,
   BackendFactory,
-} from './backends/types.js';
+} from './backends/types.ts';
 
-export { BackendRegistry, MemoryBackendAdapter } from './backends/registry.js';
+export { BackendRegistry, MemoryBackendAdapter } from './backends/registry.d.ts';
 
 export type { BackendRegistryInterface } from './backends/registry.d.ts';
