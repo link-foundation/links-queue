@@ -248,3 +248,36 @@ export {
   createCreateQueueRequest,
   createDeleteQueueRequest,
 } from './protocol/messages.d.ts';
+
+// =============================================================================
+// Cluster Exports
+// =============================================================================
+
+export {
+  // Status types
+  NodeStatus,
+  // Node interface
+  ClusterNode,
+  // Event types
+  ClusterEventType,
+  NodeJoinedHandler,
+  NodeLeftHandler,
+  NodeSuspectHandler,
+  LeaderChangedHandler,
+  RebalanceStartedHandler,
+  RebalanceCompletedHandler,
+  // Coordinator interface
+  ClusterCoordinator,
+  // Replication types
+  SyncMode,
+  ReplicationManager,
+  // Configuration types
+  DiscoveryMethod,
+  ReplicationConfig,
+  ClusterConfig,
+  // Statistics
+  ClusterStats,
+  // Error types
+  ClusterErrorCode,
+  ClusterError,
+} from './cluster/index.d.ts';
