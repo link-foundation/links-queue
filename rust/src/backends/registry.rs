@@ -169,7 +169,8 @@ impl Default for BackendConfig {
 /// Type alias for backend factory functions.
 ///
 /// Factory functions create a boxed backend from a configuration.
-type BackendFactory<T> = Arc<dyn Fn(&BackendConfig) -> BackendResult<T, Box<dyn StorageBackendDyn<T>>> + Send + Sync>;
+type BackendFactory<T> =
+    Arc<dyn Fn(&BackendConfig) -> BackendResult<T, Box<dyn StorageBackendDyn<T>>> + Send + Sync>;
 
 /// Object-safe version of `StorageBackend` for use with registry.
 ///
@@ -200,7 +201,9 @@ pub trait StorageBackendDyn<T: LinkType>: Send + Sync {
     fn load_dyn(
         &self,
         id: T,
-    ) -> std::pin::Pin<Box<dyn std::future::Future<Output = BackendResult<T, Option<crate::Link<T>>>> + Send + '_>>;
+    ) -> std::pin::Pin<
+        Box<dyn std::future::Future<Output = BackendResult<T, Option<crate::Link<T>>>> + Send + '_>,
+    >;
 
     /// Deletes a link.
     fn delete_dyn(
@@ -212,7 +215,9 @@ pub trait StorageBackendDyn<T: LinkType>: Send + Sync {
     fn query_dyn<'a>(
         &'a self,
         pattern: &'a crate::LinkPattern<T>,
-    ) -> std::pin::Pin<Box<dyn std::future::Future<Output = BackendResult<T, Vec<crate::Link<T>>>> + Send + 'a>>;
+    ) -> std::pin::Pin<
+        Box<dyn std::future::Future<Output = BackendResult<T, Vec<crate::Link<T>>>> + Send + 'a>,
+    >;
 
     /// Returns capabilities.
     fn capabilities_dyn(&self) -> super::traits::BackendCapabilities;
@@ -224,13 +229,15 @@ pub trait StorageBackendDyn<T: LinkType>: Send + Sync {
 impl<T: LinkType, B: StorageBackend<T> + 'static> StorageBackendDyn<T> for B {
     fn connect_dyn(
         &mut self,
-    ) -> std::pin::Pin<Box<dyn std::future::Future<Output = BackendResult<T, ()>> + Send + '_>> {
+    ) -> std::pin::Pin<Box<dyn std::future::Future<Output = BackendResult<T, ()>> + Send + '_>>
+    {
         Box::pin(self.connect())
     }
 
     fn disconnect_dyn(
         &mut self,
-    ) -> std::pin::Pin<Box<dyn std::future::Future<Output = BackendResult<T, ()>> + Send + '_>> {
+    ) -> std::pin::Pin<Box<dyn std::future::Future<Output = BackendResult<T, ()>> + Send + '_>>
+    {
         Box::pin(self.disconnect())
     }
 
@@ -248,21 +255,26 @@ impl<T: LinkType, B: StorageBackend<T> + 'static> StorageBackendDyn<T> for B {
     fn load_dyn(
         &self,
         id: T,
-    ) -> std::pin::Pin<Box<dyn std::future::Future<Output = BackendResult<T, Option<crate::Link<T>>>> + Send + '_>> {
+    ) -> std::pin::Pin<
+        Box<dyn std::future::Future<Output = BackendResult<T, Option<crate::Link<T>>>> + Send + '_>,
+    > {
         Box::pin(self.load(id))
     }
 
     fn delete_dyn(
         &mut self,
         id: T,
-    ) -> std::pin::Pin<Box<dyn std::future::Future<Output = BackendResult<T, bool>> + Send + '_>> {
+    ) -> std::pin::Pin<Box<dyn std::future::Future<Output = BackendResult<T, bool>> + Send + '_>>
+    {
         Box::pin(self.delete(id))
     }
 
     fn query_dyn<'a>(
         &'a self,
         pattern: &'a crate::LinkPattern<T>,
-    ) -> std::pin::Pin<Box<dyn std::future::Future<Output = BackendResult<T, Vec<crate::Link<T>>>> + Send + 'a>> {
+    ) -> std::pin::Pin<
+        Box<dyn std::future::Future<Output = BackendResult<T, Vec<crate::Link<T>>>> + Send + 'a>,
+    > {
         Box::pin(self.query(pattern))
     }
 
@@ -346,8 +358,8 @@ impl<T: LinkType + 'static> BackendRegistry<T> {
                     .get_option("capacity")
                     .and_then(|s| s.parse::<usize>().ok());
 
-                let backend = capacity
-                    .map_or_else(MemoryBackend::new, MemoryBackend::with_capacity);
+                let backend =
+                    capacity.map_or_else(MemoryBackend::new, MemoryBackend::with_capacity);
 
                 Ok(Box::new(backend) as Box<dyn StorageBackendDyn<T>>)
             }),
@@ -376,7 +388,10 @@ impl<T: LinkType + 'static> BackendRegistry<T> {
     /// ```
     pub fn register<F>(&mut self, name: impl Into<String>, factory: Arc<F>)
     where
-        F: Fn(&BackendConfig) -> BackendResult<T, Box<dyn StorageBackendDyn<T>>> + Send + Sync + 'static,
+        F: Fn(&BackendConfig) -> BackendResult<T, Box<dyn StorageBackendDyn<T>>>
+            + Send
+            + Sync
+            + 'static,
     {
         self.factories.insert(name.into(), factory);
     }
@@ -430,7 +445,10 @@ impl<T: LinkType + 'static> BackendRegistry<T> {
     /// let registry = BackendRegistry::<u64>::new();
     /// let backend = registry.create(&BackendConfig::memory()).unwrap();
     /// ```
-    pub fn create(&self, config: &BackendConfig) -> BackendResult<T, Box<dyn StorageBackendDyn<T>>> {
+    pub fn create(
+        &self,
+        config: &BackendConfig,
+    ) -> BackendResult<T, Box<dyn StorageBackendDyn<T>>> {
         let factory = self.factories.get(&config.backend_type).ok_or_else(|| {
             BackendError::Other(format!(
                 "Unknown backend type: \"{}\". Available types: {}",

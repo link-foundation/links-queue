@@ -57,8 +57,7 @@ use crate::{Link, LinkError, LinkPattern, LinkType};
 // =============================================================================
 
 /// Durability level supported by a storage backend.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-#[derive(Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 pub enum DurabilityLevel {
     /// No durability guarantees (in-memory only).
     #[default]
@@ -68,7 +67,6 @@ pub enum DurabilityLevel {
     /// Data is replicated across multiple nodes.
     Replicated,
 }
-
 
 // =============================================================================
 // Backend Capabilities
@@ -288,16 +286,12 @@ pub trait StorageBackend<T: LinkType>: Send + Sync {
     /// # Errors
     ///
     /// Returns [`BackendError::ConnectionFailed`] if connection fails.
-    fn connect(
-        &mut self,
-    ) -> impl std::future::Future<Output = BackendResult<T, ()>> + Send;
+    fn connect(&mut self) -> impl std::future::Future<Output = BackendResult<T, ()>> + Send;
 
     /// Gracefully disconnects from the storage backend.
     ///
     /// This should flush any pending writes and release resources.
-    fn disconnect(
-        &mut self,
-    ) -> impl std::future::Future<Output = BackendResult<T, ()>> + Send;
+    fn disconnect(&mut self) -> impl std::future::Future<Output = BackendResult<T, ()>> + Send;
 
     /// Checks if the backend is currently connected.
     ///
@@ -363,10 +357,8 @@ pub trait StorageBackend<T: LinkType>: Send + Sync {
     /// # Errors
     ///
     /// Returns [`BackendError::NotConnected`] if not connected.
-    fn delete(
-        &mut self,
-        id: T,
-    ) -> impl std::future::Future<Output = BackendResult<T, bool>> + Send;
+    fn delete(&mut self, id: T)
+        -> impl std::future::Future<Output = BackendResult<T, bool>> + Send;
 
     /// Queries links matching a pattern.
     ///

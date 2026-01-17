@@ -1,14 +1,27 @@
 /**
  * Tests for BackendRegistry and MemoryBackendAdapter
+ *
+ * Note: This test avoids beforeEach for Deno compatibility.
+ * Deno's node:test compatibility layer doesn't support beforeEach.
  */
 
-import { describe, it, beforeEach } from 'node:test';
+import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   BackendRegistry,
   MemoryBackendAdapter,
   createLink,
 } from '../src/index.js';
+
+/**
+ * Creates a connected backend for testing.
+ * @returns {Promise<MemoryBackendAdapter>}
+ */
+async function createConnectedBackend() {
+  const backend = new MemoryBackendAdapter();
+  await backend.connect();
+  return backend;
+}
 
 // eslint-disable-next-line max-lines-per-function
 describe('MemoryBackendAdapter', () => {
@@ -43,20 +56,15 @@ describe('MemoryBackendAdapter', () => {
   });
 
   describe('CRUD operations', () => {
-    let backend;
-
-    beforeEach(async () => {
-      backend = new MemoryBackendAdapter();
-      await backend.connect();
-    });
-
     it('should save a link and return ID', async () => {
+      const backend = await createConnectedBackend();
       const link = createLink(0, 1, 2);
       const id = await backend.save(link);
       assert.ok(id !== 0);
     });
 
     it('should load a saved link', async () => {
+      const backend = await createConnectedBackend();
       const link = createLink(0, 1, 2);
       const id = await backend.save(link);
 
@@ -67,11 +75,13 @@ describe('MemoryBackendAdapter', () => {
     });
 
     it('should return null for non-existent link', async () => {
+      const backend = await createConnectedBackend();
       const loaded = await backend.load(999);
       assert.strictEqual(loaded, null);
     });
 
     it('should delete a link', async () => {
+      const backend = await createConnectedBackend();
       const link = createLink(0, 1, 2);
       const id = await backend.save(link);
 
@@ -83,11 +93,13 @@ describe('MemoryBackendAdapter', () => {
     });
 
     it('should return false when deleting non-existent link', async () => {
+      const backend = await createConnectedBackend();
       const deleted = await backend.delete(999);
       assert.strictEqual(deleted, false);
     });
 
     it('should query links by pattern', async () => {
+      const backend = await createConnectedBackend();
       await backend.save(createLink(0, 1, 2));
       await backend.save(createLink(0, 1, 3));
       await backend.save(createLink(0, 2, 3));
@@ -97,6 +109,7 @@ describe('MemoryBackendAdapter', () => {
     });
 
     it('should query all links with empty pattern', async () => {
+      const backend = await createConnectedBackend();
       await backend.save(createLink(0, 1, 2));
       await backend.save(createLink(0, 3, 4));
 
@@ -106,14 +119,8 @@ describe('MemoryBackendAdapter', () => {
   });
 
   describe('batch operations', () => {
-    let backend;
-
-    beforeEach(async () => {
-      backend = new MemoryBackendAdapter();
-      await backend.connect();
-    });
-
     it('should save multiple links in batch', async () => {
+      const backend = await createConnectedBackend();
       const links = [
         createLink(0, 1, 2),
         createLink(0, 3, 4),
@@ -126,6 +133,7 @@ describe('MemoryBackendAdapter', () => {
     });
 
     it('should delete multiple links in batch', async () => {
+      const backend = await createConnectedBackend();
       const id1 = await backend.save(createLink(0, 1, 2));
       const id2 = await backend.save(createLink(0, 3, 4));
 
@@ -147,8 +155,7 @@ describe('MemoryBackendAdapter', () => {
     });
 
     it('should track operation statistics', async () => {
-      const backend = new MemoryBackendAdapter();
-      await backend.connect();
+      const backend = await createConnectedBackend();
 
       const id = await backend.save(createLink(0, 1, 2));
       await backend.load(id);
@@ -163,8 +170,7 @@ describe('MemoryBackendAdapter', () => {
     });
 
     it('should track total links count', async () => {
-      const backend = new MemoryBackendAdapter();
-      await backend.connect();
+      const backend = await createConnectedBackend();
 
       await backend.save(createLink(0, 1, 2));
       await backend.save(createLink(0, 3, 4));
@@ -176,8 +182,7 @@ describe('MemoryBackendAdapter', () => {
 
   describe('clear', () => {
     it('should clear all links', async () => {
-      const backend = new MemoryBackendAdapter();
-      await backend.connect();
+      const backend = await createConnectedBackend();
 
       await backend.save(createLink(0, 1, 2));
       await backend.save(createLink(0, 3, 4));
@@ -226,27 +231,29 @@ describe('MemoryBackendAdapter', () => {
 });
 
 describe('BackendRegistry', () => {
-  beforeEach(() => {
-    // Reset registry to clean state before each test
-    BackendRegistry.reset();
-  });
+  // Note: Each test resets the registry to ensure clean state
+  // This replaces beforeEach for Deno compatibility
 
   describe('registration', () => {
     it('should have memory backend registered by default', () => {
+      BackendRegistry.reset();
       assert.strictEqual(BackendRegistry.has('memory'), true);
     });
 
     it('should list registered types', () => {
+      BackendRegistry.reset();
       const types = BackendRegistry.listTypes();
       assert.ok(types.includes('memory'));
     });
 
     it('should register a custom backend', () => {
+      BackendRegistry.reset();
       BackendRegistry.register('custom', () => new MemoryBackendAdapter());
       assert.strictEqual(BackendRegistry.has('custom'), true);
     });
 
     it('should unregister a backend', () => {
+      BackendRegistry.reset();
       BackendRegistry.register('custom', () => new MemoryBackendAdapter());
       const result = BackendRegistry.unregister('custom');
       assert.strictEqual(result, true);
@@ -254,6 +261,7 @@ describe('BackendRegistry', () => {
     });
 
     it('should return false when unregistering non-existent backend', () => {
+      BackendRegistry.reset();
       const result = BackendRegistry.unregister('non-existent');
       assert.strictEqual(result, false);
     });
@@ -261,11 +269,13 @@ describe('BackendRegistry', () => {
 
   describe('creation', () => {
     it('should create memory backend by default', () => {
+      BackendRegistry.reset();
       const backend = BackendRegistry.create({ type: 'memory' });
       assert.ok(backend instanceof MemoryBackendAdapter);
     });
 
     it('should create backend with options', () => {
+      BackendRegistry.reset();
       const backend = BackendRegistry.create({
         type: 'memory',
         options: { initialCapacity: 100 },
@@ -274,12 +284,14 @@ describe('BackendRegistry', () => {
     });
 
     it('should throw for unknown backend type', () => {
+      BackendRegistry.reset();
       assert.throws(() => {
         BackendRegistry.create({ type: 'unknown' });
       }, /unknown/i);
     });
 
     it('should create custom backend', () => {
+      BackendRegistry.reset();
       let factoryCalled = false;
       BackendRegistry.register('custom', (config) => {
         factoryCalled = true;
@@ -298,6 +310,7 @@ describe('BackendRegistry', () => {
 
   describe('reset', () => {
     it('should restore default state', () => {
+      BackendRegistry.reset();
       BackendRegistry.register('custom', () => new MemoryBackendAdapter());
       BackendRegistry.reset();
 

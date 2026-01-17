@@ -221,7 +221,8 @@ impl<T: LinkType> StorageBackend<T> for MemoryBackend<T> {
         // If ID is zero/nothing, create a new link
         if link.id.is_nothing() {
             let created = if let Some(values) = link.values {
-                self.store.create_with_values(link.source, link.target, values)?
+                self.store
+                    .create_with_values(link.source, link.target, values)?
             } else {
                 self.store.create(link.source, link.target)?
             };
@@ -230,13 +231,16 @@ impl<T: LinkType> StorageBackend<T> for MemoryBackend<T> {
 
         // Try to update existing link
         if self.store.exists(link.id) {
-            let updated = self.store.update(link.id, link.source.clone(), link.target.clone())?;
+            let updated = self
+                .store
+                .update(link.id, link.source.clone(), link.target.clone())?;
             return Ok(updated.id);
         }
 
         // Create new link (will get auto-generated ID)
         let created = if let Some(values) = link.values {
-            self.store.create_with_values(link.source, link.target, values)?
+            self.store
+                .create_with_values(link.source, link.target, values)?
         } else {
             self.store.create(link.source, link.target)?
         };
@@ -342,11 +346,23 @@ mod tests {
         let mut backend = MemoryBackend::<u64>::new();
         backend.connect().await.unwrap();
 
-        backend.save(Link::new(0, LinkRef::Id(1), LinkRef::Id(2))).await.unwrap();
-        backend.save(Link::new(0, LinkRef::Id(1), LinkRef::Id(3))).await.unwrap();
-        backend.save(Link::new(0, LinkRef::Id(2), LinkRef::Id(3))).await.unwrap();
+        backend
+            .save(Link::new(0, LinkRef::Id(1), LinkRef::Id(2)))
+            .await
+            .unwrap();
+        backend
+            .save(Link::new(0, LinkRef::Id(1), LinkRef::Id(3)))
+            .await
+            .unwrap();
+        backend
+            .save(Link::new(0, LinkRef::Id(2), LinkRef::Id(3)))
+            .await
+            .unwrap();
 
-        let results = backend.query(&LinkPattern::with_source(LinkRef::Id(1))).await.unwrap();
+        let results = backend
+            .query(&LinkPattern::with_source(LinkRef::Id(1)))
+            .await
+            .unwrap();
         assert_eq!(results.len(), 2);
     }
 
@@ -355,7 +371,9 @@ mod tests {
         let mut backend = MemoryBackend::<u64>::new();
         // Don't connect
 
-        let result = backend.save(Link::new(0, LinkRef::Id(1), LinkRef::Id(2))).await;
+        let result = backend
+            .save(Link::new(0, LinkRef::Id(1), LinkRef::Id(2)))
+            .await;
         assert!(matches!(result, Err(BackendError::NotConnected)));
     }
 
@@ -379,8 +397,14 @@ mod tests {
         let mut backend = MemoryBackend::<u64>::new();
         backend.connect().await.unwrap();
 
-        let id1 = backend.save(Link::new(0, LinkRef::Id(1), LinkRef::Id(2))).await.unwrap();
-        let id2 = backend.save(Link::new(0, LinkRef::Id(3), LinkRef::Id(4))).await.unwrap();
+        let id1 = backend
+            .save(Link::new(0, LinkRef::Id(1), LinkRef::Id(2)))
+            .await
+            .unwrap();
+        let id2 = backend
+            .save(Link::new(0, LinkRef::Id(3), LinkRef::Id(4)))
+            .await
+            .unwrap();
 
         let results = backend.delete_batch(vec![id1, id2, 999]).await.unwrap();
         assert_eq!(results, vec![true, true, false]);
@@ -403,13 +427,20 @@ mod tests {
         let mut backend = MemoryBackend::<u64>::new();
         backend.connect().await.unwrap();
 
-        backend.save(Link::new(0, LinkRef::Id(1), LinkRef::Id(2))).await.unwrap();
-        backend.save(Link::new(0, LinkRef::Id(3), LinkRef::Id(4))).await.unwrap();
+        backend
+            .save(Link::new(0, LinkRef::Id(1), LinkRef::Id(2)))
+            .await
+            .unwrap();
+        backend
+            .save(Link::new(0, LinkRef::Id(3), LinkRef::Id(4)))
+            .await
+            .unwrap();
 
         let stats = backend.stats();
         assert_eq!(stats.total_links, 2);
         assert_eq!(stats.operations.writes, 2);
         assert!(stats.connected_at.is_some());
-        assert!(stats.uptime_ms >= 0);
+        // uptime_ms is u64, always non-negative - just verify it's tracked
+        assert!(stats.uptime_ms > 0 || stats.connected_at.is_some());
     }
 }
