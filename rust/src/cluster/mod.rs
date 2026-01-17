@@ -29,6 +29,9 @@
 //! coordinator.join(&["node1:5000"]).await?;
 //! ```
 
+#[cfg(test)]
+mod tests;
+
 mod traits;
 
 pub use traits::{
