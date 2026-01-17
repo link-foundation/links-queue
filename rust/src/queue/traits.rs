@@ -143,8 +143,7 @@ impl QueueStats {
 ///     .with_dead_letter_queue("my-queue-dlq".to_string())
 ///     .with_priority(true);
 /// ```
-#[derive(Debug, Clone, PartialEq, Eq)]
-#[derive(Default)]
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct QueueOptions {
     /// Maximum queue depth. Enqueue operations will fail if this limit is reached.
     /// Defaults to `usize::MAX` (unlimited).
@@ -169,7 +168,6 @@ pub struct QueueOptions {
     /// Defaults to false (FIFO ordering).
     pub priority: Option<bool>,
 }
-
 
 impl QueueOptions {
     /// Creates new `QueueOptions` with all defaults.
@@ -542,7 +540,7 @@ pub struct QueueInfo {
 impl QueueInfo {
     /// Creates a new `QueueInfo`.
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub const fn new(name: String, depth: usize, created_at: u64, options: QueueOptions) -> Self {
         Self {
             name,
