@@ -1,5 +1,5 @@
 ---
-"links-queue-js": minor
+'links-queue-js': minor
 ---
 
 Integrate links-notation library for parsing and serialization
