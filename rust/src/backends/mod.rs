@@ -1,30 +1,94 @@
 //! Storage backend implementations for links-queue.
 //!
-//! This module provides various storage backends that implement the [`LinkStore`] trait.
+//! This module provides various storage backends that implement the [`StorageBackend`] trait.
 //! Each backend offers different tradeoffs between performance, durability, and features.
 //!
 //! # Available Backends
 //!
-//! - [`MemoryLinkStore`] - In-memory storage with O(1) lookups, ideal for testing and development.
+//! - [`MemoryLinkStore`] - Low-level in-memory link store implementing [`LinkStore`]
+//! - [`MemoryBackend`] - In-memory storage backend implementing [`StorageBackend`]
 //!
-//! # Example
+//! # Backend Selection
+//!
+//! Use [`BackendRegistry`] to create backends from configuration:
 //!
 //! ```rust
-//! use links_queue::{MemoryLinkStore, LinkStore, LinkRef, LinkPattern};
+//! use links_queue::{BackendRegistry, BackendConfig};
 //!
-//! let mut store = MemoryLinkStore::<u64>::new();
+//! let registry = BackendRegistry::<u64>::new();
 //!
-//! // Create a link
-//! let link = store.create(LinkRef::Id(2), LinkRef::Id(3)).unwrap();
-//! println!("Created link: {:?}", link);
+//! // Create memory backend (default)
+//! let backend = registry.create(&BackendConfig::memory()).unwrap();
 //!
-//! // Find links by pattern
-//! let results = store.find(&LinkPattern::with_source(LinkRef::Id(2)));
-//! assert_eq!(results.len(), 1);
+//! // Create memory backend with capacity hint
+//! let backend = registry.create(&BackendConfig::memory_with_capacity(10000)).unwrap();
+//! ```
+//!
+//! # Using `StorageBackend` Directly
+//!
+//! ```rust
+//! use links_queue::{MemoryBackend, StorageBackend, Link, LinkRef, LinkPattern};
+//!
+//! #[tokio::main]
+//! async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!     let mut backend = MemoryBackend::<u64>::new();
+//!     backend.connect().await?;
+//!
+//!     // Save a link
+//!     let link = Link::new(0, LinkRef::Id(2), LinkRef::Id(3));
+//!     let id = backend.save(link).await?;
+//!     println!("Created link with ID: {}", id);
+//!
+//!     // Query links
+//!     let results = backend.query(&LinkPattern::with_source(LinkRef::Id(2))).await?;
+//!     println!("Found {} matching links", results.len());
+//!
+//!     backend.disconnect().await?;
+//!     Ok(())
+//! }
+//! ```
+//!
+//! # Custom Backends
+//!
+//! Implement the [`StorageBackend`] trait for custom storage:
+//!
+//! ```rust,ignore
+//! use links_queue::{StorageBackend, Link, LinkPattern, LinkType, BackendResult};
+//!
+//! struct MyBackend<T: LinkType> {
+//!     // ... fields
+//! }
+//!
+//! impl<T: LinkType> StorageBackend<T> for MyBackend<T> {
+//!     // ... implement required methods
+//! }
+//!
+//! // Register with the registry
+//! let mut registry = BackendRegistry::<u64>::new();
+//! registry.register("my-backend", Arc::new(|config| {
+//!     Ok(Box::new(MyBackend::new()) as _)
+//! }));
 //! ```
 
 mod memory;
+mod memory_backend;
+mod registry;
+mod traits;
+
 #[cfg(test)]
 mod memory_tests;
 
+// Re-export low-level link store
 pub use memory::MemoryLinkStore;
+
+// Re-export storage backend trait and types
+pub use traits::{
+    BackendCapabilities, BackendError, BackendResult, BackendStats, DurabilityLevel,
+    OperationStats, StorageBackend,
+};
+
+// Re-export memory backend
+pub use memory_backend::MemoryBackend;
+
+// Re-export registry
+pub use registry::{BackendConfig, BackendRegistry, StorageBackendDyn};
