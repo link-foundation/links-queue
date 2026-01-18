@@ -5,6 +5,8 @@
  * to run without the actual link-cli binary installed.
  *
  * Note: Each test creates its own instance for Deno compatibility.
+ * Note: Tests that spawn processes are skipped on Deno due to permission
+ * requirements (--allow-run, --allow-env) not granted in CI.
  */
 
 import { describe, it } from 'node:test';
@@ -16,6 +18,10 @@ import {
   ProcessState,
   createLink,
 } from '../src/index.js';
+
+// Detect if running in Deno (process spawn tests need additional permissions)
+
+const isDeno = typeof Deno !== 'undefined';
 
 // =============================================================================
 // LinkCliProcess Tests
@@ -41,13 +47,18 @@ describe('LinkCliProcess', () => {
   });
 
   describe('checkBinaryAvailable', () => {
-    it('should return false when binary is not found', async () => {
-      const process = new LinkCliProcess({
-        binaryPath: 'nonexistent-binary-that-does-not-exist',
-      });
-      const available = await process.checkBinaryAvailable();
-      assert.strictEqual(available, false);
-    });
+    it(
+      'should return false when binary is not found',
+      { skip: isDeno },
+      async () => {
+        // Skip on Deno: requires --allow-run, --allow-env permissions not granted in CI
+        const process = new LinkCliProcess({
+          binaryPath: 'nonexistent-binary-that-does-not-exist',
+        });
+        const available = await process.checkBinaryAvailable();
+        assert.strictEqual(available, false);
+      }
+    );
 
     // Note: Testing when binary IS available requires actual clink installation
     // Those tests are marked as integration tests
@@ -128,16 +139,21 @@ describe('LinkCliBackend', () => {
       assert.strictEqual(backend.isConnected(), false);
     });
 
-    it('should throw when binary not available during connect', async () => {
-      const backend = new LinkCliBackend({
-        path: './test.links',
-        binaryPath: 'nonexistent-binary',
-      });
+    it(
+      'should throw when binary not available during connect',
+      { skip: isDeno },
+      async () => {
+        // Skip on Deno: requires --allow-run, --allow-env permissions not granted in CI
+        const backend = new LinkCliBackend({
+          path: './test.links',
+          binaryPath: 'nonexistent-binary',
+        });
 
-      await assert.rejects(async () => {
-        await backend.connect();
-      }, /not found/i);
-    });
+        await assert.rejects(async () => {
+          await backend.connect();
+        }, /not found/i);
+      }
+    );
 
     it('should disconnect properly', async () => {
       const backend = new LinkCliBackend({ path: './test.links' });
