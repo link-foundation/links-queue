@@ -7,6 +7,7 @@
 //!
 //! - [`MemoryLinkStore`] - Low-level in-memory link store implementing [`LinkStore`]
 //! - [`MemoryBackend`] - In-memory storage backend implementing [`StorageBackend`]
+//! - [`LinkCliBackend`] - Persistent storage backend using link-cli
 //!
 //! # Backend Selection
 //!
@@ -48,6 +49,27 @@
 //! }
 //! ```
 //!
+//! # Using Link-CLI Backend
+//!
+//! ```rust,ignore
+//! use links_queue::{LinkCliBackend, LinkCliConfig, StorageBackend, Link, LinkRef};
+//!
+//! #[tokio::main]
+//! async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!     let config = LinkCliConfig::new("./data/db.links");
+//!     let mut backend = LinkCliBackend::<u64>::new(config);
+//!
+//!     backend.connect().await?;
+//!
+//!     // All operations are durable
+//!     let link = Link::new(0, LinkRef::Id(1), LinkRef::Id(2));
+//!     let id = backend.save(link).await?;
+//!
+//!     backend.disconnect().await?;
+//!     Ok(())
+//! }
+//! ```
+//!
 //! # Custom Backends
 //!
 //! Implement the [`StorageBackend`] trait for custom storage:
@@ -70,6 +92,9 @@
 //! }));
 //! ```
 
+mod link_cli;
+mod link_cli_notation;
+mod link_cli_process;
 mod memory;
 mod memory_backend;
 mod registry;
@@ -89,6 +114,11 @@ pub use traits::{
 
 // Re-export memory backend
 pub use memory_backend::MemoryBackend;
+
+// Re-export link-cli backend
+pub use link_cli::{LinkCliBackend, LinkCliConfig};
+pub use link_cli_notation::{LinksNotation, NotationParseError, NotationResult, ParsedLink};
+pub use link_cli_process::{LinkCliProcess, ProcessConfig, ProcessError, ProcessResult};
 
 // Re-export registry
 pub use registry::{BackendConfig, BackendRegistry, StorageBackendDyn};

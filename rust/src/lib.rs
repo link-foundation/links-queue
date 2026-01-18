@@ -86,6 +86,12 @@ pub use backends::{
     DurabilityLevel, MemoryBackend, OperationStats, StorageBackend, StorageBackendDyn,
 };
 
+// Re-export link-cli backend types
+pub use backends::{
+    LinkCliBackend, LinkCliConfig, LinkCliProcess, LinksNotation, NotationParseError,
+    NotationResult, ParsedLink, ProcessConfig, ProcessError, ProcessResult,
+};
+
 // Re-export cluster types
 pub use cluster::{
     ClusterConfig, ClusterCoordinator, ClusterError, ClusterErrorCode, ClusterEvent, ClusterNode,

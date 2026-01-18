@@ -24,10 +24,13 @@
 //! ```
 
 use std::collections::HashMap;
+use std::fmt::Display;
+use std::str::FromStr;
 use std::sync::Arc;
 
 use crate::LinkType;
 
+use super::link_cli::{create_link_cli_backend, LinkCliConfig};
 use super::memory_backend::MemoryBackend;
 use super::traits::{BackendError, BackendResult, StorageBackend};
 
@@ -117,6 +120,54 @@ impl BackendConfig {
     #[must_use]
     pub fn memory_with_capacity(capacity: usize) -> Self {
         Self::new("memory").with_option("capacity", capacity.to_string())
+    }
+
+    /// Creates a configuration for the link-cli backend.
+    ///
+    /// # Arguments
+    ///
+    /// * `path` - Path to the database file
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use links_queue::BackendConfig;
+    ///
+    /// let config = BackendConfig::link_cli("./data/db.links");
+    /// ```
+    #[must_use]
+    pub fn link_cli(path: impl Into<String>) -> Self {
+        Self::new("link-cli").with_option("path", path)
+    }
+
+    /// Creates a configuration for the link-cli backend from a config object.
+    ///
+    /// # Arguments
+    ///
+    /// * `config` - Link-CLI configuration
+    ///
+    /// # Example
+    ///
+    /// ```rust,ignore
+    /// use links_queue::{BackendConfig, LinkCliConfig};
+    ///
+    /// let cli_config = LinkCliConfig::new("./data/db.links")
+    ///     .with_timeout(10_000);
+    /// let config = BackendConfig::link_cli_with_config(cli_config);
+    /// ```
+    #[must_use]
+    pub fn link_cli_with_config(config: LinkCliConfig) -> Self {
+        let mut backend_config = Self::new("link-cli")
+            .with_option("path", config.path.to_string_lossy().to_string())
+            .with_option("timeout", config.timeout_ms.to_string())
+            .with_option("auto_restart", config.auto_restart.to_string());
+
+        if let Some(binary) = config.binary_path {
+            backend_config =
+                backend_config.with_option("binary_path", binary.to_string_lossy().to_string());
+        }
+
+        backend_config
     }
 
     /// Adds an option to the configuration (builder pattern).
@@ -320,13 +371,13 @@ pub struct BackendRegistry<T: LinkType> {
     factories: HashMap<String, BackendFactory<T>>,
 }
 
-impl<T: LinkType + 'static> Default for BackendRegistry<T> {
+impl<T: LinkType + FromStr + Display + 'static> Default for BackendRegistry<T> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<T: LinkType + 'static> BackendRegistry<T> {
+impl<T: LinkType + FromStr + Display + 'static> BackendRegistry<T> {
     /// Creates a new backend registry with built-in backends registered.
     ///
     /// # Example
@@ -343,8 +394,9 @@ impl<T: LinkType + 'static> BackendRegistry<T> {
             factories: HashMap::new(),
         };
 
-        // Register built-in memory backend
+        // Register built-in backends
         registry.register_memory_backend();
+        registry.register_link_cli_backend();
 
         registry
     }
@@ -363,6 +415,14 @@ impl<T: LinkType + 'static> BackendRegistry<T> {
 
                 Ok(Box::new(backend) as Box<dyn StorageBackendDyn<T>>)
             }),
+        );
+    }
+
+    /// Registers the built-in link-cli backend.
+    fn register_link_cli_backend(&mut self) {
+        self.factories.insert(
+            "link-cli".to_string(),
+            Arc::new(|config: &BackendConfig| create_link_cli_backend(config)),
         );
     }
 
@@ -474,6 +534,7 @@ impl<T: LinkType + 'static> BackendRegistry<T> {
     pub fn reset(&mut self) {
         self.factories.clear();
         self.register_memory_backend();
+        self.register_link_cli_backend();
     }
 }
 
