@@ -379,13 +379,13 @@ impl NodeBuilder {
     ///
     /// Returns an error if address or port are not set.
     pub fn build(self) -> Result<Node, ClusterError> {
-        let address = self.address.ok_or_else(|| {
-            ClusterError::network_error("Node address is required")
-        })?;
+        let address = self
+            .address
+            .ok_or_else(|| ClusterError::network_error("Node address is required"))?;
 
-        let port = self.port.ok_or_else(|| {
-            ClusterError::network_error("Node port is required")
-        })?;
+        let port = self
+            .port
+            .ok_or_else(|| ClusterError::network_error("Node port is required"))?;
 
         let id = self.id.unwrap_or_else(|| format!("{address}:{port}"));
 

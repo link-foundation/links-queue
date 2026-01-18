@@ -311,7 +311,10 @@ impl GossipMessage {
     /// Serializes the message to bytes.
     #[must_use]
     pub fn serialize(&self) -> Vec<u8> {
-        let mut lines = vec![format!("{}|{}|{}", self.msg_type, self.sender_id, self.sequence)];
+        let mut lines = vec![format!(
+            "{}|{}|{}",
+            self.msg_type, self.sender_id, self.sequence
+        )];
 
         for member in &self.members {
             lines.push(member.serialize());
@@ -521,14 +524,9 @@ impl GossipProtocol {
                         let stats = stats.clone();
 
                         tokio::spawn(async move {
-                            if let Err(e) = Self::handle_connection(
-                                stream,
-                                members,
-                                event_tx,
-                                &local_id,
-                                stats,
-                            )
-                            .await
+                            if let Err(e) =
+                                Self::handle_connection(stream, members, event_tx, &local_id, stats)
+                                    .await
                             {
                                 // Log error in production
                                 let _ = e;
@@ -572,15 +570,16 @@ impl GossipProtocol {
 
         // Process message based on type
         let response = match msg.msg_type {
-            GossipMessageType::Ping => {
-                Some(GossipMessage::pong(local_id.to_string()))
-            }
+            GossipMessageType::Ping => Some(GossipMessage::pong(local_id.to_string())),
             GossipMessageType::SyncRequest => {
                 let all_members: Vec<MemberState> = {
                     let m = members.read().await;
                     m.values().cloned().collect()
                 };
-                Some(GossipMessage::sync_response(local_id.to_string(), all_members))
+                Some(GossipMessage::sync_response(
+                    local_id.to_string(),
+                    all_members,
+                ))
             }
             GossipMessageType::Update | GossipMessageType::SyncResponse => {
                 // Merge member states
@@ -589,8 +588,7 @@ impl GossipProtocol {
                     if let Some(existing) = m.get_mut(&member.node_id) {
                         if existing.merge(&member) {
                             // State changed, emit event
-                            let node =
-                                Node::new(&member.node_id, &member.address, member.port);
+                            let node = Node::new(&member.node_id, &member.address, member.port);
                             match member.status {
                                 NodeStatus::Healthy => {
                                     let _ = event_tx.send(ClusterEvent::NodeJoined(node));
@@ -801,8 +799,7 @@ mod tests {
 
         #[test]
         fn test_member_state_update_status() {
-            let mut state =
-                MemberState::new("node-1".to_string(), "127.0.0.1".to_string(), 5000);
+            let mut state = MemberState::new("node-1".to_string(), "127.0.0.1".to_string(), 5000);
 
             state.update_status(NodeStatus::Healthy);
             assert_eq!(state.status, NodeStatus::Healthy);
@@ -815,11 +812,9 @@ mod tests {
 
         #[test]
         fn test_member_state_merge() {
-            let mut state1 =
-                MemberState::new("node-1".to_string(), "127.0.0.1".to_string(), 5000);
+            let mut state1 = MemberState::new("node-1".to_string(), "127.0.0.1".to_string(), 5000);
 
-            let mut state2 =
-                MemberState::new("node-1".to_string(), "127.0.0.1".to_string(), 5000);
+            let mut state2 = MemberState::new("node-1".to_string(), "127.0.0.1".to_string(), 5000);
             state2.incarnation = 5;
             state2.status = NodeStatus::Healthy;
 
@@ -830,12 +825,10 @@ mod tests {
 
         #[test]
         fn test_member_state_merge_older() {
-            let mut state1 =
-                MemberState::new("node-1".to_string(), "127.0.0.1".to_string(), 5000);
+            let mut state1 = MemberState::new("node-1".to_string(), "127.0.0.1".to_string(), 5000);
             state1.incarnation = 10;
 
-            let state2 =
-                MemberState::new("node-1".to_string(), "127.0.0.1".to_string(), 5000);
+            let state2 = MemberState::new("node-1".to_string(), "127.0.0.1".to_string(), 5000);
 
             assert!(!state1.merge(&state2));
             assert_eq!(state1.incarnation, 10);
@@ -843,8 +836,7 @@ mod tests {
 
         #[test]
         fn test_member_state_serialize_deserialize() {
-            let mut state =
-                MemberState::new("node-1".to_string(), "127.0.0.1".to_string(), 5000);
+            let mut state = MemberState::new("node-1".to_string(), "127.0.0.1".to_string(), 5000);
             state.status = NodeStatus::Healthy;
             state.incarnation = 5;
 

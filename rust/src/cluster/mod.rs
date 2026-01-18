@@ -116,23 +116,23 @@ mod replication;
 pub use traits::{
     // Configuration types
     ClusterConfig,
-    DiscoveryMethod,
-    ReplicationConfig,
-    SyncMode,
     // Traits
     ClusterCoordinator,
-    ClusterNode,
-    ReplicationManager,
-    // Event types
-    ClusterEvent,
-    // Statistics
-    ClusterStats,
-    // Status enums
-    NodeStatus,
     // Error types
     ClusterError,
     ClusterErrorCode,
+    // Event types
+    ClusterEvent,
+    ClusterNode,
     ClusterResult,
+    // Statistics
+    ClusterStats,
+    DiscoveryMethod,
+    // Status enums
+    NodeStatus,
+    ReplicationConfig,
+    ReplicationManager,
+    SyncMode,
 };
 
 // =============================================================================
@@ -165,7 +165,9 @@ pub use replication::{
 // Public Re-exports - Gossip Protocol
 // =============================================================================
 
-pub use gossip::{GossipConfig, GossipMessage, GossipMessageType, GossipProtocol, GossipStats, MemberState};
+pub use gossip::{
+    GossipConfig, GossipMessage, GossipMessageType, GossipProtocol, GossipStats, MemberState,
+};
 
 // =============================================================================
 // Public Re-exports - Coordinator

@@ -11,7 +11,9 @@ use tokio::sync::{broadcast, RwLock};
 use tokio::task::JoinHandle;
 
 use super::node::Node;
-use super::traits::{ClusterConfig, ClusterError, ClusterEvent, ClusterNode, DiscoveryMethod, NodeStatus};
+use super::traits::{
+    ClusterConfig, ClusterError, ClusterEvent, ClusterNode, DiscoveryMethod, NodeStatus,
+};
 
 // =============================================================================
 // Discovery Service
@@ -76,10 +78,7 @@ impl DiscoveryService {
     /// 1. Populate the initial node list from configuration
     /// 2. Start periodic health checks
     pub async fn start(&self) -> Result<(), ClusterError> {
-        if self
-            .running
-            .swap(true, std::sync::atomic::Ordering::SeqCst)
-        {
+        if self.running.swap(true, std::sync::atomic::Ordering::SeqCst) {
             return Err(ClusterError::already_joined());
         }
 
@@ -170,8 +169,8 @@ impl DiscoveryService {
                             // Node is healthy
                             if current_status != NodeStatus::Healthy {
                                 node.set_status(NodeStatus::Healthy).await;
-                                let _ = event_tx
-                                    .send(ClusterEvent::NodeJoined(node.as_ref().clone()));
+                                let _ =
+                                    event_tx.send(ClusterEvent::NodeJoined(node.as_ref().clone()));
                             }
                         }
                         Err(_) => {
@@ -181,8 +180,8 @@ impl DiscoveryService {
                             if failures >= config.dead_threshold {
                                 if current_status != NodeStatus::Dead {
                                     node.set_status(NodeStatus::Dead).await;
-                                    let _ =
-                                        event_tx.send(ClusterEvent::NodeLeft(node.as_ref().clone()));
+                                    let _ = event_tx
+                                        .send(ClusterEvent::NodeLeft(node.as_ref().clone()));
                                 }
                             } else if failures >= config.suspect_threshold {
                                 if current_status != NodeStatus::Suspect {
@@ -227,7 +226,9 @@ impl DiscoveryService {
         let node = nodes.remove(node_id);
 
         if let Some(ref n) = node {
-            let _ = self.event_tx.send(ClusterEvent::NodeLeft(n.as_ref().clone()));
+            let _ = self
+                .event_tx
+                .send(ClusterEvent::NodeLeft(n.as_ref().clone()));
         }
 
         node

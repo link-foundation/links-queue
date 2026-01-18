@@ -16,8 +16,7 @@ use crate::{Link, LinkType};
 use super::node::Node;
 use super::partition::PartitionManager;
 use super::traits::{
-    ClusterError, ReplicationConfig, ReplicationManager as ReplicationManagerTrait,
-    SyncMode,
+    ClusterError, ReplicationConfig, ReplicationManager as ReplicationManagerTrait, SyncMode,
 };
 
 // =============================================================================
@@ -123,7 +122,9 @@ impl<T: LinkType + std::fmt::Display + 'static> DataReplicationManager<T> {
         let replica_nodes = self.partition_manager.get_replica_nodes(&key).await;
 
         if replica_nodes.is_empty() {
-            return Err(ClusterError::replication_failed("No replica nodes available"));
+            return Err(ClusterError::replication_failed(
+                "No replica nodes available",
+            ));
         }
 
         let required_replicas = self.config.min_replicas_or_default();
@@ -190,9 +191,11 @@ impl<T: LinkType + std::fmt::Display + 'static> DataReplicationManager<T> {
         // Spawn background task
         tokio::spawn(async move {
             for node in nodes_clone {
-                let result =
-                    tokio::time::timeout(timeout, Self::send_replication_static(&node, &link_clone))
-                        .await;
+                let result = tokio::time::timeout(
+                    timeout,
+                    Self::send_replication_static(&node, &link_clone),
+                )
+                .await;
 
                 match result {
                     Ok(Ok(_)) => {
@@ -278,8 +281,12 @@ impl<T: LinkType + std::fmt::Display + 'static> DataReplicationManager<T> {
             if value.id != first.id || value.source != first.source || value.target != first.target
             {
                 // Inconsistency detected - would trigger repair
-                self.stats.consistency_repairs.fetch_add(1, Ordering::SeqCst);
-                return Err(ClusterError::consistency_error("Replica inconsistency detected"));
+                self.stats
+                    .consistency_repairs
+                    .fetch_add(1, Ordering::SeqCst);
+                return Err(ClusterError::consistency_error(
+                    "Replica inconsistency detected",
+                ));
             }
         }
 
@@ -345,7 +352,9 @@ impl<T: LinkType + std::fmt::Display + 'static> DataReplicationManager<T> {
     }
 }
 
-impl<T: LinkType + std::fmt::Display + 'static> ReplicationManagerTrait<T, Node> for DataReplicationManager<T> {
+impl<T: LinkType + std::fmt::Display + 'static> ReplicationManagerTrait<T, Node>
+    for DataReplicationManager<T>
+{
     fn replication_factor(&self) -> usize {
         self.config.factor
     }

@@ -111,11 +111,7 @@ impl DefaultClusterCoordinator {
             local_node.node().clone(),
         ));
 
-        let replication_factor = config
-            .replication
-            .as_ref()
-            .map(|r| r.factor)
-            .unwrap_or(1);
+        let replication_factor = config.replication.as_ref().map(|r| r.factor).unwrap_or(1);
 
         let partitions = Arc::new(PartitionManager::new(256, 100, replication_factor));
 
@@ -139,10 +135,7 @@ impl DefaultClusterCoordinator {
     /// Creates a coordinator from configuration.
     #[must_use]
     pub fn from_config(config: ClusterConfig) -> Self {
-        let node_id = config
-            .node_id
-            .clone()
-            .unwrap_or_else(|| uuid_v4_simple());
+        let node_id = config.node_id.clone().unwrap_or_else(|| uuid_v4_simple());
 
         let address = config
             .advertise_address
@@ -248,7 +241,8 @@ impl DefaultClusterCoordinator {
             .map(|l| l.id() == self.local_node.node().id())
             .unwrap_or(false);
 
-        let replication_factor = self.config
+        let replication_factor = self
+            .config
             .replication
             .as_ref()
             .map(|r| r.factor as f64)
@@ -547,7 +541,9 @@ impl ClusterBuilder {
             config = config.with_replication(replication);
         }
 
-        Ok(DefaultClusterCoordinator::new(config, &node_id, &address, port))
+        Ok(DefaultClusterCoordinator::new(
+            config, &node_id, &address, port,
+        ))
     }
 }
 
