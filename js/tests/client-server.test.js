@@ -54,6 +54,8 @@ describe('Client-Server Integration', () => {
       const { server, client, cleanup } = await createTestSetup();
       try {
         await client.connect();
+        // Give server time to process connection (needed on macOS)
+        await new Promise((resolve) => setTimeout(resolve, 50));
         assert.equal(client.isConnected, true);
         assert.equal(server.connectionCount, 1);
       } finally {
@@ -317,6 +319,8 @@ describe('Client-Server Integration', () => {
       try {
         await client.connect();
         await client2.connect();
+        // Give server time to process connections (needed on macOS)
+        await new Promise((resolve) => setTimeout(resolve, 50));
 
         assert.equal(server.connectionCount, 2);
 
