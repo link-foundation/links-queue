@@ -66,7 +66,7 @@ mod traits;
 mod tests;
 
 pub use connection::{Connection, ConnectionId, ConnectionInfo, ConnectionState};
-pub use router::{LinkData, Operation, Request, Response, Router};
+pub use router::{LinkData, Operation, Request, Response, ResponseData, Router};
 pub use traits::{
     LinksQueueServer, ServerConfig, ServerError, ServerErrorCode, ServerEvent, ServerResult,
     ServerStats,

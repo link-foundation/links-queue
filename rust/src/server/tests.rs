@@ -2,6 +2,108 @@
 
 use super::*;
 
+mod operation_tests {
+    use crate::server::Operation;
+
+    #[test]
+    fn test_operation_display() {
+        assert_eq!(format!("{}", Operation::Ping), "ping");
+        assert_eq!(format!("{}", Operation::Enqueue), "enqueue");
+        assert_eq!(format!("{}", Operation::Dequeue), "dequeue");
+    }
+
+    #[test]
+    fn test_operation_from_str() {
+        assert_eq!("ping".parse::<Operation>().unwrap(), Operation::Ping);
+        assert_eq!("enqueue".parse::<Operation>().unwrap(), Operation::Enqueue);
+        assert_eq!("ack".parse::<Operation>().unwrap(), Operation::Acknowledge);
+        assert_eq!("nack".parse::<Operation>().unwrap(), Operation::Reject);
+    }
+
+    #[test]
+    fn test_operation_from_str_invalid() {
+        assert!("invalid".parse::<Operation>().is_err());
+    }
+}
+
+mod request_tests {
+    use crate::server::{Operation, Request};
+
+    #[test]
+    fn test_request_ping() {
+        let req = Request::ping();
+        assert_eq!(req.op, Operation::Ping);
+    }
+
+    #[test]
+    fn test_request_parse_ping() {
+        let req = Request::parse(br#"{"op": "ping"}"#).unwrap();
+        assert_eq!(req.op, Operation::Ping);
+    }
+
+    #[test]
+    fn test_request_parse_enqueue() {
+        let req = Request::parse(
+            br#"{"op": "enqueue", "queue": "tasks", "link": {"id": 0, "source": 1, "target": 2}}"#,
+        )
+        .unwrap();
+        assert_eq!(req.op, Operation::Enqueue);
+        assert_eq!(req.queue, Some("tasks".to_string()));
+        assert!(req.link.is_some());
+    }
+
+    #[test]
+    fn test_request_parse_invalid_json() {
+        assert!(Request::parse(b"not json").is_err());
+    }
+}
+
+mod response_tests {
+    use crate::server::{LinkData, Response, ResponseData};
+
+    #[test]
+    fn test_response_pong() {
+        let resp = Response::pong();
+        assert!(resp.ok);
+        let json = resp.to_json();
+        assert!(json.contains("pong"));
+    }
+
+    #[test]
+    fn test_response_error() {
+        let resp = Response::error("Something failed", "FAILED");
+        assert!(!resp.ok);
+        let json = resp.to_json();
+        assert!(json.contains("Something failed"));
+        assert!(json.contains("FAILED"));
+    }
+
+    #[test]
+    fn test_response_link() {
+        let resp = Response::ok(ResponseData::Link(LinkData {
+            id: 1,
+            source: 2,
+            target: 3,
+            values: None,
+        }));
+        let json = resp.to_json();
+        assert!(json.contains("\"id\":1"));
+        assert!(json.contains("\"source\":2"));
+        assert!(json.contains("\"target\":3"));
+    }
+
+    #[test]
+    fn test_response_enqueue_result() {
+        let resp = Response::ok(ResponseData::EnqueueResult {
+            id: 42,
+            position: 0,
+        });
+        let json = resp.to_json();
+        assert!(json.contains("\"id\":42"));
+        assert!(json.contains("\"position\":0"));
+    }
+}
+
 mod integration_tests {
     use super::*;
     use crate::server::{LinkData, Operation};
