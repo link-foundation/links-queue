@@ -272,10 +272,16 @@ export class LinksNotation {
     const target = this.#convertRefToLinoValue(link.target);
 
     // Check if this is a self-referencing (named) link
+    // Only use the named link shortcut when source is a string
+    // (not a complex link with the same id)
     const sourceId = getLinkId(link.source);
     const targetId = getLinkId(link.target);
 
-    if (sourceId === targetId && !link.values?.length) {
+    if (
+      sourceId === targetId &&
+      !link.values?.length &&
+      typeof source === 'string'
+    ) {
       // Named link: (name: name) -> (name)
       return new LinoLink(source, []);
     }
