@@ -160,7 +160,11 @@ impl<T: LinkType> DeliveryTracker<T> {
     /// is incremented rather than creating a new record.
     pub fn record_delivery(&mut self, id: T) -> &DeliveryRecord<T> {
         let entry = self.deliveries.entry(id).or_insert_with(|| {
-            DeliveryRecord::new(id, self.default_visibility_timeout, self.default_retry_limit)
+            DeliveryRecord::new(
+                id,
+                self.default_visibility_timeout,
+                self.default_retry_limit,
+            )
         });
 
         // If re-delivering, update the record
@@ -175,8 +179,11 @@ impl<T: LinkType> DeliveryTracker<T> {
 
     /// Records a new delivery with a specific delivery count (for requeued messages).
     pub fn record_redelivery(&mut self, id: T, previous_delivery_count: u32) -> &DeliveryRecord<T> {
-        let mut record =
-            DeliveryRecord::new(id, self.default_visibility_timeout, self.default_retry_limit);
+        let mut record = DeliveryRecord::new(
+            id,
+            self.default_visibility_timeout,
+            self.default_retry_limit,
+        );
         record.delivery_count = previous_delivery_count + 1;
         self.deliveries.insert(id, record);
         self.deliveries.get(&id).expect("just inserted")
@@ -246,19 +253,17 @@ impl<T: LinkType> DeliveryTracker<T> {
     /// Returns IDs of all expired in-flight messages.
     ///
     /// These messages should be requeued.
-    #[must_use] 
+    #[must_use]
     pub fn find_expired(&self) -> Vec<T> {
         self.deliveries
             .iter()
-            .filter(|(_, record)| {
-                record.state == DeliveryState::InFlight && record.is_expired()
-            })
+            .filter(|(_, record)| record.state == DeliveryState::InFlight && record.is_expired())
             .map(|(&id, _)| id)
             .collect()
     }
 
     /// Returns the number of in-flight messages.
-    #[must_use] 
+    #[must_use]
     pub fn in_flight_count(&self) -> usize {
         self.deliveries
             .values()
@@ -273,9 +278,7 @@ impl<T: LinkType> DeliveryTracker<T> {
 
     /// Gets the delivery count for a message.
     pub fn get_delivery_count(&self, id: T) -> u32 {
-        self.deliveries
-            .get(&id)
-            .map_or(0, |r| r.delivery_count)
+        self.deliveries.get(&id).map_or(0, |r| r.delivery_count)
     }
 
     /// Clears all delivery records.

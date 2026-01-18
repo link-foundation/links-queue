@@ -39,7 +39,7 @@ use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
 use crate::queue::memory_queue::MemoryQueueWithStorage;
-use crate::queue::traits::{QueueError, QueueInfo, QueueManager, QueueOptions, QueueResult, Queue};
+use crate::queue::traits::{Queue, QueueError, QueueInfo, QueueManager, QueueOptions, QueueResult};
 use crate::LinkType;
 
 // =============================================================================
@@ -147,7 +147,7 @@ impl<T: LinkType> MemoryQueueManager<T> {
     ///
     /// This method should be called periodically to handle visibility timeouts.
     /// Returns a map of queue names to the number of messages requeued.
-    #[must_use] 
+    #[must_use]
     pub fn process_all_expired(&self) -> HashMap<String, usize> {
         let queues = self.queues.lock().expect("lock poisoned");
         let mut results = HashMap::new();

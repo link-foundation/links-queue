@@ -38,7 +38,9 @@ use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use crate::queue::delivery::{DeliveryState, DeliveryTracker};
-use crate::queue::traits::{EnqueueResult, Queue, QueueError, QueueOptions, QueueResult, QueueStats};
+use crate::queue::traits::{
+    EnqueueResult, Queue, QueueError, QueueOptions, QueueResult, QueueStats,
+};
 use crate::{Link, LinkType};
 
 // =============================================================================
@@ -208,7 +210,7 @@ impl<T: LinkType> MemoryQueue<T> {
     /// to handle messages that were not acknowledged within the visibility timeout.
     ///
     /// Returns the number of messages that were requeued.
-    #[must_use] 
+    #[must_use]
     pub fn process_expired(&self) -> usize {
         let mut state = self.state.lock().expect("lock poisoned");
         let expired_ids = state.delivery_tracker.find_expired();
@@ -248,7 +250,7 @@ impl<T: LinkType> MemoryQueue<T> {
     ///
     /// This drains the internal dead letter buffer and returns the items.
     /// The queue manager should call this to move items to the actual DLQ.
-    #[must_use] 
+    #[must_use]
     pub fn drain_dead_letters(&self) -> Vec<Link<T>> {
         let mut state = self.state.lock().expect("lock poisoned");
         std::mem::take(&mut state.dead_letter_items)
@@ -320,7 +322,9 @@ impl<T: LinkType> Queue<T> for MemoryQueue<T> {
 
         // Record the delivery with proper delivery count
         if item.delivery_count > 0 {
-            state.delivery_tracker.record_redelivery(id, item.delivery_count);
+            state
+                .delivery_tracker
+                .record_redelivery(id, item.delivery_count);
         } else {
             state.delivery_tracker.record_delivery(id);
         }
@@ -427,7 +431,7 @@ impl<T: LinkType> MemoryQueueWithStorage<T> {
 
     /// Returns the queue name.
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn name(&self) -> &str {
         self.inner.name()
     }
@@ -441,7 +445,7 @@ impl<T: LinkType> MemoryQueueWithStorage<T> {
 
     /// Returns the queue options.
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn options(&self) -> QueueOptions {
         self.inner.options()
     }
@@ -461,13 +465,13 @@ impl<T: LinkType> MemoryQueueWithStorage<T> {
     }
 
     /// Drains dead letter items from the queue.
-    #[must_use] 
+    #[must_use]
     pub fn drain_dead_letters(&self) -> Vec<Link<T>> {
         self.inner.drain_dead_letters()
     }
 
     /// Processes expired in-flight messages.
-    #[must_use] 
+    #[must_use]
     pub fn process_expired(&self) -> usize {
         self.inner.process_expired()
     }
@@ -547,10 +551,9 @@ impl<T: LinkType> Queue<T> for MemoryQueueWithStorage<T> {
                     if should_requeue {
                         if let Some(link) = link.clone() {
                             // Requeue with updated delivery count
-                            state.items.push_back(QueueItem::with_delivery_count(
-                                link,
-                                delivery_count,
-                            ));
+                            state
+                                .items
+                                .push_back(QueueItem::with_delivery_count(link, delivery_count));
                             state.stats.depth = state.items.len();
                         }
                         state.delivery_tracker.remove(id);
@@ -706,11 +709,19 @@ mod tests {
             let options = QueueOptions::new().with_max_size(2);
             let queue = MemoryQueue::<u64>::new("test", options);
 
-            queue.enqueue(Link::new(1, LinkRef::Id(1), LinkRef::Id(1))).await.unwrap();
-            queue.enqueue(Link::new(2, LinkRef::Id(2), LinkRef::Id(2))).await.unwrap();
+            queue
+                .enqueue(Link::new(1, LinkRef::Id(1), LinkRef::Id(1)))
+                .await
+                .unwrap();
+            queue
+                .enqueue(Link::new(2, LinkRef::Id(2), LinkRef::Id(2)))
+                .await
+                .unwrap();
 
             // Third enqueue should fail
-            let result = queue.enqueue(Link::new(3, LinkRef::Id(3), LinkRef::Id(3))).await;
+            let result = queue
+                .enqueue(Link::new(3, LinkRef::Id(3), LinkRef::Id(3)))
+                .await;
             assert!(result.is_err());
         }
     }
