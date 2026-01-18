@@ -4,6 +4,13 @@
 //! membership information. Nodes periodically exchange state information
 //! with random peers to propagate membership changes efficiently.
 
+// Allow intentional casts for timestamp conversions and holding locks across iterations.
+#![allow(clippy::cast_possible_truncation)]
+#![allow(clippy::significant_drop_tightening)]
+#![allow(clippy::significant_drop_in_scrutinee)]
+#![allow(clippy::missing_fields_in_debug)]
+#![allow(clippy::match_wildcard_for_single_variants)]
+
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::Arc;
@@ -188,6 +195,7 @@ impl MemberState {
     }
 
     /// Deserializes a member state from a string.
+    #[must_use]
     pub fn deserialize(s: &str) -> Option<Self> {
         let parts: Vec<&str> = s.split('|').collect();
         if parts.len() < 6 {
@@ -265,7 +273,7 @@ pub struct GossipMessage {
 impl GossipMessage {
     /// Creates a new gossip message.
     #[must_use]
-    pub fn new(msg_type: GossipMessageType, sender_id: String) -> Self {
+    pub const fn new(msg_type: GossipMessageType, sender_id: String) -> Self {
         Self {
             msg_type,
             sender_id,
@@ -276,19 +284,19 @@ impl GossipMessage {
 
     /// Creates a ping message.
     #[must_use]
-    pub fn ping(sender_id: String) -> Self {
+    pub const fn ping(sender_id: String) -> Self {
         Self::new(GossipMessageType::Ping, sender_id)
     }
 
     /// Creates a pong message.
     #[must_use]
-    pub fn pong(sender_id: String) -> Self {
+    pub const fn pong(sender_id: String) -> Self {
         Self::new(GossipMessageType::Pong, sender_id)
     }
 
     /// Creates a sync request message.
     #[must_use]
-    pub fn sync_request(sender_id: String) -> Self {
+    pub const fn sync_request(sender_id: String) -> Self {
         Self::new(GossipMessageType::SyncRequest, sender_id)
     }
 
@@ -324,6 +332,7 @@ impl GossipMessage {
     }
 
     /// Deserializes a message from bytes.
+    #[must_use]
     pub fn deserialize(data: &[u8]) -> Option<Self> {
         let text = String::from_utf8_lossy(data);
         let mut lines = text.lines();
@@ -721,7 +730,7 @@ impl GossipProtocol {
 
     /// Returns gossip statistics.
     #[must_use]
-    pub fn stats(&self) -> &GossipStats {
+    pub const fn stats(&self) -> &GossipStats {
         &self.stats
     }
 }

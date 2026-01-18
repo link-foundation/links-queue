@@ -3,6 +3,13 @@
 //! This module provides the main coordinator for managing cluster operations,
 //! including node management, partition assignment, and leader election.
 
+// Allow intentional casts for timestamp conversions and statistics calculations.
+// These casts are safe in practice: u128 milliseconds won't overflow u64 for millions of years,
+// and precision loss in f64 stats is acceptable.
+#![allow(clippy::cast_possible_truncation)]
+#![allow(clippy::cast_precision_loss)]
+#![allow(clippy::missing_fields_in_debug)]
+
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::Arc;
 use std::time::Duration;
@@ -111,7 +118,7 @@ impl DefaultClusterCoordinator {
             local_node.node().clone(),
         ));
 
-        let replication_factor = config.replication.as_ref().map(|r| r.factor).unwrap_or(1);
+        let replication_factor = config.replication.as_ref().map_or(1, |r| r.factor);
 
         let partitions = Arc::new(PartitionManager::new(256, 100, replication_factor));
 
@@ -135,7 +142,7 @@ impl DefaultClusterCoordinator {
     /// Creates a coordinator from configuration.
     #[must_use]
     pub fn from_config(config: ClusterConfig) -> Self {
-        let node_id = config.node_id.clone().unwrap_or_else(|| uuid_v4_simple());
+        let node_id = config.node_id.clone().unwrap_or_else(uuid_v4_simple);
 
         let address = config
             .advertise_address
@@ -188,7 +195,7 @@ impl DefaultClusterCoordinator {
 
     /// Returns the local node.
     #[must_use]
-    pub fn local_node(&self) -> &LocalNode {
+    pub const fn local_node(&self) -> &LocalNode {
         &self.local_node
     }
 
@@ -238,15 +245,13 @@ impl DefaultClusterCoordinator {
         let is_leader = self
             .elect_leader()
             .await
-            .map(|l| l.id() == self.local_node.node().id())
-            .unwrap_or(false);
+            .is_some_and(|l| l.id() == self.local_node.node().id());
 
         let replication_factor = self
             .config
             .replication
             .as_ref()
-            .map(|r| r.factor as f64)
-            .unwrap_or(1.0);
+            .map_or(1.0, |r| r.factor as f64);
 
         let stats = ClusterStats {
             total_nodes: counts.total,
@@ -350,8 +355,7 @@ impl ClusterCoordinator<Node> for DefaultClusterCoordinator {
                 self.partitions
                     .get_owner(key)
                     .await
-                    .map(|n| n.as_ref().clone())
-                    .unwrap_or_else(|| self.local_node.node().clone())
+                    .map_or_else(|| self.local_node.node().clone(), |n| n.as_ref().clone())
             })
         })
     }

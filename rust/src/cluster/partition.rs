@@ -4,6 +4,12 @@
 //! cluster nodes. It supports virtual nodes for better load distribution
 //! and automatic rebalancing when the cluster topology changes.
 
+// Allow intentional casts for hash calculations and statistics.
+#![allow(clippy::cast_possible_truncation)]
+#![allow(clippy::cast_precision_loss)]
+#![allow(clippy::significant_drop_tightening)]
+#![allow(clippy::missing_fields_in_debug)]
+
 use std::collections::BTreeMap;
 use std::hash::{Hash, Hasher};
 use std::sync::Arc;
@@ -55,7 +61,7 @@ impl<N: ClusterNode> HashRing<N> {
     /// More virtual nodes provide better distribution but use more memory.
     /// A typical value is 100-150 virtual nodes per physical node.
     #[must_use]
-    pub fn new(vnodes: usize) -> Self {
+    pub const fn new(vnodes: usize) -> Self {
         Self {
             ring: BTreeMap::new(),
             vnodes,
@@ -65,7 +71,7 @@ impl<N: ClusterNode> HashRing<N> {
 
     /// Creates a hash ring with default settings (100 virtual nodes).
     #[must_use]
-    pub fn with_defaults() -> Self {
+    pub const fn with_defaults() -> Self {
         Self::new(100)
     }
 
@@ -140,6 +146,7 @@ impl<N: ClusterNode> HashRing<N> {
     ///
     /// Returns the primary node and `n-1` successor nodes for replication.
     /// Nodes are returned in order of preference (primary first).
+    #[must_use]
     pub fn get_replica_nodes(&self, key: &str, n: usize) -> Vec<Arc<N>> {
         if self.ring.is_empty() || n == 0 {
             return Vec::new();
@@ -191,6 +198,7 @@ impl<N: ClusterNode> HashRing<N> {
     /// Calculates the distribution of keys across nodes.
     ///
     /// Useful for monitoring load distribution.
+    #[must_use]
     pub fn get_distribution(&self) -> std::collections::HashMap<String, f64> {
         if self.ring.is_empty() {
             return std::collections::HashMap::new();
@@ -346,14 +354,14 @@ impl PartitionManager {
             0.0
         };
 
-        let variance = if !distribution.is_empty() {
+        let variance = if distribution.is_empty() {
+            0.0
+        } else {
             distribution
                 .values()
                 .map(|pct| (pct - expected_pct).powi(2))
                 .sum::<f64>()
                 / distribution.len() as f64
-        } else {
-            0.0
         };
 
         PartitionStats {

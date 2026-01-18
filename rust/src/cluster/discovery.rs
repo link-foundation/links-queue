@@ -3,6 +3,12 @@
 //! This module provides mechanisms for discovering and monitoring cluster nodes.
 //! It supports static node lists and health monitoring with automatic status updates.
 
+// Allow holding RwLock guards across loop iterations for batch operations.
+// Allow intentional casts for timestamp conversions.
+#![allow(clippy::significant_drop_tightening)]
+#![allow(clippy::cast_possible_truncation)]
+#![allow(clippy::missing_fields_in_debug)]
+
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Duration;
@@ -164,32 +170,27 @@ impl DiscoveryService {
                         continue;
                     }
 
-                    match node.health_check(timeout).await {
-                        Ok(_latency) => {
-                            // Node is healthy
-                            if current_status != NodeStatus::Healthy {
-                                node.set_status(NodeStatus::Healthy).await;
-                                let _ =
-                                    event_tx.send(ClusterEvent::NodeJoined(node.as_ref().clone()));
-                            }
+                    if let Ok(_latency) = node.health_check(timeout).await {
+                        // Node is healthy
+                        if current_status != NodeStatus::Healthy {
+                            node.set_status(NodeStatus::Healthy).await;
+                            let _ = event_tx.send(ClusterEvent::NodeJoined(node.as_ref().clone()));
                         }
-                        Err(_) => {
-                            // Health check failed
-                            let failures = node.increment_failures();
+                    } else {
+                        // Health check failed
+                        let failures = node.increment_failures();
 
-                            if failures >= config.dead_threshold {
-                                if current_status != NodeStatus::Dead {
-                                    node.set_status(NodeStatus::Dead).await;
-                                    let _ = event_tx
-                                        .send(ClusterEvent::NodeLeft(node.as_ref().clone()));
-                                }
-                            } else if failures >= config.suspect_threshold {
-                                if current_status != NodeStatus::Suspect {
-                                    node.set_status(NodeStatus::Suspect).await;
-                                    let _ = event_tx
-                                        .send(ClusterEvent::NodeSuspect(node.as_ref().clone()));
-                                }
+                        if failures >= config.dead_threshold {
+                            if current_status != NodeStatus::Dead {
+                                node.set_status(NodeStatus::Dead).await;
+                                let _ =
+                                    event_tx.send(ClusterEvent::NodeLeft(node.as_ref().clone()));
                             }
+                        } else if failures >= config.suspect_threshold
+                            && current_status != NodeStatus::Suspect
+                        {
+                            node.set_status(NodeStatus::Suspect).await;
+                            let _ = event_tx.send(ClusterEvent::NodeSuspect(node.as_ref().clone()));
                         }
                     }
                 }
@@ -382,7 +383,7 @@ pub struct StaticDiscovery {
 impl StaticDiscovery {
     /// Creates a new static discovery with the given node addresses.
     #[must_use]
-    pub fn new(nodes: Vec<String>) -> Self {
+    pub const fn new(nodes: Vec<String>) -> Self {
         Self { nodes }
     }
 

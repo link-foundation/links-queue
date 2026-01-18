@@ -3,6 +3,9 @@
 //! This module provides the concrete implementation of `ClusterNode` trait,
 //! representing a single node in the distributed cluster.
 
+// Allow intentional casts for timestamp and latency conversions.
+#![allow(clippy::cast_possible_truncation)]
+
 use std::fmt::Debug;
 use std::net::SocketAddr;
 use std::sync::atomic::{AtomicU32, AtomicU64, Ordering};

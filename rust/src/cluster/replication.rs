@@ -3,6 +3,13 @@
 //! This module provides replication management for maintaining data copies
 //! across multiple nodes for durability and availability.
 
+// Allow intentional casts for timestamp conversions and statistics calculations.
+// Also allow float_cmp in tests since we're testing exact success rate values.
+#![allow(clippy::cast_possible_truncation)]
+#![allow(clippy::cast_precision_loss)]
+#![allow(clippy::missing_fields_in_debug)]
+#![allow(clippy::unused_async)]
+
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
@@ -113,7 +120,7 @@ impl<T: LinkType + std::fmt::Display + 'static> DataReplicationManager<T> {
 
     /// Returns replication statistics.
     #[must_use]
-    pub fn stats(&self) -> &ReplicationStats {
+    pub const fn stats(&self) -> &ReplicationStats {
         &self.stats
     }
 
@@ -152,7 +159,7 @@ impl<T: LinkType + std::fmt::Display + 'static> DataReplicationManager<T> {
 
         for node in nodes {
             match self.send_replication(node, link).await {
-                Ok(_) => {
+                Ok(()) => {
                     success_count += 1;
                     self.stats.successful.fetch_add(1, Ordering::SeqCst);
 
@@ -199,7 +206,7 @@ impl<T: LinkType + std::fmt::Display + 'static> DataReplicationManager<T> {
                 .await;
 
                 match result {
-                    Ok(Ok(_)) => {
+                    Ok(Ok(())) => {
                         stats.successful.fetch_add(1, Ordering::SeqCst);
                     }
                     Ok(Err(_)) | Err(_) => {
@@ -218,7 +225,7 @@ impl<T: LinkType + std::fmt::Display + 'static> DataReplicationManager<T> {
         Self::send_replication_static(node, link).await
     }
 
-    /// Static version of send_replication for use in spawned tasks.
+    /// Static version of `send_replication` for use in spawned tasks.
     async fn send_replication_static(node: &Node, link: &Link<T>) -> Result<(), ClusterError> {
         // Connect to the node
         let mut stream = node.connect(Duration::from_secs(5)).await?;
@@ -501,6 +508,7 @@ pub enum ReplicationResponse {
 // =============================================================================
 
 #[cfg(test)]
+#[allow(clippy::float_cmp)]
 mod tests {
     use super::*;
 
