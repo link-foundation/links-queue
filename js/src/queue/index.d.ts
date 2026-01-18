@@ -19,3 +19,15 @@ export {
   QueueHandler,
   QueueSubscription,
 } from './types.ts';
+
+export {
+  DeliveryState,
+  DeliveryStateValue,
+  DeliveryRecord,
+  DeliveryTracker,
+  RejectResult,
+} from './delivery.d.ts';
+
+export { MemoryQueue, MemoryQueueWithStorage } from './memory-queue.d.ts';
+
+export { MemoryQueueManager } from './manager.d.ts';
