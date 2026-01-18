@@ -73,8 +73,8 @@ mod traits;
 
 pub use backends::MemoryLinkStore;
 pub use queue::{
-    EnqueueResult, Queue, QueueError, QueueErrorCode, QueueInfo, QueueManager, QueueOptions,
-    QueueResult, QueueStats,
+    EnqueueResult, MemoryQueue, MemoryQueueManager, MemoryQueueWithStorage, Queue, QueueError,
+    QueueErrorCode, QueueInfo, QueueManager, QueueOptions, QueueResult, QueueStats,
 };
 pub use traits::{
     Any, Link, LinkError, LinkPattern, LinkRef, LinkResult, LinkStore, LinkType, PatternField,
