@@ -187,7 +187,15 @@ export { LinkCliProcess, ProcessState } from './backends/link-cli-process.js';
 // Queue Exports
 // =============================================================================
 
-export { QueueError } from './queue/index.js';
+export {
+  QueueError,
+  DeliveryState,
+  DeliveryRecord,
+  DeliveryTracker,
+  MemoryQueue,
+  MemoryQueueWithStorage,
+  MemoryQueueManager,
+} from './queue/index.js';
 
 // =============================================================================
 // Protocol Exports

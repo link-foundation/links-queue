@@ -217,6 +217,14 @@ export {
   QueueError,
   QueueHandler,
   QueueSubscription,
+  DeliveryState,
+  DeliveryStateValue,
+  DeliveryRecord,
+  DeliveryTracker,
+  RejectResult,
+  MemoryQueue,
+  MemoryQueueWithStorage,
+  MemoryQueueManager,
 } from './queue/index.d.ts';
 
 // =============================================================================
