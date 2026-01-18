@@ -560,6 +560,11 @@ pub struct ClusterConfig {
     /// Port to advertise to other nodes.
     /// If not provided, uses the local listening port.
     pub advertise_port: Option<u16>,
+
+    /// Port for the gossip protocol.
+    /// If not provided, uses 5001.
+    /// Use 0 to let the OS pick an available port (useful for tests).
+    pub gossip_port: Option<u16>,
 }
 
 impl ClusterConfig {
@@ -579,6 +584,7 @@ impl ClusterConfig {
             node_id: None,
             advertise_address: None,
             advertise_port: None,
+            gossip_port: None,
         }
     }
 
@@ -659,6 +665,15 @@ impl ClusterConfig {
     #[must_use]
     pub const fn with_advertise_port(mut self, port: u16) -> Self {
         self.advertise_port = Some(port);
+        self
+    }
+
+    /// Sets the gossip protocol port.
+    /// Use 0 to let the OS pick an available port (useful for tests).
+    #[inline]
+    #[must_use]
+    pub const fn with_gossip_port(mut self, port: u16) -> Self {
+        self.gossip_port = Some(port);
         self
     }
 }
