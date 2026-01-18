@@ -63,8 +63,10 @@
 // =============================================================================
 
 pub mod backends;
+pub mod client;
 pub mod cluster;
 pub mod queue;
+pub mod server;
 mod traits;
 
 // =============================================================================
@@ -97,6 +99,19 @@ pub use cluster::{
     ClusterConfig, ClusterCoordinator, ClusterError, ClusterErrorCode, ClusterEvent, ClusterNode,
     ClusterResult, ClusterStats, DiscoveryMethod, NodeStatus, ReplicationConfig,
     ReplicationManager, SyncMode,
+};
+
+// Re-export server types
+pub use server::{
+    Connection, ConnectionId, ConnectionInfo, ConnectionState, LinksQueueServer, Request,
+    Response, Router, ServerConfig, ServerError, ServerErrorCode, ServerEvent, ServerResult,
+    ServerStats,
+};
+
+// Re-export client types
+pub use client::{
+    ClientConfig, ClientConnection, ClientConnectionState, ClientError, ClientErrorCode,
+    ClientResult, LinksQueueClient, Subscription,
 };
 
 // =============================================================================

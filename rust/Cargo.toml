@@ -20,7 +20,7 @@ name = "links-queue"
 path = "src/main.rs"
 
 [dependencies]
-tokio = { version = "1.0", features = ["rt-multi-thread", "macros", "time", "process", "io-util", "sync"] }
+tokio = { version = "1.0", features = ["rt-multi-thread", "macros", "time", "process", "io-util", "sync", "net", "signal"] }
 
 [dev-dependencies]
 tokio-test = "0.4"
