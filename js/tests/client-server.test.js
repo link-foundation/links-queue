@@ -351,6 +351,11 @@ describe('Client-Server Integration', () => {
           disconnected = true;
         });
 
+        // Handle expected connection reset error during server shutdown
+        client.on('error', () => {
+          // ECONNRESET is expected when server shuts down
+        });
+
         await server.shutdown({ drainTimeout: 1000 });
 
         // Wait for disconnect event

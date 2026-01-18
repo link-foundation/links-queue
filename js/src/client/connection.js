@@ -534,19 +534,20 @@ export class ClientConnection extends EventEmitter {
     }
 
     return new Promise((resolve) => {
+      // Force close timer - cleared when graceful close succeeds
+      const forceCloseTimer = setTimeout(() => {
+        if (this._socket) {
+          this._socket.destroy();
+        }
+      }, 5000);
+
       this._socket.once('close', () => {
+        clearTimeout(forceCloseTimer);
         this.state = ClientConnectionState.CLOSED;
         resolve();
       });
 
       this._socket.end();
-
-      // Force close after a short delay if graceful close doesn't work
-      setTimeout(() => {
-        if (this._socket) {
-          this._socket.destroy();
-        }
-      }, 5000);
     });
   }
 

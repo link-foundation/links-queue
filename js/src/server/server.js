@@ -460,11 +460,23 @@ export class LinksQueueServer extends EventEmitter {
     // Close server
     if (this._server) {
       return new Promise((resolve) => {
-        this._server.close(() => {
+        // Set up close callback
+        const onClose = () => {
           this.state = ServerState.STOPPED;
           this.emit('close');
           resolve();
-        });
+        };
+
+        this._server.close(onClose);
+
+        // Deno workaround: server.close() callback may not fire
+        // Use unref to allow event loop to exit, then resolve after short delay
+        this._server.unref();
+        setTimeout(() => {
+          if (this.state !== ServerState.STOPPED) {
+            onClose();
+          }
+        }, 100);
       });
     }
 
