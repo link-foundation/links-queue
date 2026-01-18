@@ -20,10 +20,11 @@ name = "links-queue"
 path = "src/main.rs"
 
 [dependencies]
-tokio = { version = "1.0", features = ["rt-multi-thread", "macros", "time"] }
+tokio = { version = "1.0", features = ["rt-multi-thread", "macros", "time", "process", "io-util", "sync"] }
 
 [dev-dependencies]
 tokio-test = "0.4"
+tempfile = "3"
 
 [lints.rust]
 unsafe_code = "forbid"
