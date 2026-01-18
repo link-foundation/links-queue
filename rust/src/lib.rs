@@ -96,9 +96,22 @@ pub use backends::{
 
 // Re-export cluster types
 pub use cluster::{
+    // Traits and configuration
     ClusterConfig, ClusterCoordinator, ClusterError, ClusterErrorCode, ClusterEvent, ClusterNode,
     ClusterResult, ClusterStats, DiscoveryMethod, NodeStatus, ReplicationConfig,
     ReplicationManager, SyncMode,
+    // Node implementation
+    LocalNode, Node, NodeBuilder, NodeMetadata,
+    // Discovery
+    DiscoveryService, NodeCounts, StaticDiscovery,
+    // Partitioning
+    HashRing, PartitionKey, PartitionManager, PartitionStats,
+    // Replication
+    DataReplicationManager, ReplicationRequest, ReplicationResponse, ReplicationStats,
+    // Gossip
+    GossipConfig, GossipMessage, GossipMessageType, GossipProtocol, GossipStats, MemberState,
+    // Coordinator
+    ClusterBuilder, DefaultClusterCoordinator,
 };
 
 // Re-export server types
