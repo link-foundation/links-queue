@@ -73,8 +73,8 @@ mod traits;
 
 pub use backends::MemoryLinkStore;
 pub use queue::{
-    EnqueueResult, Queue, QueueError, QueueErrorCode, QueueInfo, QueueManager, QueueOptions,
-    QueueResult, QueueStats,
+    EnqueueResult, MemoryQueue, MemoryQueueManager, MemoryQueueWithStorage, Queue, QueueError,
+    QueueErrorCode, QueueInfo, QueueManager, QueueOptions, QueueResult, QueueStats,
 };
 pub use traits::{
     Any, Link, LinkError, LinkPattern, LinkRef, LinkResult, LinkStore, LinkType, PatternField,
@@ -84,6 +84,12 @@ pub use traits::{
 pub use backends::{
     BackendCapabilities, BackendConfig, BackendError, BackendRegistry, BackendResult, BackendStats,
     DurabilityLevel, MemoryBackend, OperationStats, StorageBackend, StorageBackendDyn,
+};
+
+// Re-export link-cli backend types
+pub use backends::{
+    LinkCliBackend, LinkCliConfig, LinkCliProcess, LinksNotation, NotationParseError,
+    NotationResult, ParsedLink, ProcessConfig, ProcessError, ProcessResult,
 };
 
 // Re-export cluster types

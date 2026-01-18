@@ -7,6 +7,9 @@
 //!
 //! - [`Queue`] - Trait for queue operations (enqueue, dequeue, acknowledge, reject)
 //! - [`QueueManager`] - Trait for managing queue lifecycle (create, delete, list)
+//! - [`MemoryQueue`] - In-memory queue implementation
+//! - [`MemoryQueueWithStorage`] - Enhanced queue with requeue support
+//! - [`MemoryQueueManager`] - In-memory queue manager
 //! - [`QueueOptions`] - Configuration options for creating queues
 //! - [`QueueStats`] - Statistics and metrics for a queue
 //! - [`QueueInfo`] - Information about a queue
@@ -15,16 +18,15 @@
 //! # Example
 //!
 //! ```rust,ignore
-//! use links_queue::queue::{Queue, QueueManager, QueueOptions};
+//! use links_queue::{MemoryQueueManager, QueueManager, QueueOptions, Queue};
 //! use links_queue::{Link, LinkRef};
 //!
-//! async fn example<T, Q, M>(manager: &M) -> Result<(), Box<dyn std::error::Error>>
-//! where
-//!     T: links_queue::LinkType,
-//!     Q: Queue<T>,
-//!     M: QueueManager<T, Q>,
-//! {
-//!     // Create a queue
+//! #[tokio::main]
+//! async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!     // Create a queue manager
+//!     let manager = MemoryQueueManager::<u64>::new();
+//!
+//!     // Create a queue with options
 //!     let options = QueueOptions::default()
 //!         .with_max_size(1000)
 //!         .with_visibility_timeout(30);
@@ -44,9 +46,17 @@
 //! }
 //! ```
 
+pub mod delivery;
+mod manager;
+mod memory_queue;
 mod traits;
 
+// Re-export trait types
 pub use traits::{
     EnqueueResult, Queue, QueueError, QueueErrorCode, QueueInfo, QueueManager, QueueOptions,
     QueueResult, QueueStats,
 };
+
+// Re-export implementations
+pub use manager::MemoryQueueManager;
+pub use memory_queue::{MemoryQueue, MemoryQueueWithStorage};

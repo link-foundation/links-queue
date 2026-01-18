@@ -609,19 +609,20 @@ describe('MemoryQueueManager dead letter queue integration', () => {
     const dlq = await manager.createQueue('tasks-dlq');
 
     // Create main queue with DLQ reference and low retry limit
+    // retryLimit=1 means 1 retry allowed, so dead-letter after 2nd reject
     const queue = await manager.createQueue('tasks', {
-      retryLimit: 2,
+      retryLimit: 1,
       deadLetterQueue: 'tasks-dlq',
     });
 
     // Enqueue an item
     await queue.enqueue(createLink(1, 'task', 'process'));
 
-    // Dequeue and reject with requeue (attempt 1)
+    // Dequeue and reject with requeue (attempt 1, deliveryCount=1)
     await queue.dequeue();
     await queue.reject(1, true);
 
-    // Dequeue and reject with requeue (attempt 2 - should go to DLQ)
+    // Dequeue and reject with requeue (attempt 2, deliveryCount=2 > retryLimit=1, goes to DLQ)
     await queue.dequeue();
     await queue.reject(1, true);
 

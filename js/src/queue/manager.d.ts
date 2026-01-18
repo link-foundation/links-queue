@@ -1,19 +1,85 @@
 /**
- * QueueManager implementation for links-queue.
+ * Queue manager implementations for links-queue.
  *
- * This module provides the MemoryQueueManager class - a registry for managing
- * multiple named queues with lifecycle operations.
+ * This module provides two queue manager implementations:
+ *
+ * 1. MemoryQueueManager - Lightweight manager for MemoryQueueWithStorage
+ * 2. LinksQueueManager - Full-featured manager for LinksQueue
  *
  * @module queue/manager
  */
 
 import type { MemoryLinkStore } from '../backends/memory.d.ts';
 import type { Queue, QueueManager, QueueOptions, QueueInfo } from './types.ts';
+import type { MemoryQueueWithStorage } from './memory-queue.d.ts';
+
+// =============================================================================
+// Memory Queue Manager (Lightweight, poll-based)
+// =============================================================================
 
 /**
- * Configuration for creating a MemoryQueueManager.
+ * In-memory queue manager that creates and manages MemoryQueueWithStorage instances.
  */
-export interface MemoryQueueManagerConfig {
+export declare class MemoryQueueManager implements QueueManager {
+  /**
+   * Creates a new, empty queue manager.
+   */
+  constructor();
+
+  /**
+   * Returns the number of managed queues.
+   */
+  queueCount(): number;
+
+  /**
+   * Checks if a queue with the given name exists.
+   */
+  hasQueue(name: string): boolean;
+
+  /**
+   * Creates a new named queue with the specified options.
+   */
+  createQueue(
+    name: string,
+    options?: QueueOptions
+  ): Promise<MemoryQueueWithStorage>;
+
+  /**
+   * Deletes a queue and all its contents.
+   */
+  deleteQueue(name: string): Promise<boolean>;
+
+  /**
+   * Retrieves an existing queue by name.
+   */
+  getQueue(name: string): Promise<MemoryQueueWithStorage | null>;
+
+  /**
+   * Lists all queues managed by this manager.
+   */
+  listQueues(): Promise<QueueInfo[]>;
+
+  /**
+   * Processes expired messages in all queues.
+   * Returns a map of queue names to the number of messages requeued.
+   */
+  processAllExpired(): Map<string, number>;
+
+  /**
+   * Moves dead letter items from source queues to their configured DLQs.
+   * Returns the number of items moved.
+   */
+  processDeadLetters(): Promise<number>;
+}
+
+// =============================================================================
+// Links Queue Manager (Full-featured, timer-based)
+// =============================================================================
+
+/**
+ * Configuration for creating a LinksQueueManager.
+ */
+export interface LinksQueueManagerConfig {
   /**
    * LinkStore backend to use for all queues.
    */
@@ -21,17 +87,17 @@ export interface MemoryQueueManagerConfig {
 }
 
 /**
- * MemoryQueueManager - Manages the lifecycle of named queues.
+ * LinksQueueManager - Manages the lifecycle of named LinksQueue instances.
  *
- * Handles creating, deleting, and retrieving queue instances. Acts as a
- * registry for all queues in the system and manages dead letter queue
- * relationships.
+ * This manager uses a LinkStore backend for all queues and provides
+ * automatic timer-based visibility timeout handling and dead letter queue
+ * routing.
  *
  * @example
- * import { MemoryQueueManager, MemoryLinkStore } from 'links-queue';
+ * import { LinksQueueManager, MemoryLinkStore } from 'links-queue';
  *
  * const store = new MemoryLinkStore();
- * const manager = new MemoryQueueManager({ store });
+ * const manager = new LinksQueueManager({ store });
  *
  * // Create queues
  * const tasksQueue = await manager.createQueue('tasks', {
@@ -44,13 +110,13 @@ export interface MemoryQueueManagerConfig {
  * const queues = await manager.listQueues();
  * console.log(queues); // [{ name: 'tasks', depth: 0, ... }, ...]
  */
-export class MemoryQueueManager implements QueueManager {
+export class LinksQueueManager implements QueueManager {
   /**
-   * Creates a new MemoryQueueManager.
+   * Creates a new LinksQueueManager.
    *
    * @param config - Manager configuration
    */
-  constructor(config: MemoryQueueManagerConfig);
+  constructor(config: LinksQueueManagerConfig);
 
   /**
    * Creates a new named queue with the specified options.

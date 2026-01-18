@@ -1,5 +1,30 @@
 # links-queue-js
 
+## 0.7.0
+
+### Minor Changes
+
+- 8442af6: Implement Queue and QueueManager for JavaScript
+  - Add `MemoryQueue` class for FIFO queue with visibility timeout
+  - Add `MemoryQueueWithStorage` wrapper for proper requeue support
+  - Add `MemoryQueueManager` for queue lifecycle management
+  - Add `DeliveryTracker`, `DeliveryRecord`, and `DeliveryState` for delivery tracking
+  - Support at-least-once delivery guarantee with retry limits
+  - Support dead letter queue routing for failed messages
+  - Full API parity with Rust implementation
+
+## 0.6.0
+
+### Minor Changes
+
+- 7539cee: Implement link-cli storage backend for persistent storage
+  - Add `LinkCliBackend` class implementing StorageBackend interface
+  - Add `LinkCliProcess` for managing link-cli child processes
+  - Support CRUD operations via Links Notation protocol
+  - Register link-cli backend in BackendRegistry
+  - Full TypeScript type definitions for all new exports
+  - Comprehensive unit tests with mocked link-cli
+
 ## 0.5.0
 
 ### Minor Changes
