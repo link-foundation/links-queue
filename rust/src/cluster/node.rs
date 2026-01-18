@@ -664,8 +664,15 @@ mod tests {
             let node = Node::new("local", "127.0.0.1", 5000);
             let local = LocalNode::new(node);
 
+            // Sleep briefly to ensure uptime is measurable on all platforms
+            std::thread::sleep(std::time::Duration::from_millis(1));
+
             let uptime = local.uptime();
-            assert!(uptime.as_nanos() > 0);
+            // Check uptime is at least 1ms (using micros for slightly more tolerance)
+            assert!(
+                uptime.as_micros() >= 1000,
+                "Expected uptime >= 1ms, got {uptime:?}"
+            );
         }
 
         #[tokio::test]
