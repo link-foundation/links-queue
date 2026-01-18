@@ -2,9 +2,10 @@
  * Integration tests for TCP server and client.
  *
  * Tests end-to-end communication between server and client.
+ * Note: Uses inline setup/teardown instead of beforeEach/afterEach for Deno compatibility.
  */
 
-import { describe, it, beforeEach, afterEach } from 'node:test';
+import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { LinksQueueServer, ServerState } from '../src/server/index.js';
 import {
@@ -13,198 +14,300 @@ import {
 } from '../src/client/index.js';
 
 // =============================================================================
-// Integration Tests
+// Helper Functions
 // =============================================================================
 
-describe('Client-Server Integration', () => {
-  let server;
-  let client;
-  let serverPort;
+/**
+ * Creates a server and client for testing.
+ * @returns {Promise<{server: LinksQueueServer, client: LinksQueueClient, cleanup: Function}>}
+ */
+async function createTestSetup() {
+  const server = new LinksQueueServer({ port: 0 });
+  await server.start();
+  const serverPort = server.address.port;
 
-  beforeEach(async () => {
-    // Start server on random port
-    server = new LinksQueueServer({ port: 0 });
-    await server.start();
-    serverPort = server.address.port;
-
-    // Create client
-    client = new LinksQueueClient({
-      host: 'localhost',
-      port: serverPort,
-      reconnect: false, // Disable reconnect for tests
-    });
+  const client = new LinksQueueClient({
+    host: 'localhost',
+    port: serverPort,
+    reconnect: false,
   });
 
-  afterEach(async () => {
+  const cleanup = async () => {
     if (client && client.isConnected) {
       await client.disconnect();
     }
     if (server && server.state !== ServerState.STOPPED) {
       await server.stop();
     }
-  });
+  };
 
+  return { server, client, serverPort, cleanup };
+}
+
+// =============================================================================
+// Integration Tests
+// =============================================================================
+
+describe('Client-Server Integration', () => {
   describe('Connection', () => {
     it('should connect to server', async () => {
-      await client.connect();
-      assert.equal(client.isConnected, true);
-      assert.equal(server.connectionCount, 1);
+      const { server, client, cleanup } = await createTestSetup();
+      try {
+        await client.connect();
+        assert.equal(client.isConnected, true);
+        assert.equal(server.connectionCount, 1);
+      } finally {
+        await cleanup();
+      }
     });
 
     it('should disconnect from server', async () => {
-      await client.connect();
-      await client.disconnect();
+      const { client, cleanup } = await createTestSetup();
+      try {
+        await client.connect();
+        await client.disconnect();
 
-      // Give server time to process disconnect
-      await new Promise((resolve) => setTimeout(resolve, 100));
+        // Give server time to process disconnect
+        await new Promise((resolve) => setTimeout(resolve, 100));
 
-      assert.equal(client.isConnected, false);
+        assert.equal(client.isConnected, false);
+      } finally {
+        await cleanup();
+      }
     });
 
     it('should emit connection events', async () => {
-      let connectEmitted = false;
-      let serverConnectionEmitted = false;
+      const { server, client, cleanup } = await createTestSetup();
+      try {
+        let connectEmitted = false;
+        let serverConnectionEmitted = false;
 
-      client.on('connect', () => {
-        connectEmitted = true;
-      });
+        client.on('connect', () => {
+          connectEmitted = true;
+        });
 
-      server.on('connection', () => {
-        serverConnectionEmitted = true;
-      });
+        server.on('connection', () => {
+          serverConnectionEmitted = true;
+        });
 
-      await client.connect();
+        await client.connect();
 
-      assert.ok(connectEmitted);
-      assert.ok(serverConnectionEmitted);
+        // Give server time to process connection event (needed on macOS)
+        await new Promise((resolve) => setTimeout(resolve, 50));
+
+        assert.ok(connectEmitted);
+        assert.ok(serverConnectionEmitted);
+      } finally {
+        await cleanup();
+      }
     });
   });
 
   describe('Queue Operations', () => {
-    beforeEach(async () => {
-      await client.connect();
-      // Create a test queue
-      await client.createQueue('tasks');
-    });
-
     it('should create and list queues', async () => {
-      await client.createQueue('queue2');
+      const { client, cleanup } = await createTestSetup();
+      try {
+        await client.connect();
+        await client.createQueue('tasks');
+        await client.createQueue('queue2');
 
-      const queues = await client.listQueues();
+        const queues = await client.listQueues();
 
-      assert.ok(Array.isArray(queues));
-      const names = queues.map((q) => q.name);
-      assert.ok(names.includes('tasks'));
-      assert.ok(names.includes('queue2'));
+        assert.ok(Array.isArray(queues));
+        const names = queues.map((q) => q.name);
+        assert.ok(names.includes('tasks'));
+        assert.ok(names.includes('queue2'));
+      } finally {
+        await cleanup();
+      }
     });
 
     it('should enqueue and dequeue items', async () => {
-      const payload = { source: 'test', target: 'data' };
-      const enqueueResult = await client.enqueue('tasks', payload);
+      const { client, cleanup } = await createTestSetup();
+      try {
+        await client.connect();
+        await client.createQueue('tasks');
 
-      assert.ok(enqueueResult.id);
-      assert.equal(enqueueResult.position, 0);
+        const payload = { source: 'test', target: 'data' };
+        const enqueueResult = await client.enqueue('tasks', payload);
 
-      const item = await client.dequeue('tasks');
+        assert.ok(enqueueResult.id);
+        assert.equal(enqueueResult.position, 0);
 
-      assert.ok(item);
-      assert.ok(item.id);
+        const item = await client.dequeue('tasks');
+
+        assert.ok(item);
+        assert.ok(item.id);
+      } finally {
+        await cleanup();
+      }
     });
 
     it('should return null for empty queue dequeue', async () => {
-      const item = await client.dequeue('tasks');
-      assert.equal(item, null);
+      const { client, cleanup } = await createTestSetup();
+      try {
+        await client.connect();
+        await client.createQueue('tasks');
+
+        const item = await client.dequeue('tasks');
+        assert.equal(item, null);
+      } finally {
+        await cleanup();
+      }
     });
 
     it('should peek without removing item', async () => {
-      await client.enqueue('tasks', { action: 'test' });
+      const { client, cleanup } = await createTestSetup();
+      try {
+        await client.connect();
+        await client.createQueue('tasks');
 
-      const peeked = await client.peek('tasks');
-      assert.ok(peeked);
+        await client.enqueue('tasks', { action: 'test' });
 
-      // Item should still be there
-      const peekedAgain = await client.peek('tasks');
-      assert.ok(peekedAgain);
+        const peeked = await client.peek('tasks');
+        assert.ok(peeked);
+
+        // Item should still be there
+        const peekedAgain = await client.peek('tasks');
+        assert.ok(peekedAgain);
+      } finally {
+        await cleanup();
+      }
     });
 
     it('should acknowledge processed item', async () => {
-      await client.enqueue('tasks', { action: 'test' });
-      const item = await client.dequeue('tasks');
+      const { client, cleanup } = await createTestSetup();
+      try {
+        await client.connect();
+        await client.createQueue('tasks');
 
-      // Should not throw
-      await client.acknowledge('tasks', item.id);
+        await client.enqueue('tasks', { action: 'test' });
+        const item = await client.dequeue('tasks');
+
+        // Should not throw
+        await client.acknowledge('tasks', item.id);
+      } finally {
+        await cleanup();
+      }
     });
 
     it('should reject item with requeue', async () => {
-      await client.enqueue('tasks', { action: 'test' });
-      const item = await client.dequeue('tasks');
+      const { client, cleanup } = await createTestSetup();
+      try {
+        await client.connect();
+        await client.createQueue('tasks');
 
-      await client.reject('tasks', item.id, true);
+        await client.enqueue('tasks', { action: 'test' });
+        const item = await client.dequeue('tasks');
 
-      // Item should be back in queue
-      const nextItem = await client.peek('tasks');
-      assert.ok(nextItem);
+        await client.reject('tasks', item.id, true);
+
+        // Item should be back in queue
+        const nextItem = await client.peek('tasks');
+        assert.ok(nextItem);
+      } finally {
+        await cleanup();
+      }
     });
 
     it('should get queue stats', async () => {
-      await client.enqueue('tasks', { action: '1' });
-      await client.enqueue('tasks', { action: '2' });
+      const { client, cleanup } = await createTestSetup();
+      try {
+        await client.connect();
+        await client.createQueue('tasks');
 
-      const stats = await client.getStats('tasks');
+        await client.enqueue('tasks', { action: '1' });
+        await client.enqueue('tasks', { action: '2' });
 
-      assert.equal(stats.depth, 2);
-      assert.equal(stats.enqueued, 2);
+        const stats = await client.getStats('tasks');
+
+        assert.equal(stats.depth, 2);
+        assert.equal(stats.enqueued, 2);
+      } finally {
+        await cleanup();
+      }
     });
 
     it('should delete queue', async () => {
-      const result = await client.deleteQueue('tasks');
+      const { client, cleanup } = await createTestSetup();
+      try {
+        await client.connect();
+        await client.createQueue('tasks');
 
-      assert.equal(result.deleted, true);
-      assert.equal(result.name, 'tasks');
+        const result = await client.deleteQueue('tasks');
 
-      // Should fail to dequeue from deleted queue
-      await assert.rejects(async () => {
-        await client.dequeue('tasks');
-      });
+        assert.equal(result.deleted, true);
+        assert.equal(result.name, 'tasks');
+
+        // Should fail to dequeue from deleted queue
+        await assert.rejects(async () => {
+          await client.dequeue('tasks');
+        });
+      } finally {
+        await cleanup();
+      }
     });
   });
 
   describe('Error Handling', () => {
-    beforeEach(async () => {
-      await client.connect();
-    });
-
     it('should throw on operations with non-existent queue', async () => {
-      await assert.rejects(async () => {
-        await client.enqueue('nonexistent', { data: 'test' });
-      }, /not found/i);
+      const { client, cleanup } = await createTestSetup();
+      try {
+        await client.connect();
+
+        await assert.rejects(async () => {
+          await client.enqueue('nonexistent', { data: 'test' });
+        }, /not found/i);
+      } finally {
+        await cleanup();
+      }
     });
 
     it('should throw on creating duplicate queue', async () => {
-      await client.createQueue('testqueue');
-
-      await assert.rejects(async () => {
+      const { client, cleanup } = await createTestSetup();
+      try {
+        await client.connect();
         await client.createQueue('testqueue');
-      }, /exists/i);
+
+        await assert.rejects(async () => {
+          await client.createQueue('testqueue');
+        }, /exists/i);
+      } finally {
+        await cleanup();
+      }
     });
 
     it('should throw on deleting non-existent queue', async () => {
-      await assert.rejects(async () => {
-        await client.deleteQueue('nonexistent');
-      }, /not found/i);
+      const { client, cleanup } = await createTestSetup();
+      try {
+        await client.connect();
+
+        await assert.rejects(async () => {
+          await client.deleteQueue('nonexistent');
+        }, /not found/i);
+      } finally {
+        await cleanup();
+      }
     });
 
     it('should throw on acknowledging non-existent message', async () => {
-      await client.createQueue('tasks');
+      const { client, cleanup } = await createTestSetup();
+      try {
+        await client.connect();
+        await client.createQueue('tasks');
 
-      await assert.rejects(async () => {
-        await client.acknowledge('tasks', 'nonexistent-id');
-      }, /not found/i);
+        await assert.rejects(async () => {
+          await client.acknowledge('tasks', 'nonexistent-id');
+        }, /not found/i);
+      } finally {
+        await cleanup();
+      }
     });
   });
 
   describe('Multiple Clients', () => {
     it('should handle multiple concurrent clients', async () => {
+      const { server, client, serverPort, cleanup } = await createTestSetup();
       const client2 = new LinksQueueClient({
         host: 'localhost',
         port: serverPort,
@@ -228,25 +331,34 @@ describe('Client-Server Integration', () => {
         assert.equal(stats.depth, 2);
       } finally {
         await client2.disconnect();
+        await cleanup();
       }
     });
   });
 
   describe('Connection Handling', () => {
     it('should handle server shutdown gracefully', async () => {
-      await client.connect();
+      const { server, client } = await createTestSetup();
+      try {
+        await client.connect();
 
-      let disconnected = false;
-      client.on('disconnect', () => {
-        disconnected = true;
-      });
+        let disconnected = false;
+        client.on('disconnect', () => {
+          disconnected = true;
+        });
 
-      await server.shutdown({ drainTimeout: 1000 });
+        await server.shutdown({ drainTimeout: 1000 });
 
-      // Wait for disconnect event
-      await new Promise((resolve) => setTimeout(resolve, 200));
+        // Wait for disconnect event
+        await new Promise((resolve) => setTimeout(resolve, 200));
 
-      assert.ok(disconnected);
+        assert.ok(disconnected);
+      } finally {
+        // Server already stopped from shutdown, just clean client
+        if (client && client.isConnected) {
+          await client.disconnect();
+        }
+      }
     });
   });
 });

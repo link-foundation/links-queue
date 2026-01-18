@@ -4,7 +4,7 @@
  * Tests the server, connection handling, and request routing.
  */
 
-import { describe, it, beforeEach, afterEach } from 'node:test';
+import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   LinksQueueServer,
@@ -28,6 +28,18 @@ import {
   createCreateQueueRequest,
   createDeleteQueueRequest,
 } from '../src/index.js';
+
+/**
+ * Creates a fresh router setup for testing.
+ * Using a helper instead of beforeEach for Deno compatibility.
+ * @returns {Promise<{queueManager: MemoryQueueManager, router: RequestRouter}>}
+ */
+async function createRouterSetup() {
+  const queueManager = new MemoryQueueManager();
+  const router = new RequestRouter(queueManager);
+  await queueManager.createQueue('tasks');
+  return { queueManager, router };
+}
 
 // =============================================================================
 // ServerState Tests
@@ -68,18 +80,9 @@ describe('ConnectionState', () => {
 // =============================================================================
 
 describe('RequestRouter', () => {
-  let queueManager;
-  let router;
-
-  beforeEach(async () => {
-    queueManager = new MemoryQueueManager();
-    router = new RequestRouter(queueManager);
-    // Create a test queue
-    await queueManager.createQueue('tasks');
-  });
-
   describe('route()', () => {
     it('should reject messages without type', async () => {
+      const { router } = await createRouterSetup();
       const message = new Message({});
       const response = await router.route(message);
 
@@ -88,6 +91,7 @@ describe('RequestRouter', () => {
     });
 
     it('should reject unknown request types', async () => {
+      const { router } = await createRouterSetup();
       const message = new Message({ type: 'unknown_type' });
       const response = await router.route(message);
 
@@ -96,6 +100,7 @@ describe('RequestRouter', () => {
     });
 
     it('should track request count', async () => {
+      const { router } = await createRouterSetup();
       const stats = router.getStats();
       const initialCount = stats.requestCount;
 
@@ -109,6 +114,7 @@ describe('RequestRouter', () => {
 
   describe('ENQUEUE handling', () => {
     it('should enqueue to existing queue', async () => {
+      const { router } = await createRouterSetup();
       const request = createEnqueueRequest('tasks', { action: 'process' });
       const response = await router.route(request);
 
@@ -118,6 +124,7 @@ describe('RequestRouter', () => {
     });
 
     it('should reject enqueue to non-existent queue', async () => {
+      const { router } = await createRouterSetup();
       const request = createEnqueueRequest('nonexistent', {
         action: 'process',
       });
@@ -128,6 +135,7 @@ describe('RequestRouter', () => {
     });
 
     it('should reject enqueue without queue name', async () => {
+      const { router } = await createRouterSetup();
       const request = new Message({
         type: RequestType.ENQUEUE,
         payload: { action: 'process' },
@@ -139,6 +147,7 @@ describe('RequestRouter', () => {
     });
 
     it('should reject enqueue without payload', async () => {
+      const { router } = await createRouterSetup();
       const request = new Message({
         type: RequestType.ENQUEUE,
         queue: 'tasks',
@@ -152,6 +161,7 @@ describe('RequestRouter', () => {
 
   describe('DEQUEUE handling', () => {
     it('should dequeue from queue with items', async () => {
+      const { router } = await createRouterSetup();
       // First enqueue
       await router.route(createEnqueueRequest('tasks', { action: 'process' }));
 
@@ -164,6 +174,7 @@ describe('RequestRouter', () => {
     });
 
     it('should return error for empty queue', async () => {
+      const { router } = await createRouterSetup();
       const request = createDequeueRequest('tasks');
       const response = await router.route(request);
 
@@ -172,6 +183,7 @@ describe('RequestRouter', () => {
     });
 
     it('should reject dequeue from non-existent queue', async () => {
+      const { router } = await createRouterSetup();
       const request = createDequeueRequest('nonexistent');
       const response = await router.route(request);
 
@@ -182,6 +194,7 @@ describe('RequestRouter', () => {
 
   describe('PEEK handling', () => {
     it('should peek at queue with items', async () => {
+      const { router } = await createRouterSetup();
       await router.route(createEnqueueRequest('tasks', { action: 'process' }));
 
       const request = createPeekRequest('tasks');
@@ -196,6 +209,7 @@ describe('RequestRouter', () => {
     });
 
     it('should return error for empty queue', async () => {
+      const { router } = await createRouterSetup();
       const request = createPeekRequest('tasks');
       const response = await router.route(request);
 
@@ -206,6 +220,7 @@ describe('RequestRouter', () => {
 
   describe('ACK handling', () => {
     it('should acknowledge in-flight item', async () => {
+      const { router } = await createRouterSetup();
       await router.route(createEnqueueRequest('tasks', { action: 'process' }));
       const dequeueResponse = await router.route(createDequeueRequest('tasks'));
       const messageId = dequeueResponse.result.id;
@@ -218,6 +233,7 @@ describe('RequestRouter', () => {
     });
 
     it('should reject ack for non-existent message', async () => {
+      const { router } = await createRouterSetup();
       const request = createAckRequest('tasks', 'nonexistent');
       const response = await router.route(request);
 
@@ -228,6 +244,7 @@ describe('RequestRouter', () => {
 
   describe('REJECT handling', () => {
     it('should reject in-flight item', async () => {
+      const { router } = await createRouterSetup();
       await router.route(createEnqueueRequest('tasks', { action: 'process' }));
       const dequeueResponse = await router.route(createDequeueRequest('tasks'));
       const messageId = dequeueResponse.result.id;
@@ -241,6 +258,7 @@ describe('RequestRouter', () => {
     });
 
     it('should reject and requeue item', async () => {
+      const { router } = await createRouterSetup();
       await router.route(createEnqueueRequest('tasks', { action: 'process' }));
       const dequeueResponse = await router.route(createDequeueRequest('tasks'));
       const messageId = dequeueResponse.result.id;
@@ -259,6 +277,7 @@ describe('RequestRouter', () => {
 
   describe('GET_STATS handling', () => {
     it('should return queue stats', async () => {
+      const { router } = await createRouterSetup();
       await router.route(createEnqueueRequest('tasks', { action: 'process' }));
       await router.route(createEnqueueRequest('tasks', { action: 'process2' }));
 
@@ -273,6 +292,7 @@ describe('RequestRouter', () => {
 
   describe('LIST_QUEUES handling', () => {
     it('should list all queues', async () => {
+      const { queueManager, router } = await createRouterSetup();
       await queueManager.createQueue('queue2');
 
       const request = createListQueuesRequest();
@@ -290,6 +310,7 @@ describe('RequestRouter', () => {
 
   describe('CREATE_QUEUE handling', () => {
     it('should create new queue', async () => {
+      const { queueManager, router } = await createRouterSetup();
       const request = createCreateQueueRequest('newqueue');
       const response = await router.route(request);
 
@@ -303,6 +324,7 @@ describe('RequestRouter', () => {
     });
 
     it('should reject creating existing queue', async () => {
+      const { router } = await createRouterSetup();
       const request = createCreateQueueRequest('tasks');
       const response = await router.route(request);
 
@@ -313,6 +335,7 @@ describe('RequestRouter', () => {
 
   describe('DELETE_QUEUE handling', () => {
     it('should delete existing queue', async () => {
+      const { queueManager, router } = await createRouterSetup();
       const request = createDeleteQueueRequest('tasks');
       const response = await router.route(request);
 
@@ -325,6 +348,7 @@ describe('RequestRouter', () => {
     });
 
     it('should reject deleting non-existent queue', async () => {
+      const { router } = await createRouterSetup();
       const request = createDeleteQueueRequest('nonexistent');
       const response = await router.route(request);
 
@@ -335,6 +359,7 @@ describe('RequestRouter', () => {
 
   describe('registerHandler()', () => {
     it('should allow registering custom handlers', async () => {
+      const { router } = await createRouterSetup();
       let customHandlerCalled = false;
 
       router.registerHandler('custom', async () => {
@@ -354,7 +379,8 @@ describe('RequestRouter', () => {
   });
 
   describe('getStats()', () => {
-    it('should return router statistics', () => {
+    it('should return router statistics', async () => {
+      const { router } = await createRouterSetup();
       const stats = router.getStats();
 
       assert.ok(typeof stats.requestCount === 'number');
@@ -369,25 +395,16 @@ describe('RequestRouter', () => {
 // =============================================================================
 
 describe('LinksQueueServer', () => {
-  let server;
-
-  afterEach(async () => {
-    if (server) {
-      await server.stop();
-      server = null;
-    }
-  });
-
   describe('constructor()', () => {
     it('should create server with default options', () => {
-      server = new LinksQueueServer();
+      const server = new LinksQueueServer();
 
       assert.equal(server.state, ServerState.STOPPED);
       assert.equal(server.connectionCount, 0);
     });
 
     it('should create server with custom options', () => {
-      server = new LinksQueueServer({
+      const server = new LinksQueueServer({
         host: '127.0.0.1',
         port: 9999,
         maxConnections: 500,
@@ -399,7 +416,7 @@ describe('LinksQueueServer', () => {
 
     it('should accept custom queue manager', () => {
       const queueManager = new MemoryQueueManager();
-      server = new LinksQueueServer({ queueManager });
+      const server = new LinksQueueServer({ queueManager });
 
       assert.equal(server.queueManager, queueManager);
     });
@@ -407,41 +424,53 @@ describe('LinksQueueServer', () => {
 
   describe('start()', () => {
     it('should start server and emit listening event', async () => {
-      server = new LinksQueueServer({ port: 0 }); // Port 0 = random available port
+      const server = new LinksQueueServer({ port: 0 }); // Port 0 = random available port
 
       let listeningEmitted = false;
       server.on('listening', () => {
         listeningEmitted = true;
       });
 
-      await server.start();
+      try {
+        await server.start();
 
-      assert.equal(server.state, ServerState.RUNNING);
-      assert.ok(listeningEmitted);
-      assert.ok(server.address);
-      assert.ok(server.address.port > 0);
+        assert.equal(server.state, ServerState.RUNNING);
+        assert.ok(listeningEmitted);
+        assert.ok(server.address);
+        assert.ok(server.address.port > 0);
+      } finally {
+        await server.stop();
+      }
     });
 
     it('should reject starting already running server', async () => {
-      server = new LinksQueueServer({ port: 0 });
-      await server.start();
-
-      await assert.rejects(async () => {
+      const server = new LinksQueueServer({ port: 0 });
+      try {
         await server.start();
-      }, /Cannot start server/);
+
+        await assert.rejects(async () => {
+          await server.start();
+        }, /Cannot start server/);
+      } finally {
+        await server.stop();
+      }
     });
 
     it('should create queue manager if not provided', async () => {
-      server = new LinksQueueServer({ port: 0 });
-      await server.start();
+      const server = new LinksQueueServer({ port: 0 });
+      try {
+        await server.start();
 
-      assert.ok(server.queueManager);
+        assert.ok(server.queueManager);
+      } finally {
+        await server.stop();
+      }
     });
   });
 
   describe('stop()', () => {
     it('should stop running server', async () => {
-      server = new LinksQueueServer({ port: 0 });
+      const server = new LinksQueueServer({ port: 0 });
       await server.start();
 
       let closeEmitted = false;
@@ -456,7 +485,7 @@ describe('LinksQueueServer', () => {
     });
 
     it('should handle stopping already stopped server', async () => {
-      server = new LinksQueueServer({ port: 0 });
+      const server = new LinksQueueServer({ port: 0 });
 
       // Should not throw
       await server.stop();
@@ -466,7 +495,7 @@ describe('LinksQueueServer', () => {
 
   describe('shutdown()', () => {
     it('should gracefully shutdown server', async () => {
-      server = new LinksQueueServer({ port: 0 });
+      const server = new LinksQueueServer({ port: 0 });
       await server.start();
 
       await server.shutdown({ drainTimeout: 1000 });
@@ -477,40 +506,52 @@ describe('LinksQueueServer', () => {
 
   describe('getStats()', () => {
     it('should return server statistics', async () => {
-      server = new LinksQueueServer({ port: 0 });
-      await server.start();
+      const server = new LinksQueueServer({ port: 0 });
+      try {
+        await server.start();
 
-      const stats = server.getStats();
+        const stats = server.getStats();
 
-      assert.equal(stats.state, ServerState.RUNNING);
-      assert.ok(stats.address);
-      assert.ok(stats.startedAt);
-      assert.ok(stats.uptime >= 0);
-      assert.ok(stats.connections);
-      assert.equal(stats.connections.current, 0);
+        assert.equal(stats.state, ServerState.RUNNING);
+        assert.ok(stats.address);
+        assert.ok(stats.startedAt);
+        assert.ok(stats.uptime >= 0);
+        assert.ok(stats.connections);
+        assert.equal(stats.connections.current, 0);
+      } finally {
+        await server.stop();
+      }
     });
   });
 
   describe('healthCheck()', () => {
     it('should return health status', async () => {
-      server = new LinksQueueServer({ port: 0 });
-      await server.start();
+      const server = new LinksQueueServer({ port: 0 });
+      try {
+        await server.start();
 
-      const health = server.healthCheck();
+        const health = server.healthCheck();
 
-      assert.equal(health.status, ResponseStatus.OK);
-      assert.equal(health.result.healthy, true);
-      assert.equal(health.result.state, ServerState.RUNNING);
+        assert.equal(health.status, ResponseStatus.OK);
+        assert.equal(health.result.healthy, true);
+        assert.equal(health.result.state, ServerState.RUNNING);
+      } finally {
+        await server.stop();
+      }
     });
   });
 
   describe('getConnections()', () => {
     it('should return empty array when no connections', async () => {
-      server = new LinksQueueServer({ port: 0 });
-      await server.start();
+      const server = new LinksQueueServer({ port: 0 });
+      try {
+        await server.start();
 
-      const connections = server.getConnections();
-      assert.deepEqual(connections, []);
+        const connections = server.getConnections();
+        assert.deepEqual(connections, []);
+      } finally {
+        await server.stop();
+      }
     });
   });
 });
