@@ -16,7 +16,7 @@ import {
   QueueError,
   DeliveryState,
   DeliveryRecord,
-  DeliveryTracker,
+  PollableDeliveryTracker,
   createLink,
 } from '../src/index.js';
 
@@ -35,22 +35,22 @@ const createTestLink = (id) => createLink(id, `source-${id}`, `target-${id}`);
 // DeliveryTracker Tests
 // =============================================================================
 
-describe('DeliveryTracker', () => {
+describe('PollableDeliveryTracker', () => {
   describe('constructor', () => {
     it('should create a tracker with default values', () => {
-      const tracker = new DeliveryTracker();
+      const tracker = new PollableDeliveryTracker();
       expect(tracker.inFlightCount()).toBe(0);
     });
 
     it('should create a tracker with custom values', () => {
-      const tracker = new DeliveryTracker(60000, 5);
+      const tracker = new PollableDeliveryTracker(60000, 5);
       expect(tracker.inFlightCount()).toBe(0);
     });
   });
 
   describe('recordDelivery', () => {
     it('should record a new delivery', () => {
-      const tracker = new DeliveryTracker();
+      const tracker = new PollableDeliveryTracker();
       const record = tracker.recordDelivery(1);
 
       expect(record.id).toBe(1);
@@ -60,7 +60,7 @@ describe('DeliveryTracker', () => {
     });
 
     it('should track multiple deliveries', () => {
-      const tracker = new DeliveryTracker();
+      const tracker = new PollableDeliveryTracker();
       tracker.recordDelivery(1);
       tracker.recordDelivery(2);
       tracker.recordDelivery(3);
@@ -74,7 +74,7 @@ describe('DeliveryTracker', () => {
 
   describe('recordRedelivery', () => {
     it('should record a redelivery with incremented count', () => {
-      const tracker = new DeliveryTracker();
+      const tracker = new PollableDeliveryTracker();
       const record = tracker.recordRedelivery(1, 2);
 
       expect(record.id).toBe(1);
@@ -84,7 +84,7 @@ describe('DeliveryTracker', () => {
 
   describe('acknowledge', () => {
     it('should acknowledge an in-flight delivery', () => {
-      const tracker = new DeliveryTracker();
+      const tracker = new PollableDeliveryTracker();
       tracker.recordDelivery(1);
 
       expect(tracker.acknowledge(1)).toBe(true);
@@ -93,12 +93,12 @@ describe('DeliveryTracker', () => {
     });
 
     it('should return false for non-existent delivery', () => {
-      const tracker = new DeliveryTracker();
+      const tracker = new PollableDeliveryTracker();
       expect(tracker.acknowledge(999)).toBe(false);
     });
 
     it('should not acknowledge twice', () => {
-      const tracker = new DeliveryTracker();
+      const tracker = new PollableDeliveryTracker();
       tracker.recordDelivery(1);
 
       expect(tracker.acknowledge(1)).toBe(true);
@@ -108,7 +108,7 @@ describe('DeliveryTracker', () => {
 
   describe('reject', () => {
     it('should reject with requeue', () => {
-      const tracker = new DeliveryTracker();
+      const tracker = new PollableDeliveryTracker();
       tracker.recordDelivery(1);
 
       const result = tracker.reject(1, true);
@@ -119,7 +119,7 @@ describe('DeliveryTracker', () => {
     });
 
     it('should reject without requeue (drop)', () => {
-      const tracker = new DeliveryTracker();
+      const tracker = new PollableDeliveryTracker();
       tracker.recordDelivery(1);
 
       const result = tracker.reject(1, false);
@@ -131,7 +131,7 @@ describe('DeliveryTracker', () => {
     });
 
     it('should dead-letter when retry limit exceeded', () => {
-      const tracker = new DeliveryTracker(30000, 3);
+      const tracker = new PollableDeliveryTracker(30000, 3);
       tracker.recordRedelivery(1, 3); // delivery_count = 4, exceeds limit of 3
 
       const result = tracker.reject(1, true);
@@ -142,19 +142,19 @@ describe('DeliveryTracker', () => {
     });
 
     it('should return null for non-existent delivery', () => {
-      const tracker = new DeliveryTracker();
+      const tracker = new PollableDeliveryTracker();
       expect(tracker.reject(999, true)).toBeNull();
     });
   });
 
   describe('getDeliveryCount', () => {
     it('should return 0 for non-existent delivery', () => {
-      const tracker = new DeliveryTracker();
+      const tracker = new PollableDeliveryTracker();
       expect(tracker.getDeliveryCount(999)).toBe(0);
     });
 
     it('should return correct count', () => {
-      const tracker = new DeliveryTracker();
+      const tracker = new PollableDeliveryTracker();
       tracker.recordDelivery(1);
       expect(tracker.getDeliveryCount(1)).toBe(1);
 
@@ -165,7 +165,7 @@ describe('DeliveryTracker', () => {
 
   describe('clear', () => {
     it('should clear all records', () => {
-      const tracker = new DeliveryTracker();
+      const tracker = new PollableDeliveryTracker();
       tracker.recordDelivery(1);
       tracker.recordDelivery(2);
 

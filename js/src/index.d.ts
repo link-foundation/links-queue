@@ -207,6 +207,7 @@ export {
 // =============================================================================
 
 export {
+  // Type definitions
   EnqueueResult,
   QueueStats,
   QueueOptions,
@@ -217,14 +218,24 @@ export {
   QueueError,
   QueueHandler,
   QueueSubscription,
+  // Delivery tracking
   DeliveryState,
   DeliveryStateValue,
   DeliveryRecord,
   DeliveryTracker,
+  DeliveryTrackerOptions,
+  InFlightItem,
+  PollableDeliveryTracker,
   RejectResult,
+  // Queue implementations
+  LinksQueue,
+  LinksQueueConfig,
   MemoryQueue,
   MemoryQueueWithStorage,
+  // Queue managers
   MemoryQueueManager,
+  LinksQueueManager,
+  LinksQueueManagerConfig,
 } from './queue/index.d.ts';
 
 // =============================================================================

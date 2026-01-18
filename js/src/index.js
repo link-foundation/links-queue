@@ -192,9 +192,12 @@ export {
   DeliveryState,
   DeliveryRecord,
   DeliveryTracker,
+  PollableDeliveryTracker,
+  LinksQueue,
   MemoryQueue,
   MemoryQueueWithStorage,
   MemoryQueueManager,
+  LinksQueueManager,
 } from './queue/index.js';
 
 // =============================================================================

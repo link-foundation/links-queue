@@ -38,7 +38,7 @@
 /* eslint-disable require-await */
 
 import { QueueError } from './types.js';
-import { DeliveryTracker, DeliveryState } from './delivery.js';
+import { PollableDeliveryTracker, DeliveryState } from './delivery.js';
 
 // =============================================================================
 // Default Options
@@ -137,10 +137,10 @@ export class MemoryQueue {
 
     /**
      * Delivery tracker for in-flight messages.
-     * @type {DeliveryTracker}
+     * @type {PollableDeliveryTracker}
      * @private
      */
-    this._deliveryTracker = new DeliveryTracker(
+    this._deliveryTracker = new PollableDeliveryTracker(
       this._options.visibilityTimeout * 1000, // Convert to milliseconds
       this._options.retryLimit
     );
@@ -463,6 +463,27 @@ export class MemoryQueue {
     this._deadLetterItems = [];
     return items;
   }
+
+  /**
+   * Clears all items from the queue.
+   *
+   * This removes all pending items, in-flight items, and dead letter items.
+   *
+   * @returns {Promise<void>}
+   */
+  async clear() {
+    this._items = [];
+    this._deliveryTracker.clear();
+    this._deadLetterItems = [];
+    this._stats = {
+      depth: 0,
+      enqueued: 0,
+      dequeued: 0,
+      acknowledged: 0,
+      rejected: 0,
+      inFlight: 0,
+    };
+  }
 }
 
 // =============================================================================
@@ -483,8 +504,10 @@ export class MemoryQueueWithStorage {
    *
    * @param {string} name - Unique name for this queue
    * @param {import('./types.ts').QueueOptions} [options={}] - Queue configuration options
+   * @param {Object} [callbacks={}] - Optional callbacks
+   * @param {function(import('../index.d.ts').Link): Promise<void>} [callbacks.onDeadLetter] - Called when an item exceeds retry limit
    */
-  constructor(name, options = {}) {
+  constructor(name, options = {}, callbacks = {}) {
     /** @type {MemoryQueue} Base queue. */
     this._inner = new MemoryQueue(name, options);
 
@@ -494,6 +517,13 @@ export class MemoryQueueWithStorage {
      * @private
      */
     this._inFlightLinks = new Map();
+
+    /**
+     * Callback for dead letter items.
+     * @type {function(import('../index.d.ts').Link): Promise<void> | undefined}
+     * @private
+     */
+    this._onDeadLetter = callbacks.onDeadLetter;
   }
 
   /** @type {string} */
@@ -582,13 +612,20 @@ export class MemoryQueueWithStorage {
     this._inner._stats.rejected++;
 
     if (result.shouldRequeue && link) {
-      // Requeue with updated delivery count
-      this._inner._items.push(new QueueItem(link, deliveryCount));
+      // Requeue with updated delivery count at the front of the queue
+      // This allows failed items to be retried immediately
+      this._inner._items.unshift(new QueueItem(link, deliveryCount));
       this._inner._stats.depth = this._inner._items.length;
       this._inner._deliveryTracker.remove(id);
     } else if (result.state === DeliveryState.DEAD_LETTERED && link) {
       // Move to dead letter queue
-      this._inner._deadLetterItems.push(link);
+      if (this._onDeadLetter) {
+        // Use callback for automatic DLQ routing
+        await this._onDeadLetter(link);
+      } else {
+        // Store for manual DLQ processing
+        this._inner._deadLetterItems.push(link);
+      }
       this._inner._deliveryTracker.remove(id);
     }
 
@@ -614,6 +651,16 @@ export class MemoryQueueWithStorage {
   /** @returns {import('../index.d.ts').Link[]} */
   drainDeadLetters() {
     return this._inner.drainDeadLetters();
+  }
+
+  /**
+   * Clears all items from the queue.
+   *
+   * @returns {Promise<void>}
+   */
+  async clear() {
+    await this._inner.clear();
+    this._inFlightLinks.clear();
   }
 }
 

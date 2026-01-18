@@ -11,10 +11,16 @@
 export { QueueError } from './types.js';
 
 // Export delivery tracking
-export { DeliveryState, DeliveryRecord, DeliveryTracker } from './delivery.js';
+export {
+  DeliveryState,
+  DeliveryRecord,
+  DeliveryTracker,
+  PollableDeliveryTracker,
+} from './delivery.js';
 
 // Export queue implementations
+export { LinksQueue } from './queue.js';
 export { MemoryQueue, MemoryQueueWithStorage } from './memory-queue.js';
 
-// Export queue manager
-export { MemoryQueueManager } from './manager.js';
+// Export queue managers
+export { MemoryQueueManager, LinksQueueManager } from './manager.js';

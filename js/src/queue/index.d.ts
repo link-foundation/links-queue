@@ -7,6 +7,7 @@
  * @module queue
  */
 
+// Type definitions
 export {
   EnqueueResult,
   QueueStats,
@@ -20,14 +21,25 @@ export {
   QueueSubscription,
 } from './types.ts';
 
+// Delivery tracking
 export {
   DeliveryState,
   DeliveryStateValue,
   DeliveryRecord,
   DeliveryTracker,
+  DeliveryTrackerOptions,
+  InFlightItem,
+  PollableDeliveryTracker,
   RejectResult,
 } from './delivery.d.ts';
 
+// Queue implementations
+export { LinksQueue, LinksQueueConfig } from './queue.d.ts';
 export { MemoryQueue, MemoryQueueWithStorage } from './memory-queue.d.ts';
 
-export { MemoryQueueManager } from './manager.d.ts';
+// Queue managers
+export {
+  MemoryQueueManager,
+  LinksQueueManager,
+  LinksQueueManagerConfig,
+} from './manager.d.ts';
