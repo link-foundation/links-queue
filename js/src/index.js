@@ -252,3 +252,34 @@ export {
   ClientConnection,
   ClientConnectionState,
 } from './client/index.js';
+
+// =============================================================================
+// Advanced Features Exports (Phase 7)
+// =============================================================================
+
+export {
+  // Scheduler
+  CronParser,
+  Scheduler,
+  ScheduledQueue,
+  // Rate limiter
+  SlidingWindowCounter,
+  TokenBucket,
+  RateLimiter,
+  RateLimitedQueue,
+  RateLimitError,
+  // Router
+  ExchangeType,
+  TopicMatcher,
+  DirectExchange,
+  TopicExchange,
+  FanoutExchange,
+  HeadersExchange,
+  Router,
+  RoutedQueueManager,
+  // Pub/Sub
+  MessageFilter,
+  PubSubBroker,
+  ObservableQueue,
+  QueueBackedPubSub,
+} from './features/index.js';
