@@ -1,14 +1,23 @@
 {
   "name": "links-queue-js",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "description": "Links Queue - a universal queue system using links (JavaScript implementation)",
   "type": "module",
   "main": "src/index.js",
   "types": "src/index.d.ts",
+  "bin": {
+    "links-queue": "./src/cli.js"
+  },
   "exports": {
     ".": {
       "types": "./src/index.d.ts",
       "import": "./src/index.js"
+    },
+    "./server": {
+      "import": "./src/server/index.js"
+    },
+    "./client": {
+      "import": "./src/client/index.js"
     }
   },
   "scripts": {
@@ -30,7 +39,9 @@
     "queue",
     "links",
     "javascript",
-    "typescript"
+    "typescript",
+    "tcp-server",
+    "message-queue"
   ],
   "author": "",
   "license": "Unlicense",
@@ -55,7 +66,7 @@
   },
   "lint-staged": {
     "*.{js,mjs,cjs}": [
-      "eslint --fix --max-warnings 0",
+      "eslint --fix",
       "prettier --write",
       "prettier --check"
     ],

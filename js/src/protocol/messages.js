@@ -423,7 +423,14 @@ export class Message {
     };
 
     // Recursively extract a field by name from a link structure
-    const extractField = (l, fieldName) => {
+    // Returns the entire link if returnFullLink is true (for complex fields)
+    // Set shallow=true to only search at the immediate level (not inside result/payload/error)
+    const extractField = (
+      l,
+      fieldName,
+      returnFullLink = false,
+      shallow = false
+    ) => {
       if (l === null || l === undefined) {
         return undefined;
       }
@@ -431,12 +438,31 @@ export class Message {
       // Check if this link's source matches the field name
       const source = getSourceValue(l);
       if (source === fieldName) {
+        if (returnFullLink) {
+          return l; // Return full link for complex fields
+        }
         return getTargetValue(l);
       }
 
+      // Don't search inside certain container fields unless we're specifically looking for them
+      // This prevents extracting fields like "id" from inside "result" when looking for "messageId"
+      const containerFields = ['result', 'payload', 'error'];
+      const isContainerField = containerFields.includes(source);
+      const searchingForContainer = containerFields.includes(fieldName);
+
+      // Skip diving into container fields unless we're searching for them
+      if (isContainerField && !searchingForContainer) {
+        return undefined;
+      }
+
       // Check if source is itself a Link with matching source
-      if (typeof source === 'object' && source !== null && 'source' in source) {
-        const result = extractField(source, fieldName);
+      if (
+        !shallow &&
+        typeof source === 'object' &&
+        source !== null &&
+        'source' in source
+      ) {
+        const result = extractField(source, fieldName, returnFullLink, shallow);
         if (result !== undefined) {
           return result;
         }
@@ -444,8 +470,13 @@ export class Message {
 
       // Check if target is a Link we should search
       const target = getTargetValue(l);
-      if (typeof target === 'object' && target !== null && 'source' in target) {
-        const result = extractField(target, fieldName);
+      if (
+        !shallow &&
+        typeof target === 'object' &&
+        target !== null &&
+        'source' in target
+      ) {
+        const result = extractField(target, fieldName, returnFullLink, shallow);
         if (result !== undefined) {
           return result;
         }
@@ -454,7 +485,7 @@ export class Message {
       // Check values array
       if (l.values && Array.isArray(l.values)) {
         for (const v of l.values) {
-          const result = extractField(v, fieldName);
+          const result = extractField(v, fieldName, returnFullLink, shallow);
           if (result !== undefined) {
             return result;
           }
@@ -464,15 +495,204 @@ export class Message {
       return undefined;
     };
 
+    // Helper to coerce string values to appropriate types
+    function coerceValue(val) {
+      if (typeof val !== 'string') {
+        return val;
+      }
+      // Try to convert booleans
+      if (val === 'true') {
+        return true;
+      }
+      if (val === 'false') {
+        return false;
+      }
+      if (val === 'null') {
+        return null;
+      }
+      // Try to convert numbers
+      if (/^-?\d+$/.test(val)) {
+        const num = parseInt(val, 10);
+        // Only convert if it's within safe integer range
+        if (Number.isSafeInteger(num)) {
+          return num;
+        }
+      }
+      if (/^-?\d*\.\d+$/.test(val)) {
+        return parseFloat(val);
+      }
+      return val;
+    }
+
+    // Helper to check if a link represents an array structure
+    // Arrays in Links Notation have both source and target as links
+    // where those links don't have simple string sources (i.e., they're not key-value pairs)
+    const isArrayLink = (link) => {
+      if (!link || typeof link !== 'object' || !('source' in link)) {
+        return false;
+      }
+      const source = link.source;
+      const target = link.target;
+
+      // Both must be links (objects with source property)
+      const sourceIsLink =
+        source && typeof source === 'object' && 'source' in source;
+      const targetIsLink =
+        target && typeof target === 'object' && 'source' in target;
+
+      if (!sourceIsLink || !targetIsLink) {
+        return false;
+      }
+
+      // For it to be an array, the nested links should NOT be simple key-value pairs
+      // A key-value pair has a string as its source (the key name)
+      // An array item (object) has a link as its source
+      // The array case: both source.source and target.source are links (complex objects)
+      const sourceSourceIsLink =
+        source.source &&
+        typeof source.source === 'object' &&
+        'source' in source.source;
+      const targetSourceIsLink =
+        target.source &&
+        typeof target.source === 'object' &&
+        'source' in target.source;
+
+      return sourceSourceIsLink && targetSourceIsLink;
+    };
+
+    // Convert a link structure to a plain object or array
+    // Extracts key-value pairs from Link structures
+    const linkToObject = (l) => {
+      if (l === null || l === undefined) {
+        return null;
+      }
+      if (typeof l !== 'object' || !('source' in l)) {
+        return coerceValue(l);
+      }
+
+      // Check if this link represents an array
+      if (isArrayLink(l)) {
+        // Collect all array items: source, target, and values
+        const items = [l.source, l.target];
+        if (l.values && Array.isArray(l.values)) {
+          items.push(...l.values);
+        }
+        // Recursively convert each item
+        return items.map((item) => linkToObject(item));
+      }
+
+      const result = {};
+
+      // Helper to extract all key-value pairs from a link tree
+      const extractKeyValues = (link) => {
+        if (!link || typeof link !== 'object' || !('source' in link)) {
+          return;
+        }
+
+        const source = getSourceValue(link);
+        const target = getTargetValue(link);
+
+        // If source is a string, this could be a key-value pair
+        if (typeof source === 'string' && source) {
+          // Value is the target, which could be primitive or another link
+          if (typeof target === 'object' && target && 'source' in target) {
+            // Target is a complex link - check if it's a nested object or just a value
+            const targetSource = getSourceValue(target);
+            if (typeof targetSource === 'string' && targetSource) {
+              // Target itself has string source, could be nested object
+              // Recursively convert
+              result[source] = linkToObject(target);
+            } else {
+              // Target's source is not a string key, might be a compound value
+              result[source] = linkToObject(target);
+            }
+          } else {
+            // Simple value - coerce to appropriate type
+            result[source] = coerceValue(target);
+          }
+        } else if (typeof source === 'object' && source && 'source' in source) {
+          // Source is itself a link - extract from it
+          extractKeyValues(source);
+        }
+
+        // Check target as well if it's a link
+        if (typeof target === 'object' && target && 'source' in target) {
+          const targetSource = getSourceValue(target);
+          // Only recurse into target if its source is a string key
+          if (typeof targetSource === 'string' && targetSource) {
+            extractKeyValues(target);
+          }
+        }
+
+        // Extract from values array
+        if (link.values && Array.isArray(link.values)) {
+          for (const v of link.values) {
+            extractKeyValues(v);
+          }
+        }
+      };
+
+      extractKeyValues(l);
+
+      return Object.keys(result).length > 0 ? result : null;
+    };
+
     data.type = extractField(link, 'type');
     data.status = extractField(link, 'status');
     data.queue = extractField(link, 'queue');
     data.messageId = extractField(link, 'id');
-    data.payload = extractField(link, 'payload');
-    data.result = extractField(link, 'result');
-    data.error = extractField(link, 'error');
     data.requeue = extractField(link, 'requeue');
     data.priority = extractField(link, 'priority');
+
+    // For complex fields (error, result, payload), extract the full link and convert to object
+    const errorLink = extractField(link, 'error', true);
+    if (errorLink) {
+      // Error has nested code and message in the values array
+      const errorObj = {};
+      // Check values array for code and message
+      if (errorLink.values && Array.isArray(errorLink.values)) {
+        for (const v of errorLink.values) {
+          const vSource = getSourceValue(v);
+          const vTarget = getTargetValue(v);
+          if (vSource === 'code') {
+            errorObj.code = vTarget;
+          } else if (vSource === 'message') {
+            errorObj.message = vTarget;
+          }
+        }
+      }
+      data.error = Object.keys(errorObj).length > 0 ? errorObj : null;
+    }
+
+    const resultLink = extractField(link, 'result', true);
+    if (resultLink) {
+      // Get the target of the result link, which contains the actual data
+      const resultTarget = getTargetValue(resultLink);
+      if (
+        resultTarget &&
+        typeof resultTarget === 'object' &&
+        'source' in resultTarget
+      ) {
+        data.result = linkToObject(resultTarget);
+      } else {
+        data.result = resultTarget;
+      }
+    }
+
+    const payloadLink = extractField(link, 'payload', true);
+    if (payloadLink) {
+      // Get the target of the payload link, which contains the actual data
+      const payloadTarget = getTargetValue(payloadLink);
+      if (
+        payloadTarget &&
+        typeof payloadTarget === 'object' &&
+        'source' in payloadTarget
+      ) {
+        data.payload = linkToObject(payloadTarget);
+      } else {
+        data.payload = payloadTarget;
+      }
+    }
 
     // Convert requeue to boolean
     if (typeof data.requeue === 'string') {

@@ -20,8 +20,16 @@ export default [
         Buffer: 'readonly',
         __dirname: 'readonly',
         __filename: 'readonly',
+        // Timers
+        setTimeout: 'readonly',
+        clearTimeout: 'readonly',
+        setInterval: 'readonly',
+        clearInterval: 'readonly',
+        setImmediate: 'readonly',
+        clearImmediate: 'readonly',
         // Node.js 18+ globals
         fetch: 'readonly',
+        URL: 'readonly',
         // Runtime-specific globals
         Bun: 'readonly',
         Deno: 'readonly',
@@ -77,6 +85,15 @@ export default [
     files: ['tests/**/*.js', '**/*.test.js'],
     rules: {
       'require-await': 'off', // Async functions without await are common in tests
+    },
+  },
+  {
+    // Experiment/debug files have different requirements
+    files: ['experiments/**/*.js'],
+    rules: {
+      'no-unused-vars': 'off',
+      complexity: 'off',
+      'require-await': 'off',
     },
   },
   {

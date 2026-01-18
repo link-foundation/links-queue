@@ -230,3 +230,25 @@ export {
   createCreateQueueRequest,
   createDeleteQueueRequest,
 } from './protocol/messages.js';
+
+// =============================================================================
+// Server Exports
+// =============================================================================
+
+export {
+  LinksQueueServer,
+  ServerState,
+  ServerConnection,
+  ConnectionState,
+  RequestRouter,
+} from './server/index.js';
+
+// =============================================================================
+// Client Exports
+// =============================================================================
+
+export {
+  LinksQueueClient,
+  ClientConnection,
+  ClientConnectionState,
+} from './client/index.js';
