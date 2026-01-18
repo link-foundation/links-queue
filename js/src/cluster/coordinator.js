@@ -343,8 +343,7 @@ export class ClusterCoordinatorImpl extends EventEmitter {
     // Initialize gossip protocol
     this._gossip = new GossipProtocol({
       localNode: this._localNode,
-      onMessage: (message, fromNode) =>
-        this._handleGossipMessage(message, fromNode),
+      onMessage: (message) => this._handleGossipMessage(message),
     });
 
     // Link local node to gossip
@@ -454,7 +453,7 @@ export class ClusterCoordinatorImpl extends EventEmitter {
    * @returns {boolean} True if this is the leader
    */
   isLeader() {
-    return this._leader && this._leader.id === this._localNode.id;
+    return Boolean(this._leader && this._leader.id === this._localNode.id);
   }
 
   // ---------------------------------------------------------------------------
@@ -743,16 +742,15 @@ export class ClusterCoordinatorImpl extends EventEmitter {
    * Handles incoming gossip messages.
    *
    * @param {Object} message - Gossip message
-   * @param {ClusterNodeImpl} fromNode - Source node
    * @private
    */
-  _handleGossipMessage(message, fromNode) {
+  _handleGossipMessage(message) {
     switch (message.type) {
       case 'state-change':
         this._handleStateChange(message);
         break;
       case 'join':
-        this._handleJoinMessage(message, fromNode);
+        this._handleJoinMessage(message);
         break;
       case 'leave':
         this._handleLeaveMessage(message);
@@ -792,10 +790,9 @@ export class ClusterCoordinatorImpl extends EventEmitter {
    * Handles join message.
    *
    * @param {Object} message - Join message
-   * @param {ClusterNodeImpl} fromNode - Source node
    * @private
    */
-  _handleJoinMessage(message, fromNode) {
+  _handleJoinMessage(message) {
     const nodeInfo = message.node;
     if (!this._nodes.has(nodeInfo.id)) {
       const node = new ClusterNodeImpl({
