@@ -63,6 +63,7 @@
 // =============================================================================
 
 pub mod backends;
+pub mod cluster;
 pub mod queue;
 mod traits;
 
@@ -83,6 +84,13 @@ pub use traits::{
 pub use backends::{
     BackendCapabilities, BackendConfig, BackendError, BackendRegistry, BackendResult, BackendStats,
     DurabilityLevel, MemoryBackend, OperationStats, StorageBackend, StorageBackendDyn,
+};
+
+// Re-export cluster types
+pub use cluster::{
+    ClusterConfig, ClusterCoordinator, ClusterError, ClusterErrorCode, ClusterEvent, ClusterNode,
+    ClusterResult, ClusterStats, DiscoveryMethod, NodeStatus, ReplicationConfig,
+    ReplicationManager, SyncMode,
 };
 
 // =============================================================================
