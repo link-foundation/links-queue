@@ -65,6 +65,7 @@ pub struct DataReplicationManager<T: LinkType> {
 
 /// A pending replication operation.
 #[derive(Debug)]
+#[allow(dead_code)] // Fields used for tracking async replications in future
 struct PendingReplication<T: LinkType> {
     /// The link to replicate.
     link: Link<T>,
