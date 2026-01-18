@@ -1,4 +1,4 @@
-//! Benchmarks for MemoryLinkStore operations.
+//! Benchmarks for `MemoryLinkStore` operations.
 //!
 //! These benchmarks measure the performance of core link operations:
 //! - Link creation

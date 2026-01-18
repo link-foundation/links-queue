@@ -175,8 +175,8 @@ fn bench_bulk_enqueue(c: &mut Criterion) {
         .build()
         .unwrap();
 
-    for batch_size in [10, 100] {
-        group.throughput(Throughput::Elements(batch_size as u64));
+    for batch_size in [10u64, 100] {
+        group.throughput(Throughput::Elements(batch_size));
         group.bench_with_input(
             BenchmarkId::new("memory_queue", batch_size),
             &batch_size,
@@ -197,7 +197,7 @@ fn bench_bulk_enqueue(c: &mut Criterion) {
                                 );
                                 queue.enqueue(black_box(link)).await.ok();
                             }
-                        })
+                        });
                     },
                     criterion::BatchSize::SmallInput,
                 );
