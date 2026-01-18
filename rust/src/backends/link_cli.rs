@@ -681,7 +681,7 @@ mod tests {
                 .target(LinkRef::Id(10u64));
 
             let cmd = LinkCliBackend::<u64>::build_query_command(&pattern);
-            assert!(cmd.contains("5"));
+            assert!(cmd.contains('5'));
             assert!(cmd.contains("10"));
         }
 
@@ -690,7 +690,7 @@ mod tests {
             let pattern = LinkPattern::with_source(LinkRef::Id(5u64));
 
             let cmd = LinkCliBackend::<u64>::build_query_command(&pattern);
-            assert!(cmd.contains("5"));
+            assert!(cmd.contains('5'));
             assert!(cmd.contains("$t"));
         }
 

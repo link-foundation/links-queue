@@ -13,7 +13,6 @@ use links_queue::{
     StorageBackend,
 };
 use std::env;
-use std::path::PathBuf;
 use tempfile::tempdir;
 
 /// Checks if clink is available in PATH.
