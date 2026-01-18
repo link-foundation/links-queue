@@ -423,6 +423,7 @@ pub struct ConnectionPool<T: LinkType> {
     max_connections: usize,
 }
 
+#[allow(dead_code)]
 impl<T: LinkType> ConnectionPool<T> {
     /// Creates a new connection pool.
     #[must_use]
