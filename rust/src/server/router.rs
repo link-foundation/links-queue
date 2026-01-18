@@ -9,6 +9,7 @@
 #![allow(clippy::doc_markdown)]
 #![allow(clippy::manual_let_else)]
 #![allow(clippy::unnecessary_wraps)]
+#![allow(clippy::redundant_closure_for_method_calls)]
 #![allow(dead_code)]
 
 use std::collections::HashMap;
