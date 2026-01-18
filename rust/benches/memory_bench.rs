@@ -60,13 +60,17 @@ fn bench_get(c: &mut Criterion) {
         let ids: Vec<u64> = (1..=size as u64).collect();
 
         group.throughput(Throughput::Elements(1));
-        group.bench_with_input(BenchmarkId::new("by_id", size), &(store, ids), |b, (store, ids)| {
-            let mut idx = 0;
-            b.iter(|| {
-                idx = (idx + 1) % ids.len();
-                store.get(black_box(ids[idx]))
-            });
-        });
+        group.bench_with_input(
+            BenchmarkId::new("by_id", size),
+            &(store, ids),
+            |b, (store, ids)| {
+                let mut idx = 0;
+                b.iter(|| {
+                    idx = (idx + 1) % ids.len();
+                    store.get(black_box(ids[idx]))
+                });
+            },
+        );
     }
 
     group.finish();
@@ -81,13 +85,17 @@ fn bench_exists(c: &mut Criterion) {
         let ids: Vec<u64> = (1..=size as u64).collect();
 
         group.throughput(Throughput::Elements(1));
-        group.bench_with_input(BenchmarkId::new("existing", size), &(store, ids), |b, (store, ids)| {
-            let mut idx = 0;
-            b.iter(|| {
-                idx = (idx + 1) % ids.len();
-                store.exists(black_box(ids[idx]))
-            });
-        });
+        group.bench_with_input(
+            BenchmarkId::new("existing", size),
+            &(store, ids),
+            |b, (store, ids)| {
+                let mut idx = 0;
+                b.iter(|| {
+                    idx = (idx + 1) % ids.len();
+                    store.exists(black_box(ids[idx]))
+                });
+            },
+        );
     }
 
     group.finish();
@@ -146,9 +154,13 @@ fn bench_count(c: &mut Criterion) {
         });
 
         // Count with pattern
-        group.bench_with_input(BenchmarkId::new("with_pattern", size), &store, |b, store| {
-            b.iter(|| store.count(&LinkPattern::with_source(LinkRef::Id(black_box(50u64)))));
-        });
+        group.bench_with_input(
+            BenchmarkId::new("with_pattern", size),
+            &store,
+            |b, store| {
+                b.iter(|| store.count(&LinkPattern::with_source(LinkRef::Id(black_box(50u64)))));
+            },
+        );
     }
 
     group.finish();

@@ -21,11 +21,7 @@ fn create_populated_queue(name: &str, count: usize) -> MemoryQueue<u64> {
 
     rt.block_on(async {
         for i in 0..count {
-            let link = Link::new(
-                i as u64,
-                LinkRef::Id(i as u64),
-                LinkRef::Id((i + 1) as u64),
-            );
+            let link = Link::new(i as u64, LinkRef::Id(i as u64), LinkRef::Id((i + 1) as u64));
             queue.enqueue(link).await.ok();
         }
     });
@@ -44,21 +40,26 @@ fn bench_enqueue(c: &mut Criterion) {
 
     for size in [100, 1000] {
         group.throughput(Throughput::Elements(1));
-        group.bench_with_input(BenchmarkId::new("memory_queue", size), &size, |b, &_size| {
-            b.iter_batched(
-                || {
-                    let queue = MemoryQueue::new("bench-queue", QueueOptions::default());
-                    let counter = 0u64;
-                    (queue, counter)
-                },
-                |(queue, mut counter)| {
-                    counter += 1;
-                    let link = Link::new(counter, LinkRef::Id(counter), LinkRef::Id(counter + 1));
-                    rt.block_on(async { queue.enqueue(black_box(link)).await })
-                },
-                criterion::BatchSize::SmallInput,
-            );
-        });
+        group.bench_with_input(
+            BenchmarkId::new("memory_queue", size),
+            &size,
+            |b, &_size| {
+                b.iter_batched(
+                    || {
+                        let queue = MemoryQueue::new("bench-queue", QueueOptions::default());
+                        let counter = 0u64;
+                        (queue, counter)
+                    },
+                    |(queue, mut counter)| {
+                        counter += 1;
+                        let link =
+                            Link::new(counter, LinkRef::Id(counter), LinkRef::Id(counter + 1));
+                        rt.block_on(async { queue.enqueue(black_box(link)).await })
+                    },
+                    criterion::BatchSize::SmallInput,
+                );
+            },
+        );
     }
 
     group.finish();
@@ -100,9 +101,13 @@ fn bench_peek(c: &mut Criterion) {
         group.throughput(Throughput::Elements(1));
         let queue = create_populated_queue("bench-queue", size);
 
-        group.bench_with_input(BenchmarkId::new("memory_queue", size), &queue, |b, queue| {
-            b.iter(|| rt.block_on(async { queue.peek().await }));
-        });
+        group.bench_with_input(
+            BenchmarkId::new("memory_queue", size),
+            &queue,
+            |b, queue| {
+                b.iter(|| rt.block_on(async { queue.peek().await }));
+            },
+        );
     }
 
     group.finish();
@@ -116,9 +121,13 @@ fn bench_depth(c: &mut Criterion) {
         group.throughput(Throughput::Elements(1));
         let queue = create_populated_queue("bench-queue", size);
 
-        group.bench_with_input(BenchmarkId::new("memory_queue", size), &queue, |b, queue| {
-            b.iter(|| queue.depth());
-        });
+        group.bench_with_input(
+            BenchmarkId::new("memory_queue", size),
+            &queue,
+            |b, queue| {
+                b.iter(|| queue.depth());
+            },
+        );
     }
 
     group.finish();
