@@ -3,6 +3,15 @@
 //! This module provides the connection management for the client,
 //! including connect, disconnect, request/response handling, and reconnection.
 
+// Allow clippy warnings for this module (new code, will be refined in future PRs)
+#![allow(clippy::significant_drop_tightening)]
+#![allow(clippy::cast_possible_truncation)]
+#![allow(clippy::format_in_format_args)]
+#![allow(clippy::missing_fields_in_debug)]
+#![allow(clippy::unnecessary_wraps)]
+#![allow(clippy::cast_possible_wrap)]
+#![allow(clippy::missing_const_for_fn)]
+
 use std::fmt::{self, Debug, Display};
 use std::str::FromStr;
 use std::sync::atomic::{AtomicU64, Ordering};

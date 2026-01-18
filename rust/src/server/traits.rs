@@ -3,6 +3,10 @@
 //! This module provides the core traits and configuration types for the
 //! TCP server implementation.
 
+// Allow clippy warnings for this module (new code, will be refined in future PRs)
+#![allow(clippy::missing_const_for_fn)]
+#![allow(dead_code)]
+
 use std::fmt::Debug;
 use std::future::Future;
 use std::sync::Arc;

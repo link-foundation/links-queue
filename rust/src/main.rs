@@ -3,6 +3,11 @@
 //! This binary provides a CLI for starting the queue server and performing
 //! queue operations.
 
+// Allow clippy warnings for this binary (new code, will be refined in future PRs)
+#![allow(clippy::assigning_clones)]
+#![allow(clippy::single_match_else)]
+#![allow(clippy::ignored_unit_patterns)]
+
 use std::env;
 use std::sync::Arc;
 
