@@ -3,9 +3,12 @@
  *
  * Tests for node discovery, partition management, gossip protocol,
  * and cluster coordination.
+ *
+ * Note: Uses inline setup/teardown instead of beforeEach/afterEach for Deno compatibility.
+ * Deno's node:test compatibility layer doesn't support beforeEach/afterEach.
  */
 
-import { describe, it, beforeEach, afterEach } from 'node:test';
+import { describe, it } from 'node:test';
 import assert from 'node:assert';
 
 import {
@@ -17,6 +20,52 @@ import { NodeDiscovery } from '../src/cluster/discovery.js';
 import { PartitionManager } from '../src/cluster/partition.js';
 import { GossipProtocol } from '../src/cluster/gossip.js';
 import { ClusterError } from '../src/cluster/types.js';
+
+// =============================================================================
+// Helper Functions (replacing beforeEach/afterEach for Deno compatibility)
+// =============================================================================
+
+/**
+ * Creates a fresh PartitionManager for testing.
+ * @returns {PartitionManager}
+ */
+function createPartitionManager() {
+  return new PartitionManager({ partitionCount: 256 });
+}
+
+/**
+ * Creates a fresh GossipProtocol setup for testing.
+ * @returns {{gossip: GossipProtocol, localNode: ClusterNodeImpl}}
+ */
+function createGossipSetup() {
+  const localNode = new ClusterNodeImpl({
+    id: 'local-node',
+    address: 'localhost',
+    port: 5000,
+    status: 'healthy',
+  });
+
+  const gossip = new GossipProtocol({
+    localNode,
+    onMessage: () => {},
+  });
+
+  return { gossip, localNode };
+}
+
+/**
+ * Creates a fresh ClusterCoordinator for testing.
+ * @returns {ClusterCoordinatorImpl}
+ */
+function createCoordinator() {
+  return new ClusterCoordinatorImpl({
+    nodeId: 'test-node-1',
+    advertiseAddress: 'localhost',
+    advertisePort: 5000,
+    nodes: [],
+    discovery: 'static',
+  });
+}
 
 // =============================================================================
 // ClusterError Tests
@@ -131,12 +180,6 @@ describe('ClusterNodeImpl', () => {
 // =============================================================================
 
 describe('PartitionManager', () => {
-  let partitionManager;
-
-  beforeEach(() => {
-    partitionManager = new PartitionManager({ partitionCount: 256 });
-  });
-
   it('should create with default partition count', () => {
     const pm = new PartitionManager();
     assert.strictEqual(pm.getPartitionCount(), 256);
@@ -148,6 +191,7 @@ describe('PartitionManager', () => {
   });
 
   it('should compute partition for key', () => {
+    const partitionManager = createPartitionManager();
     const partition = partitionManager.getPartition('test-key');
     assert(typeof partition === 'number');
     assert(partition >= 0);
@@ -155,6 +199,7 @@ describe('PartitionManager', () => {
   });
 
   it('should return consistent partition for same key', () => {
+    const partitionManager = createPartitionManager();
     const key = 'consistent-key';
     const partition1 = partitionManager.getPartition(key);
     const partition2 = partitionManager.getPartition(key);
@@ -162,6 +207,7 @@ describe('PartitionManager', () => {
   });
 
   it('should assign partitions to nodes', () => {
+    const partitionManager = createPartitionManager();
     const nodeIds = ['node-1', 'node-2', 'node-3'];
     partitionManager.assignPartitions(nodeIds);
 
@@ -176,6 +222,7 @@ describe('PartitionManager', () => {
   });
 
   it('should return partition owner after assignment', () => {
+    const partitionManager = createPartitionManager();
     const nodeIds = ['node-1', 'node-2'];
     partitionManager.assignPartitions(nodeIds);
 
@@ -184,11 +231,13 @@ describe('PartitionManager', () => {
   });
 
   it('should return null for unassigned partition', () => {
+    const partitionManager = createPartitionManager();
     const owner = partitionManager.getPartitionOwner(0);
     assert.strictEqual(owner, null);
   });
 
   it('should return key owner', () => {
+    const partitionManager = createPartitionManager();
     const nodeIds = ['node-1', 'node-2'];
     partitionManager.assignPartitions(nodeIds);
 
@@ -197,6 +246,7 @@ describe('PartitionManager', () => {
   });
 
   it('should distribute partitions fairly', () => {
+    const partitionManager = createPartitionManager();
     const nodeIds = ['node-1', 'node-2', 'node-3', 'node-4'];
     partitionManager.assignPartitions(nodeIds);
 
@@ -253,34 +303,15 @@ describe('NodeDiscovery', () => {
 // =============================================================================
 
 describe('GossipProtocol', () => {
-  let gossip;
-  let localNode;
-
-  beforeEach(() => {
-    localNode = new ClusterNodeImpl({
-      id: 'local-node',
-      address: 'localhost',
-      port: 5000,
-      status: 'healthy',
-    });
-
-    gossip = new GossipProtocol({
-      localNode,
-      onMessage: () => {},
-    });
-  });
-
-  afterEach(async () => {
-    if (gossip) {
-      await gossip.close();
-    }
-  });
-
-  it('should create gossip protocol', () => {
+  it('should create gossip protocol', async () => {
+    const { gossip } = createGossipSetup();
     assert(gossip instanceof GossipProtocol);
+    await gossip.close();
   });
 
-  it('should add and remove peers', () => {
+  it('should add and remove peers', async () => {
+    const { gossip } = createGossipSetup();
+
     const peer = new ClusterNodeImpl({
       id: 'peer-node',
       address: 'localhost',
@@ -290,14 +321,22 @@ describe('GossipProtocol', () => {
 
     gossip.addPeer(peer);
     gossip.removePeer('peer-node');
+
+    await gossip.close();
   });
 
-  it('should not add local node as peer', () => {
+  it('should not add local node as peer', async () => {
+    const { gossip, localNode } = createGossipSetup();
+
     gossip.addPeer(localNode);
     // Should not throw and should silently ignore
+
+    await gossip.close();
   });
 
   it('should start and close', async () => {
+    const { gossip } = createGossipSetup();
+
     await gossip.start();
     await gossip.close();
   });
@@ -308,80 +347,85 @@ describe('GossipProtocol', () => {
 // =============================================================================
 
 describe('ClusterCoordinatorImpl', () => {
-  let coordinator;
-
-  beforeEach(() => {
-    coordinator = new ClusterCoordinatorImpl({
-      nodeId: 'test-node-1',
-      advertiseAddress: 'localhost',
-      advertisePort: 5000,
-      nodes: [],
-      discovery: 'static',
-    });
-  });
-
-  afterEach(async () => {
-    if (coordinator) {
-      await coordinator.leave();
-    }
-  });
-
-  it('should create coordinator with config', () => {
+  it('should create coordinator with config', async () => {
+    const coordinator = createCoordinator();
     assert(coordinator instanceof ClusterCoordinatorImpl);
+    await coordinator.leave();
   });
 
-  it('should have local node', () => {
+  it('should have local node', async () => {
+    const coordinator = createCoordinator();
     const localNode = coordinator.getLocalNode();
     assert.strictEqual(localNode.id, 'test-node-1');
+    await coordinator.leave();
   });
 
-  it('should return nodes list', () => {
+  it('should return nodes list', async () => {
+    const coordinator = createCoordinator();
     const nodes = coordinator.getNodes();
     assert(Array.isArray(nodes));
     assert.strictEqual(nodes.length, 1); // Just local node
+    await coordinator.leave();
   });
 
-  it('should return null leader before joining', () => {
+  it('should return null leader before joining', async () => {
+    const coordinator = createCoordinator();
     const leader = coordinator.getLeader();
     assert.strictEqual(leader, null);
+    await coordinator.leave();
   });
 
-  it('should not be leader before joining', () => {
+  it('should not be leader before joining', async () => {
+    const coordinator = createCoordinator();
     assert.strictEqual(coordinator.isLeader(), false);
+    await coordinator.leave();
   });
 
   it('should throw when joining twice', async () => {
+    const coordinator = createCoordinator();
     await coordinator.join([]);
 
     await assert.rejects(async () => coordinator.join([]), /Already joined/);
+
+    await coordinator.leave();
   });
 
   it('should get partition owner', async () => {
+    const coordinator = createCoordinator();
     await coordinator.join([]);
 
     const owner = coordinator.getPartitionOwner('test-key');
     assert(owner !== null);
     assert.strictEqual(owner.id, 'test-node-1');
+
+    await coordinator.leave();
   });
 
   it('should get partition number', async () => {
+    const coordinator = createCoordinator();
     await coordinator.join([]);
 
     const partition = coordinator.getPartition('test-key');
     assert(typeof partition === 'number');
     assert(partition >= 0);
+
+    await coordinator.leave();
   });
 
   it('should return stats', async () => {
+    const coordinator = createCoordinator();
     await coordinator.join([]);
 
     const stats = coordinator.getStats();
     assert.strictEqual(stats.totalNodes, 1);
     assert.strictEqual(stats.healthyNodes, 1);
     assert.strictEqual(stats.isLeader, true);
+
+    await coordinator.leave();
   });
 
   it('should rebalance', async () => {
+    const coordinator = createCoordinator();
     await coordinator.join([]);
 
     let rebalanceStarted = false;
@@ -398,9 +442,12 @@ describe('ClusterCoordinatorImpl', () => {
 
     assert.strictEqual(rebalanceStarted, true);
     assert.strictEqual(rebalanceCompleted, true);
+
+    await coordinator.leave();
   });
 
   it('should leave gracefully', async () => {
+    const coordinator = createCoordinator();
     await coordinator.join([]);
     await coordinator.leave();
 
@@ -409,6 +456,7 @@ describe('ClusterCoordinatorImpl', () => {
   });
 
   it('should emit node-joined event for discovered nodes', async () => {
+    const coordinator = createCoordinator();
     let nodeJoinedEmitted = false;
     coordinator.on('node-joined', () => {
       nodeJoinedEmitted = true;
@@ -422,9 +470,12 @@ describe('ClusterCoordinatorImpl', () => {
     assert.strictEqual(stats.totalNodes, 1);
     // Since we join with no seed nodes, no node-joined events are emitted
     assert.strictEqual(nodeJoinedEmitted, false);
+
+    await coordinator.leave();
   });
 
   it('should emit leader-changed event', async () => {
+    const coordinator = createCoordinator();
     let newLeader = null;
     coordinator.on('leader-changed', (node) => {
       newLeader = node;
@@ -434,6 +485,8 @@ describe('ClusterCoordinatorImpl', () => {
 
     assert(newLeader !== null);
     assert.strictEqual(newLeader.id, 'test-node-1');
+
+    await coordinator.leave();
   });
 });
 
@@ -442,7 +495,7 @@ describe('ClusterCoordinatorImpl', () => {
 // =============================================================================
 
 describe('createClusterCoordinator', () => {
-  it('should create coordinator using factory function', () => {
+  it('should create coordinator using factory function', async () => {
     const coordinator = createClusterCoordinator({
       nodeId: 'factory-node',
       advertiseAddress: 'localhost',
@@ -453,5 +506,7 @@ describe('createClusterCoordinator', () => {
 
     assert(coordinator instanceof ClusterCoordinatorImpl);
     assert.strictEqual(coordinator.getLocalNode().id, 'factory-node');
+
+    await coordinator.leave();
   });
 });
