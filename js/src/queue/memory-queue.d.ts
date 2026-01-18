@@ -8,7 +8,12 @@
  */
 
 import type { Link, LinkId } from '../index.d.ts';
-import type { Queue, QueueOptions, QueueStats, EnqueueResult } from './types.ts';
+import type {
+  Queue,
+  QueueOptions,
+  QueueStats,
+  EnqueueResult,
+} from './types.ts';
 
 // =============================================================================
 // Memory Queue Implementation

@@ -29,7 +29,8 @@ export declare const DeliveryState: Readonly<{
   DEAD_LETTERED: 'DEAD_LETTERED';
 }>;
 
-export type DeliveryStateValue = (typeof DeliveryState)[keyof typeof DeliveryState];
+export type DeliveryStateValue =
+  (typeof DeliveryState)[keyof typeof DeliveryState];
 
 // =============================================================================
 // Delivery Record
@@ -60,11 +61,7 @@ export declare class DeliveryRecord {
   /**
    * Creates a new delivery record.
    */
-  constructor(
-    id: LinkId,
-    visibilityTimeoutMs: number,
-    retryLimit: number
-  );
+  constructor(id: LinkId, visibilityTimeoutMs: number, retryLimit: number);
 
   /** Returns true if the visibility timeout has expired. */
   isExpired(): boolean;
@@ -101,10 +98,7 @@ export declare class DeliveryTracker {
   /**
    * Creates a new delivery tracker with the specified defaults.
    */
-  constructor(
-    defaultVisibilityTimeoutMs?: number,
-    defaultRetryLimit?: number
-  );
+  constructor(defaultVisibilityTimeoutMs?: number, defaultRetryLimit?: number);
 
   /**
    * Records a new delivery (message dequeued).
