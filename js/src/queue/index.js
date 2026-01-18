@@ -9,3 +9,12 @@
 
 // Re-export the QueueError class for runtime usage
 export { QueueError } from './types.js';
+
+// Export the Queue implementation
+export { LinksQueue } from './queue.js';
+
+// Export the QueueManager implementation
+export { MemoryQueueManager } from './manager.js';
+
+// Export the DeliveryTracker for advanced usage
+export { DeliveryTracker } from './delivery.js';

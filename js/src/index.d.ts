@@ -193,6 +193,7 @@ export type { BackendRegistryInterface } from './backends/registry.d.ts';
 // =============================================================================
 
 export {
+  // Type definitions
   EnqueueResult,
   QueueStats,
   QueueOptions,
@@ -203,6 +204,16 @@ export {
   QueueError,
   QueueHandler,
   QueueSubscription,
+  // Queue implementation
+  LinksQueue,
+  LinksQueueConfig,
+  // QueueManager implementation
+  MemoryQueueManager,
+  MemoryQueueManagerConfig,
+  // Delivery tracking
+  DeliveryTracker,
+  DeliveryTrackerOptions,
+  InFlightItem,
 } from './queue/index.d.ts';
 
 // =============================================================================

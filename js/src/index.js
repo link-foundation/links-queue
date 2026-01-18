@@ -183,7 +183,12 @@ export { BackendRegistry, MemoryBackendAdapter } from './backends/registry.js';
 // Queue Exports
 // =============================================================================
 
-export { QueueError } from './queue/index.js';
+export {
+  QueueError,
+  LinksQueue,
+  MemoryQueueManager,
+  DeliveryTracker,
+} from './queue/index.js';
 
 // =============================================================================
 // Protocol Exports
