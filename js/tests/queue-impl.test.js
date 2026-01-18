@@ -290,6 +290,8 @@ describe('LinksQueue dequeue', () => {
 
     expect(item.id).toBe(1);
     expect(queue.getDepth()).toBe(1);
+    // Clean up the visibility timeout timer to avoid Deno resource leak
+    await queue.clear();
   });
 
   it('should return null when queue is empty', async () => {
