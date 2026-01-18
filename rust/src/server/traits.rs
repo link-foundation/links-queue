@@ -340,10 +340,7 @@ impl ServerError {
     #[inline]
     #[must_use]
     pub fn io_error(details: &str) -> Self {
-        Self::new(
-            ServerErrorCode::IoError,
-            format!("I/O error: {details}"),
-        )
+        Self::new(ServerErrorCode::IoError, format!("I/O error: {details}"))
     }
 }
 

@@ -125,8 +125,12 @@ where
         // Split the stream
         let (read_half, write_half) = stream.into_split();
 
-        *self.reader.lock().await = Some(BufReader::with_capacity(self.config.buffer_size, read_half));
-        *self.writer.lock().await = Some(BufWriter::with_capacity(self.config.buffer_size, write_half));
+        *self.reader.lock().await =
+            Some(BufReader::with_capacity(self.config.buffer_size, read_half));
+        *self.writer.lock().await = Some(BufWriter::with_capacity(
+            self.config.buffer_size,
+            write_half,
+        ));
         *self.address.write().await = Some(address.to_string());
         *self.state.write().await = ConnectionState::Connected;
 
@@ -289,7 +293,9 @@ where
         let response = self.request(&request).await?;
         match response {
             ResponseData::QueueInfo { .. } => Ok(()),
-            ResponseData::Error { message, code } => Err(ClientError::server_error(&message, &code)),
+            ResponseData::Error { message, code } => {
+                Err(ClientError::server_error(&message, &code))
+            }
             _ => Err(ClientError::protocol_error("Unexpected response")),
         }
     }
@@ -300,7 +306,9 @@ where
 
         match response {
             ResponseData::Bool(deleted) => Ok(deleted),
-            ResponseData::Error { message, code } => Err(ClientError::server_error(&message, &code)),
+            ResponseData::Error { message, code } => {
+                Err(ClientError::server_error(&message, &code))
+            }
             _ => Err(ClientError::protocol_error("Unexpected response")),
         }
     }
@@ -312,7 +320,9 @@ where
         match response {
             ResponseData::QueueInfo { name, depth } => Ok(Some(QueueInfo::new(name, depth))),
             ResponseData::Error { code, .. } if code == "QUEUE_NOT_FOUND" => Ok(None),
-            ResponseData::Error { message, code } => Err(ClientError::server_error(&message, &code)),
+            ResponseData::Error { message, code } => {
+                Err(ClientError::server_error(&message, &code))
+            }
             _ => Err(ClientError::protocol_error("Unexpected response")),
         }
     }
@@ -322,7 +332,9 @@ where
 
         match response {
             ResponseData::QueueList(queues) => Ok(queues),
-            ResponseData::Error { message, code } => Err(ClientError::server_error(&message, &code)),
+            ResponseData::Error { message, code } => {
+                Err(ClientError::server_error(&message, &code))
+            }
             _ => Err(ClientError::protocol_error("Unexpected response")),
         }
     }
@@ -346,7 +358,9 @@ where
                     .map_err(|_| ClientError::protocol_error("Invalid ID in response"))?;
                 Ok(EnqueueResult::new(typed_id, position))
             }
-            ResponseData::Error { message, code } => Err(ClientError::server_error(&message, &code)),
+            ResponseData::Error { message, code } => {
+                Err(ClientError::server_error(&message, &code))
+            }
             _ => Err(ClientError::protocol_error("Unexpected response")),
         }
     }
@@ -377,7 +391,9 @@ where
                 )))
             }
             ResponseData::Empty => Ok(None),
-            ResponseData::Error { message, code } => Err(ClientError::server_error(&message, &code)),
+            ResponseData::Error { message, code } => {
+                Err(ClientError::server_error(&message, &code))
+            }
             _ => Err(ClientError::protocol_error("Unexpected response")),
         }
     }
@@ -408,7 +424,9 @@ where
                 )))
             }
             ResponseData::Empty => Ok(None),
-            ResponseData::Error { message, code } => Err(ClientError::server_error(&message, &code)),
+            ResponseData::Error { message, code } => {
+                Err(ClientError::server_error(&message, &code))
+            }
             _ => Err(ClientError::protocol_error("Unexpected response")),
         }
     }
@@ -424,7 +442,9 @@ where
 
         match response {
             ResponseData::Bool(true) => Ok(()),
-            ResponseData::Error { message, code } => Err(ClientError::server_error(&message, &code)),
+            ResponseData::Error { message, code } => {
+                Err(ClientError::server_error(&message, &code))
+            }
             _ => Err(ClientError::protocol_error("Unexpected response")),
         }
     }
@@ -441,7 +461,9 @@ where
 
         match response {
             ResponseData::Bool(true) => Ok(()),
-            ResponseData::Error { message, code } => Err(ClientError::server_error(&message, &code)),
+            ResponseData::Error { message, code } => {
+                Err(ClientError::server_error(&message, &code))
+            }
             _ => Err(ClientError::protocol_error("Unexpected response")),
         }
     }
@@ -466,7 +488,9 @@ where
                 rejected,
                 in_flight,
             }),
-            ResponseData::Error { message, code } => Err(ClientError::server_error(&message, &code)),
+            ResponseData::Error { message, code } => {
+                Err(ClientError::server_error(&message, &code))
+            }
             _ => Err(ClientError::protocol_error("Unexpected response")),
         }
     }
@@ -562,7 +586,8 @@ fn parse_response_json(json: &str) -> ClientResult<ResponseData> {
 
     if !ok {
         // Parse error response
-        let error = extract_json_string(json, "error").unwrap_or_else(|| "Unknown error".to_string());
+        let error =
+            extract_json_string(json, "error").unwrap_or_else(|| "Unknown error".to_string());
         let code = extract_json_string(json, "code").unwrap_or_else(|| "UNKNOWN".to_string());
         return Ok(ResponseData::Error {
             message: error,
@@ -785,10 +810,7 @@ mod tests {
         #[test]
         fn test_extract_json_string() {
             let json = r#"{"name":"test","value":"hello"}"#;
-            assert_eq!(
-                extract_json_string(json, "name"),
-                Some("test".to_string())
-            );
+            assert_eq!(extract_json_string(json, "name"), Some("test".to_string()));
             assert_eq!(
                 extract_json_string(json, "value"),
                 Some("hello".to_string())

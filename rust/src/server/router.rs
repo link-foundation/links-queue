@@ -302,10 +302,7 @@ pub enum ResponseData {
     /// Multiple links.
     Links(Vec<LinkData>),
     /// Queue info.
-    QueueInfo {
-        name: String,
-        depth: usize,
-    },
+    QueueInfo { name: String, depth: usize },
     /// Queue stats.
     QueueStats {
         depth: usize,
@@ -318,10 +315,7 @@ pub enum ResponseData {
     /// List of queue names.
     QueueList(Vec<String>),
     /// Enqueue result.
-    EnqueueResult {
-        id: u64,
-        position: usize,
-    },
+    EnqueueResult { id: u64, position: usize },
     /// Boolean result.
     Bool(bool),
     /// Empty result.
@@ -460,8 +454,12 @@ where
             Operation::Acknowledge => self.acknowledge(request).await,
             Operation::Reject => self.reject(request).await,
             Operation::Stats => self.stats(request).await,
-            Operation::Subscribe => Response::error("Subscribe not yet implemented", "NOT_IMPLEMENTED"),
-            Operation::Unsubscribe => Response::error("Unsubscribe not yet implemented", "NOT_IMPLEMENTED"),
+            Operation::Subscribe => {
+                Response::error("Subscribe not yet implemented", "NOT_IMPLEMENTED")
+            }
+            Operation::Unsubscribe => {
+                Response::error("Unsubscribe not yet implemented", "NOT_IMPLEMENTED")
+            }
         }
     }
 
@@ -823,7 +821,9 @@ fn parse_json_fields(json: &str) -> ServerResult<HashMap<String, String>> {
             while i < bytes.len() && bytes[i] != b',' && !bytes[i].is_ascii_whitespace() {
                 i += 1;
             }
-            value = String::from_utf8_lossy(&bytes[value_start..i]).trim().to_string();
+            value = String::from_utf8_lossy(&bytes[value_start..i])
+                .trim()
+                .to_string();
         }
 
         fields.insert(key, value);
@@ -880,9 +880,13 @@ fn parse_queue_options(json: &str) -> ServerResult<QueueOptionsData> {
 
     Ok(QueueOptionsData {
         max_size: fields.get("max_size").and_then(|s| s.parse().ok()),
-        visibility_timeout: fields.get("visibility_timeout").and_then(|s| s.parse().ok()),
+        visibility_timeout: fields
+            .get("visibility_timeout")
+            .and_then(|s| s.parse().ok()),
         retry_limit: fields.get("retry_limit").and_then(|s| s.parse().ok()),
-        dead_letter_queue: fields.get("dead_letter_queue").map(|s| s.trim_matches('"').to_string()),
+        dead_letter_queue: fields
+            .get("dead_letter_queue")
+            .map(|s| s.trim_matches('"').to_string()),
         priority: fields.get("priority").map(|s| s == "true"),
     })
 }

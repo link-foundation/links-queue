@@ -4,8 +4,8 @@ use super::*;
 
 mod integration_tests {
     use super::*;
-    use crate::MemoryQueueManager;
     use crate::server::{LinkData, Operation};
+    use crate::MemoryQueueManager;
     use std::sync::Arc;
 
     #[tokio::test]

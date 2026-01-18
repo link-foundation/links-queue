@@ -103,9 +103,8 @@ pub use cluster::{
 
 // Re-export server types
 pub use server::{
-    Connection, ConnectionId, ConnectionInfo, ConnectionState, LinksQueueServer, Request,
-    Response, Router, ServerConfig, ServerError, ServerErrorCode, ServerEvent, ServerResult,
-    ServerStats,
+    Connection, ConnectionId, ConnectionInfo, ConnectionState, LinksQueueServer, Request, Response,
+    Router, ServerConfig, ServerError, ServerErrorCode, ServerEvent, ServerResult, ServerStats,
 };
 
 // Re-export client types

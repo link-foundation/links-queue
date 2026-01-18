@@ -356,7 +356,9 @@ impl<T: LinkType> Connection<T> {
                 }
                 Ok(start.elapsed())
             }
-            None => Err(ServerError::connection_error("Connection closed during ping")),
+            None => Err(ServerError::connection_error(
+                "Connection closed during ping",
+            )),
         }
     }
 

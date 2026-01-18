@@ -489,7 +489,8 @@ pub trait LinksQueueClient<T: LinkType>: Send + Sync {
     fn delete_queue(&self, name: &str) -> impl Future<Output = ClientResult<bool>> + Send;
 
     /// Gets queue information.
-    fn get_queue(&self, name: &str) -> impl Future<Output = ClientResult<Option<QueueInfo>>> + Send;
+    fn get_queue(&self, name: &str)
+        -> impl Future<Output = ClientResult<Option<QueueInfo>>> + Send;
 
     /// Lists all queues.
     fn list_queues(&self) -> impl Future<Output = ClientResult<Vec<String>>> + Send;
@@ -533,7 +534,10 @@ pub trait LinksQueueClient<T: LinkType>: Send + Sync {
     fn subscribe(&self, queue: &str) -> impl Future<Output = ClientResult<Subscription<T>>> + Send;
 
     /// Unsubscribes from queue updates.
-    fn unsubscribe(&self, subscription: Subscription<T>) -> impl Future<Output = ClientResult<()>> + Send;
+    fn unsubscribe(
+        &self,
+        subscription: Subscription<T>,
+    ) -> impl Future<Output = ClientResult<()>> + Send;
 }
 
 // =============================================================================
@@ -619,7 +623,10 @@ mod tests {
                 format!("{}", ClientErrorCode::ConnectionFailed),
                 "CONNECTION_FAILED"
             );
-            assert_eq!(format!("{}", ClientErrorCode::NotConnected), "NOT_CONNECTED");
+            assert_eq!(
+                format!("{}", ClientErrorCode::NotConnected),
+                "NOT_CONNECTED"
+            );
             assert_eq!(format!("{}", ClientErrorCode::Timeout), "TIMEOUT");
         }
 
