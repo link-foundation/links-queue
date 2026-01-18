@@ -188,6 +188,20 @@ export {
 
 export type { BackendRegistryInterface } from './backends/registry.d.ts';
 
+// link-cli backend for persistent storage
+export { LinkCliBackend } from './backends/link-cli.d.ts';
+export type { LinkCliBackendExtendedOptions } from './backends/link-cli.d.ts';
+export {
+  LinkCliProcess,
+  ProcessState,
+  ProcessStateValue,
+  LinkCliProcessOptions,
+  ExecuteOptions,
+  ExecuteResult,
+  ParsedLink,
+  LinkQueryPattern,
+} from './backends/link-cli-process.d.ts';
+
 // =============================================================================
 // Queue Exports
 // =============================================================================

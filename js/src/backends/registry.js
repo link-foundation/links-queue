@@ -18,6 +18,7 @@
  */
 
 import { MemoryLinkStore } from './memory.js';
+import { LinkCliBackend } from './link-cli.js';
 
 /**
  * A wrapper that adapts MemoryLinkStore to the StorageBackend interface.
@@ -294,6 +295,7 @@ class BackendRegistryClass {
 
     // Register built-in backends
     this._backends.set('memory', MemoryBackendAdapter);
+    this._backends.set('link-cli', LinkCliBackend);
   }
 
   /**
@@ -410,6 +412,7 @@ class BackendRegistryClass {
   reset() {
     this._backends.clear();
     this._backends.set('memory', MemoryBackendAdapter);
+    this._backends.set('link-cli', LinkCliBackend);
   }
 }
 

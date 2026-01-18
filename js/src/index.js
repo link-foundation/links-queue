@@ -179,6 +179,10 @@ export { MemoryLinkStore } from './backends/memory.js';
 // Storage backend interface and registry
 export { BackendRegistry, MemoryBackendAdapter } from './backends/registry.js';
 
+// link-cli backend for persistent storage
+export { LinkCliBackend } from './backends/link-cli.js';
+export { LinkCliProcess, ProcessState } from './backends/link-cli-process.js';
+
 // =============================================================================
 // Queue Exports
 // =============================================================================
