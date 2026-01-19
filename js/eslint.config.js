@@ -30,6 +30,8 @@ export default [
         // Node.js 18+ globals
         fetch: 'readonly',
         URL: 'readonly',
+        TextEncoder: 'readonly',
+        TextDecoder: 'readonly',
         // Runtime-specific globals
         Bun: 'readonly',
         Deno: 'readonly',

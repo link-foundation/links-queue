@@ -92,6 +92,7 @@
 //! }));
 //! ```
 
+mod binary_notation;
 mod link_cli;
 mod link_cli_notation;
 mod link_cli_process;
@@ -122,3 +123,13 @@ pub use link_cli_process::{LinkCliProcess, ProcessConfig, ProcessError, ProcessR
 
 // Re-export registry
 pub use registry::{BackendConfig, BackendRegistry, StorageBackendDyn};
+
+// Re-export binary notation
+pub use binary_notation::{
+    BinaryNotation, BinaryNotationError, BinaryNotationErrorCode, BinaryNotationResult,
+    DecodeOptions, EncodeOptions, EncodedLink, EncodedValue,
+    HEADER_SIZE, MAGIC, VERSION,
+    decode_link_body, decode_string, decode_value, decode_varint,
+    encode_link_body, encode_string, encode_value, encode_varint,
+    link_body_size, string_size, value_size, varint_size,
+};
