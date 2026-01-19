@@ -2,7 +2,7 @@
  * Protocol negotiation for Links Queue communication.
  */
 
-import type { Link } from '../index.js';
+import type { Link } from '../index.d.ts';
 
 /**
  * Supported protocol types.
