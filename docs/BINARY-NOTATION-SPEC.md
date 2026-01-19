@@ -6,11 +6,11 @@
 
 ## Overview
 
-Binary Links Notation (BLN) is a compact binary encoding of Links Notation designed for high-performance data exchange in the Links Queue system. It provides 5-10x smaller message sizes compared to text notation while maintaining compatibility with the Links data model.
+Binary Links Notation (BLN) is a compact binary encoding of Links Notation designed for high-performance data exchange in the Links Queue system. It provides 1.2-1.7x smaller message sizes compared to text notation while maintaining compatibility with the Links data model. Larger savings are achieved for numeric-heavy data, self-referencing links, and large batches.
 
 ## Design Goals
 
-1. **Compact Encoding**: 5-10x smaller than text notation
+1. **Compact Encoding**: 1.2-1.7x smaller than text notation for typical workloads
 2. **Zero-Copy Parsing**: Direct memory access where possible
 3. **Forward/Backward Compatibility**: Version header for evolution
 4. **Streaming Support**: Support for incremental encoding/decoding
@@ -20,7 +20,7 @@ Binary Links Notation (BLN) is a compact binary encoding of Links Notation desig
 
 ### Message Frame
 
-Every binary message starts with a fixed 10-byte header:
+Every binary message starts with a fixed 11-byte header:
 
 ```
 ┌────────┬────────┬────────┬─────────────────────────────────┐
