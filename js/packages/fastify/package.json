@@ -1,0 +1,46 @@
+{
+  "name": "links-queue-fastify",
+  "version": "0.1.0",
+  "description": "Fastify plugin for Links Queue",
+  "type": "module",
+  "main": "src/index.js",
+  "types": "src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "import": "./src/index.js"
+    }
+  },
+  "scripts": {
+    "test": "node --test tests/",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
+  },
+  "keywords": [
+    "links-queue",
+    "fastify",
+    "plugin",
+    "queue",
+    "message-queue"
+  ],
+  "author": "",
+  "license": "Unlicense",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/link-foundation/links-queue",
+    "directory": "js/packages/fastify"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "peerDependencies": {
+    "fastify": "^4.0.0 || ^5.0.0"
+  },
+  "dependencies": {
+    "fastify-plugin": "^5.0.0",
+    "links-queue-js": "^0.11.0"
+  },
+  "devDependencies": {
+    "fastify": "^5.0.0"
+  }
+}

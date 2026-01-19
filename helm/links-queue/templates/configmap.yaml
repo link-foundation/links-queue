@@ -1,0 +1,11 @@
+{{- if .Values.configMap.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "links-queue.fullname" . }}-config
+  labels:
+    {{- include "links-queue.labels" . | nindent 4 }}
+data:
+  config.json: |
+{{ .Values.configMap.config | indent 4 }}
+{{- end }}

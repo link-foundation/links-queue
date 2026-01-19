@@ -1,0 +1,136 @@
+# Links Queue - Multi-Node Cluster Setup
+#
+# This docker-compose file provides a multi-node cluster setup
+# for Links Queue, demonstrating distributed operation.
+#
+# Usage:
+#   docker-compose -f docker-compose.cluster.yml up -d
+#   docker-compose -f docker-compose.cluster.yml logs -f
+#   docker-compose -f docker-compose.cluster.yml down
+#
+# Access nodes at:
+#   - Node 1: tcp://localhost:5001
+#   - Node 2: tcp://localhost:5002
+#   - Node 3: tcp://localhost:5003
+
+services:
+  # ==========================================================================
+  # Node 1 - Primary seed node
+  # ==========================================================================
+  links-queue-node1:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.js
+    container_name: links-queue-node1
+    hostname: node1
+    restart: unless-stopped
+    ports:
+      - "5001:5000"
+    environment:
+      - NODE_ENV=production
+      - LINKS_QUEUE_HOST=0.0.0.0
+      - LINKS_QUEUE_PORT=5000
+      - LINKS_QUEUE_NODE_ID=node1
+      - LINKS_QUEUE_CLUSTER_ENABLED=true
+      - LINKS_QUEUE_CLUSTER_SEEDS=node1:5000,node2:5000,node3:5000
+    networks:
+      - links-queue-cluster
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('net').createConnection({port: 5000}).on('connect', () => process.exit(0)).on('error', () => process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+
+  # ==========================================================================
+  # Node 2
+  # ==========================================================================
+  links-queue-node2:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.js
+    container_name: links-queue-node2
+    hostname: node2
+    restart: unless-stopped
+    ports:
+      - "5002:5000"
+    environment:
+      - NODE_ENV=production
+      - LINKS_QUEUE_HOST=0.0.0.0
+      - LINKS_QUEUE_PORT=5000
+      - LINKS_QUEUE_NODE_ID=node2
+      - LINKS_QUEUE_CLUSTER_ENABLED=true
+      - LINKS_QUEUE_CLUSTER_SEEDS=node1:5000,node2:5000,node3:5000
+    networks:
+      - links-queue-cluster
+    depends_on:
+      links-queue-node1:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('net').createConnection({port: 5000}).on('connect', () => process.exit(0)).on('error', () => process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+
+  # ==========================================================================
+  # Node 3
+  # ==========================================================================
+  links-queue-node3:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.js
+    container_name: links-queue-node3
+    hostname: node3
+    restart: unless-stopped
+    ports:
+      - "5003:5000"
+    environment:
+      - NODE_ENV=production
+      - LINKS_QUEUE_HOST=0.0.0.0
+      - LINKS_QUEUE_PORT=5000
+      - LINKS_QUEUE_NODE_ID=node3
+      - LINKS_QUEUE_CLUSTER_ENABLED=true
+      - LINKS_QUEUE_CLUSTER_SEEDS=node1:5000,node2:5000,node3:5000
+    networks:
+      - links-queue-cluster
+    depends_on:
+      links-queue-node1:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('net').createConnection({port: 5000}).on('connect', () => process.exit(0)).on('error', () => process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+
+networks:
+  links-queue-cluster:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16
