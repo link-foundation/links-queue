@@ -36,7 +36,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let person_type: u64 = 1000;
     let name_property: u64 = 1001;
     let alice_person = Link::new(101, LinkRef::Id(person_type), LinkRef::Id(alice_id));
-    let alice_name = Link::new(102, LinkRef::link(alice_person.clone()), LinkRef::Id(name_property));
+    let alice_name = Link::new(
+        102,
+        LinkRef::link(alice_person.clone()),
+        LinkRef::Id(name_property),
+    );
     println!("Alice person link: {alice_person:?}");
     println!("Alice name link: {alice_name:?}");
 
@@ -57,7 +61,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Then, a link about that relationship (meta-link)
     let year_2024: u64 = 2024;
-    let established_in = Link::new(11, LinkRef::link(alice_knows_bob.clone()), LinkRef::Id(year_2024));
+    let established_in = Link::new(
+        11,
+        LinkRef::link(alice_knows_bob.clone()),
+        LinkRef::Id(year_2024),
+    );
     println!("Nested link (statement about relationship):");
     println!("  Base: {alice_knows_bob:?}");
     println!("  Meta: {established_in:?}");
@@ -96,7 +104,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         200,
         LinkRef::Id(subject),
         LinkRef::Id(predicate),
-        vec![LinkRef::Id(object), LinkRef::Id(confidence), LinkRef::Id(source_id)],
+        vec![
+            LinkRef::Id(object),
+            LinkRef::Id(confidence),
+            LinkRef::Id(source_id),
+        ],
     );
     println!("Universal link (n-ary relation): {universal_link:?}");
     println!("  Subject: {}", universal_link.source_id());
@@ -105,7 +117,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     if let Some(values) = &universal_link.values {
         println!(
             "  Values: {:?}",
-            values.iter().map(links_queue::LinkRef::get_id).collect::<Vec<_>>()
+            values
+                .iter()
+                .map(links_queue::LinkRef::get_id)
+                .collect::<Vec<_>>()
         );
     }
 
@@ -120,8 +135,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let charlie_id: u64 = 3;
 
     let graph = vec![
-        Link::new(30, LinkRef::Id(alice_id), LinkRef::Id(bob_id)),     // Alice -> Bob
-        Link::new(31, LinkRef::Id(bob_id), LinkRef::Id(charlie_id)),   // Bob -> Charlie
+        Link::new(30, LinkRef::Id(alice_id), LinkRef::Id(bob_id)), // Alice -> Bob
+        Link::new(31, LinkRef::Id(bob_id), LinkRef::Id(charlie_id)), // Bob -> Charlie
         Link::new(32, LinkRef::Id(alice_id), LinkRef::Id(charlie_id)), // Alice -> Charlie
         Link::new(33, LinkRef::Id(charlie_id), LinkRef::Id(alice_id)), // Charlie -> Alice (cycle)
     ];

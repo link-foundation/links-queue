@@ -7,7 +7,9 @@
 //!
 //! Run with: `cargo run --example 04-deduplication`
 
-use links_queue::{Link, LinkPattern, LinkRef, LinkStore, MemoryLinkStore, MemoryQueue, Queue, QueueOptions};
+use links_queue::{
+    Link, LinkPattern, LinkRef, LinkStore, MemoryLinkStore, MemoryQueue, Queue, QueueOptions,
+};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -68,9 +70,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut store_usize = MemoryLinkStore::<usize>::new();
     let usize_link1 = store_usize.create(LinkRef::Id(1), LinkRef::Id(2))?;
     let usize_link2 = store_usize.create(LinkRef::Id(1), LinkRef::Id(2))?;
-    println!("usize links deduplicated: {}", usize_link1.id == usize_link2.id); // true
+    println!(
+        "usize links deduplicated: {}",
+        usize_link1.id == usize_link2.id
+    ); // true
 
-    println!("Total unique links in each store: u32={}, u64={}, usize={}",
+    println!(
+        "Total unique links in each store: u32={}, u64={}, usize={}",
         store32.total_count(),
         store64.total_count(),
         store_usize.total_count()
@@ -94,7 +100,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let outer1 = store3.create(LinkRef::link(inner1.clone()), LinkRef::Id(30))?;
     let outer2 = store3.create(LinkRef::link(inner2.clone()), LinkRef::Id(30))?;
 
-    println!("Outer links with same nested source are same: {}", outer1.id == outer2.id); // true
+    println!(
+        "Outer links with same nested source are same: {}",
+        outer1.id == outer2.id
+    ); // true
     println!("Total links (1 inner + 1 outer): {}", store3.total_count()); // 2
 
     // =========================================================================
@@ -119,7 +128,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("Universal link 1: {universal1:?}");
     println!("Universal link 2: {universal2:?}");
-    println!("Same ID (deduplication includes values): {}", universal1.id == universal2.id); // true
+    println!(
+        "Same ID (deduplication includes values): {}",
+        universal1.id == universal2.id
+    ); // true
 
     // Different values = different link
     let universal3 = store4.create_with_values(
@@ -152,10 +164,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Simulate receiving duplicate events
     let events = vec![
         (USER_LOGIN, USER_123),
-        (USER_LOGIN, USER_123),  // Duplicate!
+        (USER_LOGIN, USER_123), // Duplicate!
         (USER_LOGOUT, USER_123),
         (USER_LOGIN, USER_456),
-        (USER_LOGIN, USER_123),  // Duplicate!
+        (USER_LOGIN, USER_123), // Duplicate!
     ];
 
     println!("Processing events with deduplication:");
@@ -168,24 +180,42 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         // Check if we've already processed this exact event
         if processed_ids.contains(&event_link.id) {
-            let event_name = if *event_type == USER_LOGIN { "LOGIN" } else { "LOGOUT" };
+            let event_name = if *event_type == USER_LOGIN {
+                "LOGIN"
+            } else {
+                "LOGOUT"
+            };
             println!("  SKIPPED (duplicate): {event_name} - user {user_id}");
             continue;
         }
 
         // New event - enqueue and track
-        let complete_link = Link::new(event_link.id, event_link.source.clone(), event_link.target.clone());
+        let complete_link = Link::new(
+            event_link.id,
+            event_link.source.clone(),
+            event_link.target.clone(),
+        );
         queue.enqueue(complete_link).await?;
         processed_ids.insert(event_link.id);
-        let event_name = if *event_type == USER_LOGIN { "LOGIN" } else { "LOGOUT" };
-        println!("  ENQUEUED: {} - user {} (id: {})", event_name, user_id, event_link.id);
+        let event_name = if *event_type == USER_LOGIN {
+            "LOGIN"
+        } else {
+            "LOGOUT"
+        };
+        println!(
+            "  ENQUEUED: {} - user {} (id: {})",
+            event_name, user_id, event_link.id
+        );
     }
 
     println!("\nQueue stats:");
     let stats = queue.stats();
     println!("  Events in queue: {}", stats.depth);
     println!("  Unique events: {}", processed_ids.len());
-    println!("  Duplicates filtered: {}", events.len() - processed_ids.len());
+    println!(
+        "  Duplicates filtered: {}",
+        events.len() - processed_ids.len()
+    );
 
     // =========================================================================
     // Part 6: Pattern-Based Deduplication Check
@@ -223,7 +253,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         let new_link = store5.create(LinkRef::Id(API_CALL), LinkRef::Id(new_endpoint))?;
         println!("New API call tracked: {}", new_link.id);
     } else {
-        println!("API call to endpoint {} already tracked (id: {})", new_endpoint, existing[0].id);
+        println!(
+            "API call to endpoint {} already tracked (id: {})",
+            new_endpoint, existing[0].id
+        );
     }
 
     println!("\n=== Deduplication Complete! ===");

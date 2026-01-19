@@ -27,7 +27,9 @@ fn rand_u64() -> u64 {
         .unwrap()
         .as_nanos() as u64;
     // Simple LCG
-    now.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407) % 256
+    now.wrapping_mul(6364136223846793005)
+        .wrapping_add(1442695040888963407)
+        % 256
 }
 
 /// Producer: generates tasks and enqueues them
@@ -47,7 +49,11 @@ async fn producer(
         let task_type = (i % 3) + 1; // task type 1, 2, or 3
         let payload = u64::from(producer_id) * 10000 + u64::from(i);
 
-        let task_link = Link::new(task_id, LinkRef::Id(u64::from(task_type)), LinkRef::Id(payload));
+        let task_link = Link::new(
+            task_id,
+            LinkRef::Id(u64::from(task_type)),
+            LinkRef::Id(payload),
+        );
 
         let result = queue.enqueue(task_link).await?;
         println!(
@@ -88,7 +94,10 @@ async fn consumer(
 
                 // Acknowledge successful processing
                 if let Err(e) = queue.acknowledge(task.id).await {
-                    eprintln!("Consumer {}: Failed to acknowledge task {}: {}", consumer_id, task.id, e);
+                    eprintln!(
+                        "Consumer {}: Failed to acknowledge task {}: {}",
+                        consumer_id, task.id, e
+                    );
                 } else {
                     processed += 1;
                     processed_count.fetch_add(1, Ordering::Relaxed);
@@ -207,9 +216,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     println!("Total tasks enqueued: {}", stats.enqueued);
     println!("Total tasks dequeued: {}", stats.dequeued);
     println!("Total tasks acknowledged: {}", stats.acknowledged);
-    println!(
-        "Tasks processed per consumer: {consumer_results:?}"
-    );
+    println!("Tasks processed per consumer: {consumer_results:?}");
     println!(
         "Total processed: {}",
         consumer_results.iter().map(|&x| x as usize).sum::<usize>()
