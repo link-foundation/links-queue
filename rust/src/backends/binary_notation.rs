@@ -72,12 +72,24 @@ pub struct BinaryNotationError {
 impl BinaryNotationError {
     #[must_use]
     pub fn new(message: impl Into<String>, code: BinaryNotationErrorCode) -> Self {
-        Self { message: message.into(), code, position: None }
+        Self {
+            message: message.into(),
+            code,
+            position: None,
+        }
     }
 
     #[must_use]
-    pub fn with_position(message: impl Into<String>, code: BinaryNotationErrorCode, position: usize) -> Self {
-        Self { message: message.into(), code, position: Some(position) }
+    pub fn with_position(
+        message: impl Into<String>,
+        code: BinaryNotationErrorCode,
+        position: usize,
+    ) -> Self {
+        Self {
+            message: message.into(),
+            code,
+            position: Some(position),
+        }
     }
 }
 
@@ -107,10 +119,14 @@ pub fn encode_varint<W: Write>(value: u64, writer: &mut W) -> io::Result<usize> 
     loop {
         let mut byte = (v & 0x7F) as u8;
         v >>= 7;
-        if v != 0 { byte |= 0x80; }
+        if v != 0 {
+            byte |= 0x80;
+        }
         writer.write_all(&[byte])?;
         bytes_written += 1;
-        if v == 0 { break; }
+        if v == 0 {
+            break;
+        }
     }
     Ok(bytes_written)
 }
@@ -123,10 +139,15 @@ pub fn decode_varint<R: Read>(reader: &mut R) -> BinaryNotationResult<u64> {
         let mut byte = [0u8; 1];
         reader.read_exact(&mut byte)?;
         result |= u64::from(byte[0] & 0x7F) << shift;
-        if byte[0] & 0x80 == 0 { break; }
+        if byte[0] & 0x80 == 0 {
+            break;
+        }
         shift += 7;
         if shift > 63 {
-            return Err(BinaryNotationError::new("VarInt too large", BinaryNotationErrorCode::InvalidLiteral));
+            return Err(BinaryNotationError::new(
+                "VarInt too large",
+                BinaryNotationErrorCode::InvalidLiteral,
+            ));
         }
     }
     Ok(result)
@@ -135,7 +156,9 @@ pub fn decode_varint<R: Read>(reader: &mut R) -> BinaryNotationResult<u64> {
 /// Gets the number of bytes needed to encode a value as varint.
 #[must_use]
 pub const fn varint_size(value: u64) -> usize {
-    if value == 0 { return 1; }
+    if value == 0 {
+        return 1;
+    }
     let bits = 64 - value.leading_zeros() as usize;
     (bits + 6) / 7
 }
