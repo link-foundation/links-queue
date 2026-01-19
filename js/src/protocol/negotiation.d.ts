@@ -2,7 +2,7 @@
  * Protocol negotiation for Links Queue communication.
  */
 
-import { EncodedLink } from './binary-notation.js';
+import type { Link } from '../index.js';
 
 /**
  * Supported protocol types.
@@ -209,12 +209,12 @@ export class ProtocolCodec {
   /**
    * Encodes links to wire format.
    */
-  encode(links: EncodedLink[]): Uint8Array | string;
+  encode(links: Link[]): Uint8Array | string;
 
   /**
    * Decodes wire format to links.
    */
-  decode(data: Uint8Array | string): EncodedLink[];
+  decode(data: Uint8Array | string): Link[];
 
   /**
    * Detects the protocol of incoming data.
@@ -275,12 +275,12 @@ export class ProtocolConnection {
   /**
    * Encodes a message for sending.
    */
-  encode(links: EncodedLink[]): Uint8Array | string;
+  encode(links: Link[]): Uint8Array | string;
 
   /**
    * Decodes received data.
    */
-  decode(data: Uint8Array | string): EncodedLink[];
+  decode(data: Uint8Array | string): Link[];
 
   /**
    * Resets the connection state.

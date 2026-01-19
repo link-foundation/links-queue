@@ -404,7 +404,7 @@ export class ProtocolCodec {
   /**
    * Encodes links to wire format.
    *
-   * @param {import('./binary-notation.js').EncodedLink[]} links - Links to encode
+   * @param {import('../index.js').Link[]} links - Links to encode
    * @returns {Uint8Array|string} Encoded data
    */
   encode(links) {
@@ -420,7 +420,7 @@ export class ProtocolCodec {
    * Decodes wire format to links.
    *
    * @param {Uint8Array|string} data - Data to decode
-   * @returns {import('./binary-notation.js').EncodedLink[]} Decoded links
+   * @returns {import('../index.js').Link[]} Decoded links
    */
   decode(data) {
     // Auto-detect binary vs text
@@ -575,7 +575,7 @@ export class ProtocolConnection {
   /**
    * Encodes a message for sending.
    *
-   * @param {import('./binary-notation.js').EncodedLink[]} links - Links to encode
+   * @param {import('../index.js').Link[]} links - Links to encode
    * @returns {Uint8Array|string} Encoded data
    */
   encode(links) {
@@ -589,7 +589,7 @@ export class ProtocolConnection {
    * Decodes received data.
    *
    * @param {Uint8Array|string} data - Data to decode
-   * @returns {import('./binary-notation.js').EncodedLink[]} Decoded links
+   * @returns {import('../index.js').Link[]} Decoded links
    */
   decode(data) {
     return this.codec.decode(data);
