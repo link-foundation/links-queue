@@ -13,6 +13,11 @@ use tokio::time::sleep;
 
 use links_queue::{Link, LinkRef, MemoryQueue, Queue, QueueOptions};
 
+// Configuration constants (moved to module level to satisfy clippy)
+const PRODUCER_COUNT: u32 = 2;
+const CONSUMER_COUNT: u32 = 3;
+const TASKS_PER_PRODUCER: u32 = 5;
+
 /// Simulated processing time (50-200ms)
 async fn simulate_work() {
     let delay_ms = 50 + rand_u64() % 150;
@@ -20,15 +25,17 @@ async fn simulate_work() {
 }
 
 /// Simple pseudo-random number generator (for demo purposes)
+#[allow(clippy::cast_possible_truncation)]
 fn rand_u64() -> u64 {
     use std::time::SystemTime;
+    // Note: truncation from u128 is intentional for randomness
     let now = SystemTime::now()
         .duration_since(SystemTime::UNIX_EPOCH)
         .unwrap()
         .as_nanos() as u64;
     // Simple LCG
-    now.wrapping_mul(6364136223846793005)
-        .wrapping_add(1442695040888963407)
+    now.wrapping_mul(6_364_136_223_846_793_005)
+        .wrapping_add(1_442_695_040_888_963_407)
         % 256
 }
 
@@ -146,11 +153,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     // Stop signal for consumers
     let stop_signal = Arc::new(AtomicBool::new(false));
     let total_processed = Arc::new(AtomicUsize::new(0));
-
-    // Configuration
-    const PRODUCER_COUNT: u32 = 2;
-    const CONSUMER_COUNT: u32 = 3;
-    const TASKS_PER_PRODUCER: u32 = 5;
 
     println!("Configuration:");
     println!("  Producers: {PRODUCER_COUNT}");

@@ -11,6 +11,21 @@ use links_queue::{
     Link, LinkPattern, LinkRef, LinkStore, MemoryLinkStore, MemoryQueue, Queue, QueueOptions,
 };
 
+// Event types (moved to module level to satisfy clippy)
+const USER_LOGIN: u64 = 1;
+const USER_LOGOUT: u64 = 2;
+
+// User IDs
+const USER_123: u64 = 123;
+const USER_456: u64 = 456;
+
+// API constants
+const API_CALL: u64 = 1;
+const DB_QUERY: u64 = 2;
+const USERS_ENDPOINT: u64 = 100;
+const PRODUCTS_ENDPOINT: u64 = 101;
+const ORDERS_ENDPOINT: u64 = 102;
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== Links Queue: Deduplication ===\n");
@@ -112,15 +127,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("\n--- Part 4: Universal Links (Deduplication Includes Values) ---\n");
 
-    let mut store4 = MemoryLinkStore::<u64>::new();
+    let mut store_universal = MemoryLinkStore::<u64>::new();
 
     // Universal links with same values are deduplicated
-    let universal1 = store4.create_with_values(
+    let universal1 = store_universal.create_with_values(
         LinkRef::Id(100),
         LinkRef::Id(200),
         vec![LinkRef::Id(300), LinkRef::Id(400)],
     )?;
-    let universal2 = store4.create_with_values(
+    let universal2 = store_universal.create_with_values(
         LinkRef::Id(100),
         LinkRef::Id(200),
         vec![LinkRef::Id(300), LinkRef::Id(400)],
@@ -134,7 +149,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     ); // true
 
     // Different values = different link
-    let universal3 = store4.create_with_values(
+    let universal3 = store_universal.create_with_values(
         LinkRef::Id(100),
         LinkRef::Id(200),
         vec![LinkRef::Id(300), LinkRef::Id(500)], // Different value!
@@ -142,7 +157,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("\nUniversal link 3 (different values): {universal3:?}");
     println!("Different from link 1: {}", universal1.id != universal3.id); // true
 
-    println!("Total universal links: {}", store4.total_count()); // 2
+    println!("Total universal links: {}", store_universal.total_count()); // 2
 
     // =========================================================================
     // Part 5: Practical Use Case - Event Deduplication
@@ -152,14 +167,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let mut event_store = MemoryLinkStore::<u64>::new();
     let queue = MemoryQueue::<u64>::new("events", QueueOptions::default());
-
-    // Define event types
-    const USER_LOGIN: u64 = 1;
-    const USER_LOGOUT: u64 = 2;
-
-    // Users
-    const USER_123: u64 = 123;
-    const USER_456: u64 = 456;
 
     // Simulate receiving duplicate events
     let events = vec![
@@ -226,12 +233,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut store5 = MemoryLinkStore::<u64>::new();
 
     // Create some links representing API calls
-    const API_CALL: u64 = 1;
-    const DB_QUERY: u64 = 2;
-    const USERS_ENDPOINT: u64 = 100;
-    const PRODUCTS_ENDPOINT: u64 = 101;
-    const ORDERS_ENDPOINT: u64 = 102;
-
     store5.create(LinkRef::Id(API_CALL), LinkRef::Id(USERS_ENDPOINT))?;
     store5.create(LinkRef::Id(API_CALL), LinkRef::Id(PRODUCTS_ENDPOINT))?;
     store5.create(LinkRef::Id(API_CALL), LinkRef::Id(ORDERS_ENDPOINT))?;

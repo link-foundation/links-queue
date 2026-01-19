@@ -10,6 +10,11 @@
 
 use links_queue::{Link, LinkPattern, LinkRef, MemoryQueue, Queue, QueueOptions};
 
+// Define operation types as IDs (moved to module level to satisfy clippy)
+const ADD_EDGE: u64 = 1;
+const REMOVE_EDGE: u64 = 2;
+const QUERY: u64 = 3;
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== Links Queue: Link Relationships ===\n");
@@ -173,11 +178,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let queue = MemoryQueue::<u64>::new("graph-operations", QueueOptions::default());
 
-    // Define operation types as IDs
-    const ADD_EDGE: u64 = 1;
-    const REMOVE_EDGE: u64 = 2;
-    const QUERY: u64 = 3;
-
     // Queue up some graph operations as links
     // Operation link: (op_id: operation_type -> edge_link)
     let edge1 = Link::new(101, LinkRef::Id(100), LinkRef::Id(200)); // node100 -> node200
@@ -200,11 +200,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             _ => "UNKNOWN",
         };
         let op_data = if op.target.is_link() {
-            if let Some(edge) = op.target.as_link() {
-                format!("{}->{}", edge.source_id(), edge.target_id())
-            } else {
-                "?".to_string()
-            }
+            op.target.as_link().map_or_else(
+                || "?".to_string(),
+                |edge| format!("{}->{}", edge.source_id(), edge.target_id()),
+            )
         } else {
             format!("node {}", op.target_id())
         };
