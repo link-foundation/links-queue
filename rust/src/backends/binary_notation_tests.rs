@@ -131,7 +131,7 @@ mod link_tests {
     }
 }
 
-mod binary_notation_tests {
+mod encoder_decoder_tests {
     use super::*;
 
     #[test]
