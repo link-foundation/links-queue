@@ -1,7 +1,12 @@
 //! Binary Links Notation encoder/decoder.
 //!
 //! This module provides high-performance binary encoding/decoding for Links,
-//! achieving 5-10x smaller message sizes compared to text notation.
+//! achieving 1.2-1.7x smaller message sizes compared to text notation.
+
+// Allow unused constants that are part of the spec but not yet implemented
+#![allow(dead_code)]
+// Allow truncation casts - we check bounds elsewhere
+#![allow(clippy::cast_possible_truncation)]
 //!
 //! # Wire Format
 //!
@@ -280,24 +285,23 @@ pub const fn varint_size(value: u64) -> usize {
 pub fn encode_string<W: Write>(s: &str, writer: &mut W) -> io::Result<usize> {
     let bytes = s.as_bytes();
     let len = bytes.len();
-    let mut bytes_written = 0;
 
-    if len <= 255 {
+    let header_size = if len <= 255 {
         writer.write_all(&[LITERAL_STRING_SHORT])?;
         writer.write_all(&[len as u8])?;
-        bytes_written = 2;
+        2
     } else if len <= 65535 {
         writer.write_all(&[LITERAL_STRING_MEDIUM])?;
         writer.write_all(&(len as u16).to_be_bytes())?;
-        bytes_written = 3;
+        3
     } else {
         writer.write_all(&[LITERAL_STRING_LONG])?;
         writer.write_all(&(len as u32).to_be_bytes())?;
-        bytes_written = 5;
-    }
+        5
+    };
 
     writer.write_all(bytes)?;
-    Ok(bytes_written + len)
+    Ok(header_size + len)
 }
 
 /// Decodes a string from the reader.
@@ -342,7 +346,7 @@ pub fn decode_string<R: Read>(reader: &mut R) -> BinaryNotationResult<String> {
 
 /// Gets the number of bytes needed to encode a string.
 #[must_use]
-pub fn string_size(s: &str) -> usize {
+pub const fn string_size(s: &str) -> usize {
     let len = s.len();
     if len <= 255 {
         2 + len
@@ -388,7 +392,7 @@ pub struct EncodedLink {
 impl EncodedLink {
     /// Creates a new encoded link.
     #[must_use]
-    pub fn new(id: Option<u64>, source: EncodedValue, target: EncodedValue) -> Self {
+    pub const fn new(id: Option<u64>, source: EncodedValue, target: EncodedValue) -> Self {
         Self {
             id,
             source,
@@ -399,7 +403,7 @@ impl EncodedLink {
 
     /// Creates an encoded link with values.
     #[must_use]
-    pub fn with_values(
+    pub const fn with_values(
         id: Option<u64>,
         source: EncodedValue,
         target: EncodedValue,
@@ -469,23 +473,19 @@ pub fn decode_value<R: Read>(reader: &mut R) -> BinaryNotationResult<EncodedValu
             Ok(EncodedValue::Int(u64::from_be_bytes(bytes)))
         }
         LITERAL_STRING_SHORT | LITERAL_STRING_MEDIUM | LITERAL_STRING_LONG => {
-            // Put the type byte back conceptually by creating a cursor
-            let mut combined = Vec::with_capacity(1 + 255);
-            combined.push(type_byte[0]);
-            let mut temp = vec![0u8; 4]; // max header size
-            let header_len = match type_byte[0] {
-                LITERAL_STRING_SHORT => 1,
-                LITERAL_STRING_MEDIUM => 2,
-                LITERAL_STRING_LONG => 4,
-                _ => unreachable!(),
-            };
-            reader.read_exact(&mut temp[..header_len])?;
-            combined.extend_from_slice(&temp[..header_len]);
-
+            // Read length header based on type
+            let mut temp = [0u8; 4];
             let len = match type_byte[0] {
-                LITERAL_STRING_SHORT => usize::from(temp[0]),
-                LITERAL_STRING_MEDIUM => usize::from(u16::from_be_bytes([temp[0], temp[1]])),
+                LITERAL_STRING_SHORT => {
+                    reader.read_exact(&mut temp[..1])?;
+                    usize::from(temp[0])
+                }
+                LITERAL_STRING_MEDIUM => {
+                    reader.read_exact(&mut temp[..2])?;
+                    usize::from(u16::from_be_bytes([temp[0], temp[1]]))
+                }
                 LITERAL_STRING_LONG => {
+                    reader.read_exact(&mut temp[..4])?;
                     u32::from_be_bytes([temp[0], temp[1], temp[2], temp[3]]) as usize
                 }
                 _ => unreachable!(),
@@ -743,7 +743,7 @@ where
             .map(|vals| vals.iter().map(linkref_to_encoded).collect())
             .unwrap_or_default();
 
-        EncodedLink {
+        Self {
             id,
             source,
             target,
@@ -797,7 +797,7 @@ where
             )
         };
 
-        Ok(Link {
+        Ok(Self {
             id,
             source,
             target,
@@ -813,9 +813,12 @@ where
     <T as TryFrom<u64>>::Error: std::fmt::Debug,
 {
     match value {
-        EncodedValue::Int(n) => T::try_from(n)
-            .map(LinkRef::Id)
-            .map_err(|_| BinaryNotationError::new("Failed to convert ID", BinaryNotationErrorCode::InvalidLiteral)),
+        EncodedValue::Int(n) => T::try_from(n).map(LinkRef::Id).map_err(|_| {
+            BinaryNotationError::new(
+                "Failed to convert ID",
+                BinaryNotationErrorCode::InvalidLiteral,
+            )
+        }),
         EncodedValue::Link(link) => {
             let converted: Link<T> = (*link).try_into()?;
             Ok(LinkRef::link(converted))
@@ -942,10 +945,7 @@ impl BinaryNotation {
         let magic = u32::from_be_bytes([data[0], data[1], data[2], data[3]]);
         if magic != MAGIC {
             return Err(BinaryNotationError::with_position(
-                format!(
-                    "Invalid magic number: expected 0x{:08X}, got 0x{:08X}",
-                    MAGIC, magic
-                ),
+                format!("Invalid magic number: expected 0x{MAGIC:08X}, got 0x{magic:08X}"),
                 BinaryNotationErrorCode::InvalidMagic,
                 0,
             ));
@@ -958,8 +958,7 @@ impl BinaryNotation {
         if major_version > expected_major && !options.ignore_version {
             return Err(BinaryNotationError::with_position(
                 format!(
-                    "Unsupported version: {}.x (expected {}.x or lower)",
-                    major_version, expected_major
+                    "Unsupported version: {major_version}.x (expected {expected_major}.x or lower)"
                 ),
                 BinaryNotationErrorCode::UnsupportedVersion,
                 4,
@@ -979,8 +978,7 @@ impl BinaryNotation {
         }
 
         // Read payload length
-        let payload_length =
-            u32::from_be_bytes([data[7], data[8], data[9], data[10]]) as usize;
+        let payload_length = u32::from_be_bytes([data[7], data[8], data[9], data[10]]) as usize;
 
         if data.len() < HEADER_SIZE + payload_length {
             return Err(BinaryNotationError::with_position(
@@ -1016,10 +1014,7 @@ impl BinaryNotation {
         <T as TryFrom<u64>>::Error: std::fmt::Debug,
     {
         let encoded = Self::decode(data, options)?;
-        encoded
-            .into_iter()
-            .map(TryInto::try_into)
-            .collect()
+        encoded.into_iter().map(TryInto::try_into).collect()
     }
 
     /// Checks if data appears to be binary notation.
@@ -1117,11 +1112,7 @@ mod tests {
 
         #[test]
         fn test_encode_decode_simple_link() {
-            let link = EncodedLink::new(
-                Some(1),
-                EncodedValue::Int(2),
-                EncodedValue::Int(3),
-            );
+            let link = EncodedLink::new(Some(1), EncodedValue::Int(2), EncodedValue::Int(3));
 
             let mut buf = Vec::new();
             encode_link_body(&link, &mut buf).unwrap();
@@ -1136,11 +1127,7 @@ mod tests {
 
         #[test]
         fn test_encode_decode_self_ref_link() {
-            let link = EncodedLink::new(
-                Some(5),
-                EncodedValue::Int(5),
-                EncodedValue::Int(5),
-            );
+            let link = EncodedLink::new(Some(5), EncodedValue::Int(5), EncodedValue::Int(5));
 
             let mut buf = Vec::new();
             let size = encode_link_body(&link, &mut buf).unwrap();
@@ -1251,8 +1238,7 @@ mod tests {
             let link2 = Link::new(4u64, LinkRef::Id(5), LinkRef::Id(6));
 
             let buffer = BinaryNotation::encode_links(&[link1, link2], None).unwrap();
-            let decoded: Vec<Link<u64>> =
-                BinaryNotation::decode_links(&buffer, None).unwrap();
+            let decoded: Vec<Link<u64>> = BinaryNotation::decode_links(&buffer, None).unwrap();
 
             assert_eq!(decoded.len(), 2);
             assert_eq!(decoded[0].id, 1);

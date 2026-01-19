@@ -126,10 +126,8 @@ pub use registry::{BackendConfig, BackendRegistry, StorageBackendDyn};
 
 // Re-export binary notation
 pub use binary_notation::{
+    decode_link_body, decode_string, decode_value, decode_varint, encode_link_body, encode_string,
+    encode_value, encode_varint, link_body_size, string_size, value_size, varint_size,
     BinaryNotation, BinaryNotationError, BinaryNotationErrorCode, BinaryNotationResult,
-    DecodeOptions, EncodeOptions, EncodedLink, EncodedValue,
-    HEADER_SIZE, MAGIC, VERSION,
-    decode_link_body, decode_string, decode_value, decode_varint,
-    encode_link_body, encode_string, encode_value, encode_varint,
-    link_body_size, string_size, value_size, varint_size,
+    DecodeOptions, EncodeOptions, EncodedLink, EncodedValue, HEADER_SIZE, MAGIC, VERSION,
 };
