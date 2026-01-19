@@ -239,7 +239,10 @@ export class BinaryNotation {
   /**
    * Decodes binary data to links.
    */
-  static decode(data: Uint8Array | ArrayBuffer, options?: DecodeOptions): Link[];
+  static decode(
+    data: Uint8Array | ArrayBuffer,
+    options?: DecodeOptions
+  ): Link[];
 
   /**
    * Checks if data appears to be binary notation.

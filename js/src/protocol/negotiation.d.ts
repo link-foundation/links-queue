@@ -64,7 +64,10 @@ export class ProtocolCapabilities {
    * Creates capabilities with full binary support.
    */
   static withBinarySupport(
-    options?: Pick<ProtocolCapabilitiesOptions, 'compression' | 'maxMessageSize'>
+    options?: Pick<
+      ProtocolCapabilitiesOptions,
+      'compression' | 'maxMessageSize'
+    >
   ): ProtocolCapabilities;
 
   /**
