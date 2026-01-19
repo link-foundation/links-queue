@@ -492,16 +492,23 @@ export function valueSize(value, asId = false) {
  * @returns {number} Number of bytes written
  */
 export function encodeLinkBody(link, buffer, offset) {
+  // Check if source/target are nested links (not just ID references)
+  const sourceIsLink = isLink(link.source);
+  const targetIsLink = isLink(link.target);
+
   const sourceId = getLinkId(link.source);
   const targetId = getLinkId(link.target);
 
   // Determine type flags
   let type = 0;
 
+  // Only set *_IS_ID flags if the value is a numeric ID, NOT a nested link
   const sourceIsId =
-    typeof sourceId === 'number' || typeof sourceId === 'bigint';
+    !sourceIsLink &&
+    (typeof sourceId === 'number' || typeof sourceId === 'bigint');
   const targetIsId =
-    typeof targetId === 'number' || typeof targetId === 'bigint';
+    !targetIsLink &&
+    (typeof targetId === 'number' || typeof targetId === 'bigint');
   const isSelfRef = sourceId === targetId && sourceIsId && targetIsId;
 
   if (sourceIsId) {
@@ -629,13 +636,20 @@ export function decodeLinkBody(buffer, offset) {
  * @returns {number} Number of bytes needed
  */
 export function linkBodySize(link) {
+  // Check if source/target are nested links (not just ID references)
+  const sourceIsLink = isLink(link.source);
+  const targetIsLink = isLink(link.target);
+
   const sourceId = getLinkId(link.source);
   const targetId = getLinkId(link.target);
 
+  // Only set *_IS_ID flags if the value is a numeric ID, NOT a nested link
   const sourceIsId =
-    typeof sourceId === 'number' || typeof sourceId === 'bigint';
+    !sourceIsLink &&
+    (typeof sourceId === 'number' || typeof sourceId === 'bigint');
   const targetIsId =
-    typeof targetId === 'number' || typeof targetId === 'bigint';
+    !targetIsLink &&
+    (typeof targetId === 'number' || typeof targetId === 'bigint');
   const isSelfRef = sourceId === targetId && sourceIsId && targetIsId;
   const hasId = link.id !== undefined && link.id !== null;
   const hasValues = link.values && link.values.length > 0;

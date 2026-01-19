@@ -32,6 +32,7 @@ export default [
         URL: 'readonly',
         TextEncoder: 'readonly',
         TextDecoder: 'readonly',
+        performance: 'readonly',
         // Runtime-specific globals
         Bun: 'readonly',
         Deno: 'readonly',
