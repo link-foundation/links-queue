@@ -1,188 +1,91 @@
-//! Binary Links Notation encoder/decoder.
-//!
-//! This module provides high-performance binary encoding/decoding for Links,
-//! achieving 1.2-1.7x smaller message sizes compared to text notation.
-
-// Allow unused constants that are part of the spec but not yet implemented
+//! Binary Links Notation encoder/decoder for high-performance link serialization.
 #![allow(dead_code)]
-// Allow truncation casts - we check bounds elsewhere
 #![allow(clippy::cast_possible_truncation)]
-//!
-//! # Wire Format
-//!
-//! Every binary message starts with an 11-byte header:
-//! - Magic (4 bytes): 0x4C4E4B51 ("LNKQ")
-//! - Version (2 bytes): Protocol version (major.minor)
-//! - Flags (1 byte): Message flags (compression, etc.)
-//! - Length (4 bytes): Payload length in bytes
-//!
-//! # Example
-//!
-//! ```rust,ignore
-//! use links_queue::backends::binary_notation::{BinaryNotation, BinaryNotationError};
-//! use links_queue::{Link, LinkRef};
-//!
-//! // Encode links
-//! let link = Link::new(1u64, LinkRef::Id(2), LinkRef::Id(3));
-//! let buffer = BinaryNotation::encode(&[link])?;
-//!
-//! // Decode links
-//! let decoded = BinaryNotation::decode(&buffer)?;
-//! assert_eq!(decoded.len(), 1);
-//! ```
 
 use crate::{Link, LinkRef, LinkType};
 use std::fmt::Display;
 use std::io::{self, Read, Write};
 use std::str::FromStr;
 
-// =============================================================================
-// Constants
-// =============================================================================
-
-/// Magic number for protocol identification: "LNKQ"
-pub const MAGIC: u32 = 0x4C4E_4B51;
-
-/// Current protocol version (1.0)
+// Protocol constants
+pub const MAGIC: u32 = 0x4C4E_4B51; // "LNKQ"
 pub const VERSION: u16 = 0x0100;
-
-/// Header size in bytes
 pub const HEADER_SIZE: usize = 11;
 
 // Flag bits
-/// Payload is compressed
 pub const FLAG_COMPRESSED: u8 = 0x01;
-/// Compression algorithm mask
 pub const FLAG_COMPRESSION_MASK: u8 = 0x06;
-/// Zstd compression
 pub const FLAG_COMPRESSION_ZSTD: u8 = 0x02;
-/// LZ4 compression
 pub const FLAG_COMPRESSION_LZ4: u8 = 0x04;
-/// Has CRC32 checksum
 pub const FLAG_HAS_CHECKSUM: u8 = 0x08;
-/// Message is part of a stream
 pub const FLAG_STREAMING: u8 = 0x10;
 
 // Link type bits
-/// Source is a link ID reference
 pub const TYPE_SOURCE_IS_ID: u8 = 0x01;
-/// Target is a link ID reference
 pub const TYPE_TARGET_IS_ID: u8 = 0x02;
-/// Self-referencing link (source == target)
 pub const TYPE_SELF_REF: u8 = 0x04;
-/// Link has an explicit ID
 pub const TYPE_HAS_ID: u8 = 0x08;
-/// Link has additional values array
 pub const TYPE_HAS_VALUES: u8 = 0x10;
-/// ID size mask
 pub const TYPE_ID_SIZE_MASK: u8 = 0x60;
-/// ID is varint encoded
 pub const TYPE_ID_SIZE_VARINT: u8 = 0x00;
-/// ID is 4 bytes
 pub const TYPE_ID_SIZE_4BYTES: u8 = 0x20;
-/// ID is 8 bytes
 pub const TYPE_ID_SIZE_8BYTES: u8 = 0x40;
 
 // Literal type markers
-/// Null value
 pub const LITERAL_NULL: u8 = 0x00;
-/// Boolean false
 pub const LITERAL_FALSE: u8 = 0x01;
-/// Boolean true
 pub const LITERAL_TRUE: u8 = 0x02;
-/// Variable-length integer
 pub const LITERAL_VARINT: u8 = 0x10;
-/// 32-bit integer
 pub const LITERAL_INT32: u8 = 0x11;
-/// 64-bit integer
 pub const LITERAL_INT64: u8 = 0x12;
-/// 64-bit float
 pub const LITERAL_FLOAT64: u8 = 0x13;
-/// Short string (1-byte length)
 pub const LITERAL_STRING_SHORT: u8 = 0x20;
-/// Medium string (2-byte length)
 pub const LITERAL_STRING_MEDIUM: u8 = 0x21;
-/// Long string (4-byte length)
 pub const LITERAL_STRING_LONG: u8 = 0x22;
-/// Short binary (1-byte length)
 pub const LITERAL_BINARY_SHORT: u8 = 0x30;
-/// Medium binary (2-byte length)
 pub const LITERAL_BINARY_MEDIUM: u8 = 0x31;
-/// Long binary (4-byte length)
 pub const LITERAL_BINARY_LONG: u8 = 0x32;
-/// Inline link
 pub const LITERAL_LINK: u8 = 0x40;
-
-// =============================================================================
-// Error Types
-// =============================================================================
 
 /// Error codes for binary notation operations.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum BinaryNotationErrorCode {
-    /// Magic number mismatch
     InvalidMagic = 0x01,
-    /// Protocol version not supported
     UnsupportedVersion = 0x02,
-    /// Unknown or invalid flags
     InvalidFlags = 0x03,
-    /// Message shorter than declared length
     TruncatedMessage = 0x04,
-    /// Unknown link type byte
     InvalidType = 0x05,
-    /// Malformed literal encoding
     InvalidLiteral = 0x06,
-    /// Decompression error
     DecompressionFailed = 0x07,
-    /// CRC32 checksum failed
     ChecksumMismatch = 0x08,
-    /// I/O error
     IoError = 0x10,
 }
 
 /// Error thrown when binary notation encoding/decoding fails.
 #[derive(Debug)]
 pub struct BinaryNotationError {
-    /// Error message
     pub message: String,
-    /// Error code
     pub code: BinaryNotationErrorCode,
-    /// Position in buffer where error occurred
     pub position: Option<usize>,
 }
 
 impl BinaryNotationError {
-    /// Creates a new `BinaryNotationError`.
     #[must_use]
     pub fn new(message: impl Into<String>, code: BinaryNotationErrorCode) -> Self {
-        Self {
-            message: message.into(),
-            code,
-            position: None,
-        }
+        Self { message: message.into(), code, position: None }
     }
 
-    /// Creates a new error with position.
     #[must_use]
-    pub fn with_position(
-        message: impl Into<String>,
-        code: BinaryNotationErrorCode,
-        position: usize,
-    ) -> Self {
-        Self {
-            message: message.into(),
-            code,
-            position: Some(position),
-        }
+    pub fn with_position(message: impl Into<String>, code: BinaryNotationErrorCode, position: usize) -> Self {
+        Self { message: message.into(), code, position: Some(position) }
     }
 }
 
 impl Display for BinaryNotationError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        if let Some(pos) = self.position {
-            write!(f, "{} (at position {})", self.message, pos)
-        } else {
-            write!(f, "{}", self.message)
+        match self.position {
+            Some(pos) => write!(f, "{} (at position {})", self.message, pos),
+            None => write!(f, "{}", self.message),
         }
     }
 }
@@ -195,91 +98,47 @@ impl From<io::Error> for BinaryNotationError {
     }
 }
 
-/// Result type for binary notation operations.
 pub type BinaryNotationResult<T> = Result<T, BinaryNotationError>;
 
-// =============================================================================
-// VarInt Encoding/Decoding (LEB128)
-// =============================================================================
-
 /// Encodes a value as a variable-length integer (LEB128).
-///
-/// # Arguments
-///
-/// * `value` - The value to encode
-/// * `writer` - Writer to write to
-///
-/// # Returns
-///
-/// Number of bytes written.
 pub fn encode_varint<W: Write>(value: u64, writer: &mut W) -> io::Result<usize> {
     let mut v = value;
     let mut bytes_written = 0;
-
     loop {
         let mut byte = (v & 0x7F) as u8;
         v >>= 7;
-        if v != 0 {
-            byte |= 0x80;
-        }
+        if v != 0 { byte |= 0x80; }
         writer.write_all(&[byte])?;
         bytes_written += 1;
-        if v == 0 {
-            break;
-        }
+        if v == 0 { break; }
     }
-
     Ok(bytes_written)
 }
 
 /// Decodes a variable-length integer (LEB128).
-///
-/// # Arguments
-///
-/// * `reader` - Reader to read from
-///
-/// # Returns
-///
-/// Decoded value.
 pub fn decode_varint<R: Read>(reader: &mut R) -> BinaryNotationResult<u64> {
     let mut result: u64 = 0;
     let mut shift = 0;
-
     loop {
         let mut byte = [0u8; 1];
         reader.read_exact(&mut byte)?;
-
         result |= u64::from(byte[0] & 0x7F) << shift;
-
-        if byte[0] & 0x80 == 0 {
-            break;
-        }
-
+        if byte[0] & 0x80 == 0 { break; }
         shift += 7;
         if shift > 63 {
-            return Err(BinaryNotationError::new(
-                "VarInt too large",
-                BinaryNotationErrorCode::InvalidLiteral,
-            ));
+            return Err(BinaryNotationError::new("VarInt too large", BinaryNotationErrorCode::InvalidLiteral));
         }
     }
-
     Ok(result)
 }
 
 /// Gets the number of bytes needed to encode a value as varint.
 #[must_use]
 pub const fn varint_size(value: u64) -> usize {
-    if value == 0 {
-        return 1;
-    }
+    if value == 0 { return 1; }
     let bits = 64 - value.leading_zeros() as usize;
     (bits + 6) / 7
 }
-
-// =============================================================================
-// String Encoding/Decoding
-// =============================================================================
 
 /// Encodes a string to the writer.
 pub fn encode_string<W: Write>(s: &str, writer: &mut W) -> io::Result<usize> {
@@ -1028,222 +887,6 @@ impl BinaryNotation {
     }
 }
 
-// =============================================================================
-// Tests
-// =============================================================================
-
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    mod varint_tests {
-        use super::*;
-
-        #[test]
-        fn test_encode_decode_zero() {
-            let mut buf = Vec::new();
-            encode_varint(0, &mut buf).unwrap();
-            assert_eq!(buf, vec![0x00]);
-
-            let mut cursor = std::io::Cursor::new(buf);
-            assert_eq!(decode_varint(&mut cursor).unwrap(), 0);
-        }
-
-        #[test]
-        fn test_encode_decode_127() {
-            let mut buf = Vec::new();
-            encode_varint(127, &mut buf).unwrap();
-            assert_eq!(buf, vec![0x7F]);
-
-            let mut cursor = std::io::Cursor::new(buf);
-            assert_eq!(decode_varint(&mut cursor).unwrap(), 127);
-        }
-
-        #[test]
-        fn test_encode_decode_128() {
-            let mut buf = Vec::new();
-            encode_varint(128, &mut buf).unwrap();
-            assert_eq!(buf, vec![0x80, 0x01]);
-
-            let mut cursor = std::io::Cursor::new(buf);
-            assert_eq!(decode_varint(&mut cursor).unwrap(), 128);
-        }
-
-        #[test]
-        fn test_varint_size() {
-            assert_eq!(varint_size(0), 1);
-            assert_eq!(varint_size(127), 1);
-            assert_eq!(varint_size(128), 2);
-            assert_eq!(varint_size(16383), 2);
-            assert_eq!(varint_size(16384), 3);
-        }
-    }
-
-    mod string_tests {
-        use super::*;
-
-        #[test]
-        fn test_encode_decode_empty() {
-            let mut buf = Vec::new();
-            encode_string("", &mut buf).unwrap();
-
-            let mut cursor = std::io::Cursor::new(buf);
-            assert_eq!(decode_string(&mut cursor).unwrap(), "");
-        }
-
-        #[test]
-        fn test_encode_decode_hello() {
-            let mut buf = Vec::new();
-            encode_string("hello", &mut buf).unwrap();
-
-            let mut cursor = std::io::Cursor::new(buf);
-            assert_eq!(decode_string(&mut cursor).unwrap(), "hello");
-        }
-
-        #[test]
-        fn test_string_size() {
-            assert_eq!(string_size(""), 2);
-            assert_eq!(string_size("hello"), 2 + 5);
-        }
-    }
-
-    mod link_tests {
-        use super::*;
-
-        #[test]
-        fn test_encode_decode_simple_link() {
-            let link = EncodedLink::new(Some(1), EncodedValue::Int(2), EncodedValue::Int(3));
-
-            let mut buf = Vec::new();
-            encode_link_body(&link, &mut buf).unwrap();
-
-            let mut cursor = std::io::Cursor::new(buf);
-            let decoded = decode_link_body(&mut cursor).unwrap();
-
-            assert_eq!(decoded.id, Some(1));
-            assert!(matches!(decoded.source, EncodedValue::Int(2)));
-            assert!(matches!(decoded.target, EncodedValue::Int(3)));
-        }
-
-        #[test]
-        fn test_encode_decode_self_ref_link() {
-            let link = EncodedLink::new(Some(5), EncodedValue::Int(5), EncodedValue::Int(5));
-
-            let mut buf = Vec::new();
-            let size = encode_link_body(&link, &mut buf).unwrap();
-
-            // Self-ref should be compact
-            assert!(size <= 3);
-
-            let mut cursor = std::io::Cursor::new(buf);
-            let decoded = decode_link_body(&mut cursor).unwrap();
-
-            assert_eq!(decoded.id, Some(5));
-            assert!(matches!(decoded.source, EncodedValue::Int(5)));
-            assert!(matches!(decoded.target, EncodedValue::Int(5)));
-        }
-
-        #[test]
-        fn test_encode_decode_link_with_values() {
-            let link = EncodedLink::with_values(
-                Some(1),
-                EncodedValue::Int(2),
-                EncodedValue::Int(3),
-                vec![EncodedValue::Int(4), EncodedValue::Int(5)],
-            );
-
-            let mut buf = Vec::new();
-            encode_link_body(&link, &mut buf).unwrap();
-
-            let mut cursor = std::io::Cursor::new(buf);
-            let decoded = decode_link_body(&mut cursor).unwrap();
-
-            assert_eq!(decoded.values.len(), 2);
-        }
-    }
-
-    mod binary_notation_tests {
-        use super::*;
-
-        #[test]
-        fn test_encode_decode_single_link() {
-            let links = vec![EncodedLink::new(
-                Some(1),
-                EncodedValue::Int(2),
-                EncodedValue::Int(3),
-            )];
-
-            let buffer = BinaryNotation::encode(&links, None).unwrap();
-            let decoded = BinaryNotation::decode(&buffer, None).unwrap();
-
-            assert_eq!(decoded.len(), 1);
-            assert_eq!(decoded[0].id, Some(1));
-        }
-
-        #[test]
-        fn test_encode_decode_multiple_links() {
-            let links = vec![
-                EncodedLink::new(Some(1), EncodedValue::Int(2), EncodedValue::Int(3)),
-                EncodedLink::new(Some(4), EncodedValue::Int(5), EncodedValue::Int(6)),
-            ];
-
-            let buffer = BinaryNotation::encode(&links, None).unwrap();
-            let decoded = BinaryNotation::decode(&buffer, None).unwrap();
-
-            assert_eq!(decoded.len(), 2);
-        }
-
-        #[test]
-        fn test_is_binary() {
-            let links = vec![EncodedLink::new(
-                Some(1),
-                EncodedValue::Int(2),
-                EncodedValue::Int(3),
-            )];
-            let buffer = BinaryNotation::encode(&links, None).unwrap();
-
-            assert!(BinaryNotation::is_binary(&buffer));
-            assert!(!BinaryNotation::is_binary(b"(1 2)"));
-            assert!(!BinaryNotation::is_binary(&[1, 2, 3]));
-        }
-
-        #[test]
-        fn test_decode_invalid_magic() {
-            let buffer = vec![0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0];
-            let result = BinaryNotation::decode(&buffer, None);
-            assert!(result.is_err());
-            assert_eq!(
-                result.unwrap_err().code,
-                BinaryNotationErrorCode::InvalidMagic
-            );
-        }
-
-        #[test]
-        fn test_decode_truncated() {
-            let result = BinaryNotation::decode(&[1, 2, 3], None);
-            assert!(result.is_err());
-            assert_eq!(
-                result.unwrap_err().code,
-                BinaryNotationErrorCode::TruncatedMessage
-            );
-        }
-    }
-
-    mod typed_link_tests {
-        use super::*;
-
-        #[test]
-        fn test_encode_typed_links() {
-            let link1 = Link::new(1u64, LinkRef::Id(2), LinkRef::Id(3));
-            let link2 = Link::new(4u64, LinkRef::Id(5), LinkRef::Id(6));
-
-            let buffer = BinaryNotation::encode_links(&[link1, link2], None).unwrap();
-            let decoded: Vec<Link<u64>> = BinaryNotation::decode_links(&buffer, None).unwrap();
-
-            assert_eq!(decoded.len(), 2);
-            assert_eq!(decoded[0].id, 1);
-            assert_eq!(decoded[0].source_id(), 2);
-            assert_eq!(decoded[0].target_id(), 3);
-        }
-    }
-}
+#[path = "binary_notation_tests.rs"]
+mod binary_notation_tests;
