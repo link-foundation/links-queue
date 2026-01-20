@@ -212,6 +212,30 @@ export {
 } from './protocol/notation.js';
 
 export {
+  BinaryNotation,
+  BinaryNotationError,
+  BinaryStreamEncoder,
+  BinaryStreamDecoder,
+  BufferPool,
+  // Constants
+  MAGIC as BINARY_MAGIC,
+  VERSION as BINARY_VERSION,
+  HEADER_SIZE as BINARY_HEADER_SIZE,
+} from './protocol/binary-notation.js';
+
+export {
+  Protocol,
+  ProtocolVersion,
+  CompressionAlgorithm,
+  ProtocolCapabilities,
+  NegotiationResult,
+  ProtocolNegotiator,
+  ProtocolCodec,
+  ConnectionState as NegotiationConnectionState,
+  ProtocolConnection,
+} from './protocol/negotiation.js';
+
+export {
   Message,
   MessageBuilder,
   RequestType,
