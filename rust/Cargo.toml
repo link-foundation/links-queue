@@ -19,6 +19,22 @@ path = "src/lib.rs"
 name = "links-queue"
 path = "src/main.rs"
 
+[[example]]
+name = "01-hello-world"
+path = "examples/01-hello-world/main.rs"
+
+[[example]]
+name = "02-link-relationships"
+path = "examples/02-link-relationships/main.rs"
+
+[[example]]
+name = "03-producer-consumer"
+path = "examples/03-producer-consumer/main.rs"
+
+[[example]]
+name = "04-deduplication"
+path = "examples/04-deduplication/main.rs"
+
 [dependencies]
 tokio = { version = "1.0", features = ["rt-multi-thread", "macros", "time", "process", "io-util", "sync", "net", "signal"] }
 
@@ -41,6 +57,15 @@ full = ["axum", "actix"]
 [dev-dependencies]
 tokio-test = "0.4"
 tempfile = "3"
+criterion = { version = "0.5", features = ["async_tokio"] }
+
+[[bench]]
+name = "queue_bench"
+harness = false
+
+[[bench]]
+name = "memory_bench"
+harness = false
 
 [lints.rust]
 unsafe_code = "forbid"
