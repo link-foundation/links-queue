@@ -93,9 +93,7 @@ impl LatencyHistogram {
     /// Creates a new LatencyHistogram with custom buckets.
     #[must_use]
     pub fn with_buckets(buckets: Vec<f64>) -> Self {
-        let counts = (0..=buckets.len())
-            .map(|_| AtomicU64::new(0))
-            .collect();
+        let counts = (0..=buckets.len()).map(|_| AtomicU64::new(0)).collect();
         Self {
             buckets,
             counts,
@@ -124,12 +122,16 @@ impl LatencyHistogram {
             let current = self.sum.load(Ordering::Relaxed);
             let current_f64 = f64::from_bits(current);
             let new_f64 = current_f64 + value;
-            if self.sum.compare_exchange(
-                current,
-                new_f64.to_bits(),
-                Ordering::Relaxed,
-                Ordering::Relaxed,
-            ).is_ok() {
+            if self
+                .sum
+                .compare_exchange(
+                    current,
+                    new_f64.to_bits(),
+                    Ordering::Relaxed,
+                    Ordering::Relaxed,
+                )
+                .is_ok()
+            {
                 break;
             }
         }
@@ -459,12 +461,30 @@ impl QueueMetrics {
         Self {
             queue_name: queue_name.into(),
             created_at: Instant::now(),
-            depth: Gauge::new("links_queue_depth", "Current number of messages in the queue"),
-            enqueued: Counter::new("links_queue_messages_enqueued_total", "Total messages enqueued"),
-            dequeued: Counter::new("links_queue_messages_dequeued_total", "Total messages dequeued"),
-            acknowledged: Counter::new("links_queue_messages_acknowledged_total", "Total messages acknowledged"),
-            rejected: Counter::new("links_queue_messages_rejected_total", "Total messages rejected"),
-            dead_lettered: Counter::new("links_queue_messages_dead_lettered_total", "Total messages dead-lettered"),
+            depth: Gauge::new(
+                "links_queue_depth",
+                "Current number of messages in the queue",
+            ),
+            enqueued: Counter::new(
+                "links_queue_messages_enqueued_total",
+                "Total messages enqueued",
+            ),
+            dequeued: Counter::new(
+                "links_queue_messages_dequeued_total",
+                "Total messages dequeued",
+            ),
+            acknowledged: Counter::new(
+                "links_queue_messages_acknowledged_total",
+                "Total messages acknowledged",
+            ),
+            rejected: Counter::new(
+                "links_queue_messages_rejected_total",
+                "Total messages rejected",
+            ),
+            dead_lettered: Counter::new(
+                "links_queue_messages_dead_lettered_total",
+                "Total messages dead-lettered",
+            ),
             enqueue_latency: LatencyHistogram::new(),
             dequeue_latency: LatencyHistogram::new(),
             processing_latency: LatencyHistogram::new(),
@@ -567,8 +587,10 @@ impl QueueMetrics {
             *self.dequeue_rate.write().unwrap() = dequeue_delta as f64 / elapsed;
 
             *last_calc = now;
-            self.last_enqueued_count.store(current_enqueued, Ordering::Relaxed);
-            self.last_dequeued_count.store(current_dequeued, Ordering::Relaxed);
+            self.last_enqueued_count
+                .store(current_enqueued, Ordering::Relaxed);
+            self.last_dequeued_count
+                .store(current_dequeued, Ordering::Relaxed);
         }
     }
 

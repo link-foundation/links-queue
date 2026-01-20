@@ -21,12 +21,12 @@ pub enum HealthStatus {
 impl HealthStatus {
     /// Returns the string representation.
     #[must_use]
-    pub fn as_str(&self) -> &'static str {
+    pub const fn as_str(&self) -> &'static str {
         match self {
-            HealthStatus::Healthy => "healthy",
-            HealthStatus::Unhealthy => "unhealthy",
-            HealthStatus::Degraded => "degraded",
-            HealthStatus::Unknown => "unknown",
+            Self::Healthy => "healthy",
+            Self::Unhealthy => "unhealthy",
+            Self::Degraded => "degraded",
+            Self::Unknown => "unknown",
         }
     }
 }
@@ -39,7 +39,7 @@ impl std::fmt::Display for HealthStatus {
 
 impl Default for HealthStatus {
     fn default() -> Self {
-        HealthStatus::Unknown
+        Self::Unknown
     }
 }
 
@@ -92,14 +92,18 @@ impl ComponentHealth {
 
     /// Sets the latency.
     #[must_use]
-    pub fn with_latency(mut self, latency_ms: u64) -> Self {
+    pub const fn with_latency(mut self, latency_ms: u64) -> Self {
         self.latency = Some(latency_ms);
         self
     }
 
     /// Adds a detail field.
     #[must_use]
-    pub fn with_detail(mut self, key: impl Into<String>, value: impl Into<serde_json::Value>) -> Self {
+    pub fn with_detail(
+        mut self,
+        key: impl Into<String>,
+        value: impl Into<serde_json::Value>,
+    ) -> Self {
         self.details.insert(key.into(), value.into());
         self
     }
@@ -108,7 +112,10 @@ impl ComponentHealth {
     #[must_use]
     pub fn to_json(&self) -> serde_json::Value {
         let mut obj = serde_json::Map::new();
-        obj.insert("status".to_string(), serde_json::json!(self.status.as_str()));
+        obj.insert(
+            "status".to_string(),
+            serde_json::json!(self.status.as_str()),
+        );
 
         if let Some(latency) = self.latency {
             obj.insert("latency".to_string(), serde_json::json!(latency));
@@ -165,7 +172,8 @@ impl HealthCheckResult {
 }
 
 /// Type alias for health check function.
-pub type HealthCheckFn = Box<dyn Fn() -> Pin<Box<dyn Future<Output = ComponentHealth> + Send>> + Send + Sync>;
+pub type HealthCheckFn =
+    Box<dyn Fn() -> Pin<Box<dyn Future<Output = ComponentHealth> + Send>> + Send + Sync>;
 
 /// A component health checker.
 pub struct ComponentChecker {
@@ -306,7 +314,11 @@ impl HealthChecker {
     pub fn check_alive(&self) -> LivenessResult {
         let alive = self.alive.read().map(|a| *a).unwrap_or(false);
         LivenessResult {
-            status: if alive { HealthStatus::Healthy } else { HealthStatus::Unhealthy },
+            status: if alive {
+                HealthStatus::Healthy
+            } else {
+                HealthStatus::Unhealthy
+            },
             timestamp: current_timestamp(),
         }
     }
@@ -477,7 +489,10 @@ impl ReadinessResult {
     #[must_use]
     pub fn to_json(&self) -> serde_json::Value {
         let mut obj = serde_json::Map::new();
-        obj.insert("status".to_string(), serde_json::json!(self.status.as_str()));
+        obj.insert(
+            "status".to_string(),
+            serde_json::json!(self.status.as_str()),
+        );
         obj.insert("timestamp".to_string(), serde_json::json!(self.timestamp));
 
         if let Some(ref msg) = self.message {
@@ -584,11 +599,7 @@ mod tests {
     fn test_register_sync_check() {
         let checker = HealthChecker::new("1.0.0");
 
-        checker.register_sync_check(
-            "test",
-            || ComponentHealth::healthy(),
-            true,
-        );
+        checker.register_sync_check("test", || ComponentHealth::healthy(), true);
 
         let components = checker.components.read().unwrap();
         assert!(components.contains_key("test"));

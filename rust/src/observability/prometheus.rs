@@ -3,7 +3,7 @@
 //! Provides Prometheus-compatible metrics export in text format,
 //! following the Prometheus exposition format specification.
 
-use super::metrics::{MetricsRegistry, QueueMetricsData, HistogramStats};
+use super::metrics::{HistogramStats, MetricsRegistry, QueueMetricsData};
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -12,7 +12,13 @@ fn format_metric_name(name: &str, prefix: Option<&str>) -> String {
     let name = name
         .to_lowercase()
         .chars()
-        .map(|c| if c.is_alphanumeric() || c == '_' || c == ':' { c } else { '_' })
+        .map(|c| {
+            if c.is_alphanumeric() || c == '_' || c == ':' {
+                c
+            } else {
+                '_'
+            }
+        })
         .collect::<String>();
 
     // Remove consecutive underscores and trim
@@ -164,129 +170,126 @@ impl PrometheusExporter {
         // Sum and count
         let label_str = format_labels(&all_labels);
         lines.push(format!("{}_sum{} {}", metric_name, label_str, stats.sum));
-        lines.push(format!("{}_count{} {}", metric_name, label_str, stats.count));
+        lines.push(format!(
+            "{}_count{} {}",
+            metric_name, label_str, stats.count
+        ));
 
         lines.join("\n")
     }
 
     /// Exports queue metrics in Prometheus format.
+    #[allow(clippy::cast_possible_truncation)]
     fn export_queue_metrics(&self, queue_name: &str, metrics: &QueueMetricsData) -> String {
         let mut labels = HashMap::new();
         labels.insert("queue".to_string(), queue_name.to_string());
 
-        let mut parts = Vec::new();
-
-        // Queue depth
-        parts.push(self.format_gauge(
-            "links_queue_depth",
-            metrics.depth,
-            "Current number of messages in the queue",
-            &labels,
-        ));
-
-        // Throughput counters
-        parts.push(self.format_counter(
-            "links_queue_messages_enqueued_total",
-            metrics.throughput.enqueued,
-            "Total number of messages enqueued",
-            &labels,
-        ));
-        parts.push(self.format_counter(
-            "links_queue_messages_dequeued_total",
-            metrics.throughput.dequeued,
-            "Total number of messages dequeued",
-            &labels,
-        ));
-        parts.push(self.format_counter(
-            "links_queue_messages_acknowledged_total",
-            metrics.throughput.acknowledged,
-            "Total number of messages acknowledged",
-            &labels,
-        ));
-        parts.push(self.format_counter(
-            "links_queue_messages_rejected_total",
-            metrics.throughput.rejected,
-            "Total number of messages rejected",
-            &labels,
-        ));
-        parts.push(self.format_counter(
-            "links_queue_messages_dead_lettered_total",
-            metrics.throughput.dead_lettered,
-            "Total number of messages moved to dead letter queue",
-            &labels,
-        ));
-
-        // Throughput rates
-        parts.push(self.format_gauge(
-            "links_queue_enqueue_rate",
-            metrics.throughput.enqueue_rate as i64,
-            "Current enqueue rate (messages/second)",
-            &labels,
-        ));
-        parts.push(self.format_gauge(
-            "links_queue_dequeue_rate",
-            metrics.throughput.dequeue_rate as i64,
-            "Current dequeue rate (messages/second)",
-            &labels,
-        ));
-
-        // Latency histograms
-        parts.push(self.format_histogram(
-            "links_queue_enqueue_duration_milliseconds",
-            &metrics.latency.enqueue,
-            "Enqueue operation duration in milliseconds",
-            &labels,
-        ));
-        parts.push(self.format_histogram(
-            "links_queue_dequeue_duration_milliseconds",
-            &metrics.latency.dequeue,
-            "Dequeue operation duration in milliseconds",
-            &labels,
-        ));
-        parts.push(self.format_histogram(
-            "links_queue_processing_duration_milliseconds",
-            &metrics.latency.processing,
-            "Message processing duration in milliseconds",
-            &labels,
-        ));
-
-        // Consumer lag and in-flight
-        parts.push(self.format_gauge(
-            "links_queue_consumer_lag",
-            metrics.consumer_lag,
-            "Number of messages waiting to be processed",
-            &labels,
-        ));
-        parts.push(self.format_gauge(
-            "links_queue_in_flight",
-            metrics.in_flight,
-            "Number of messages currently being processed",
-            &labels,
-        ));
-
-        // Errors
-        parts.push(self.format_counter(
-            "links_queue_errors_total",
-            metrics.errors,
-            "Total number of errors",
-            &labels,
-        ));
+        let parts = vec![
+            // Queue depth
+            self.format_gauge(
+                "links_queue_depth",
+                metrics.depth,
+                "Current number of messages in the queue",
+                &labels,
+            ),
+            // Throughput counters
+            self.format_counter(
+                "links_queue_messages_enqueued_total",
+                metrics.throughput.enqueued,
+                "Total number of messages enqueued",
+                &labels,
+            ),
+            self.format_counter(
+                "links_queue_messages_dequeued_total",
+                metrics.throughput.dequeued,
+                "Total number of messages dequeued",
+                &labels,
+            ),
+            self.format_counter(
+                "links_queue_messages_acknowledged_total",
+                metrics.throughput.acknowledged,
+                "Total number of messages acknowledged",
+                &labels,
+            ),
+            self.format_counter(
+                "links_queue_messages_rejected_total",
+                metrics.throughput.rejected,
+                "Total number of messages rejected",
+                &labels,
+            ),
+            self.format_counter(
+                "links_queue_messages_dead_lettered_total",
+                metrics.throughput.dead_lettered,
+                "Total number of messages moved to dead letter queue",
+                &labels,
+            ),
+            // Throughput rates
+            self.format_gauge(
+                "links_queue_enqueue_rate",
+                metrics.throughput.enqueue_rate as i64,
+                "Current enqueue rate (messages/second)",
+                &labels,
+            ),
+            self.format_gauge(
+                "links_queue_dequeue_rate",
+                metrics.throughput.dequeue_rate as i64,
+                "Current dequeue rate (messages/second)",
+                &labels,
+            ),
+            // Latency histograms
+            self.format_histogram(
+                "links_queue_enqueue_duration_milliseconds",
+                &metrics.latency.enqueue,
+                "Enqueue operation duration in milliseconds",
+                &labels,
+            ),
+            self.format_histogram(
+                "links_queue_dequeue_duration_milliseconds",
+                &metrics.latency.dequeue,
+                "Dequeue operation duration in milliseconds",
+                &labels,
+            ),
+            self.format_histogram(
+                "links_queue_processing_duration_milliseconds",
+                &metrics.latency.processing,
+                "Message processing duration in milliseconds",
+                &labels,
+            ),
+            // Consumer lag and in-flight
+            self.format_gauge(
+                "links_queue_consumer_lag",
+                metrics.consumer_lag,
+                "Number of messages waiting to be processed",
+                &labels,
+            ),
+            self.format_gauge(
+                "links_queue_in_flight",
+                metrics.in_flight,
+                "Number of messages currently being processed",
+                &labels,
+            ),
+            // Errors
+            self.format_counter(
+                "links_queue_errors_total",
+                metrics.errors,
+                "Total number of errors",
+                &labels,
+            ),
+        ];
 
         parts.join("\n\n")
     }
 
     /// Exports all metrics in Prometheus text format.
     #[must_use]
+    #[allow(clippy::cast_possible_wrap)]
     pub fn export(&self) -> String {
-        let mut parts = Vec::new();
-
-        // Uptime
-        parts.push(self.format_gauge(
+        let mut parts = vec![self.format_gauge(
             "links_queue_uptime_seconds",
             self.registry.uptime().as_secs() as i64,
             "Uptime of the links-queue process in seconds",
             &HashMap::new(),
-        ));
+        )];
 
         // Queue metrics
         let queues = self.registry.get_all_queue_metrics();
@@ -299,7 +302,7 @@ impl PrometheusExporter {
 
     /// Returns the content type for Prometheus metrics.
     #[must_use]
-    pub fn content_type() -> &'static str {
+    pub const fn content_type() -> &'static str {
         "text/plain; version=0.0.4; charset=utf-8"
     }
 }
@@ -312,7 +315,10 @@ mod tests {
     fn test_format_metric_name() {
         assert_eq!(format_metric_name("my_metric", None), "my_metric");
         assert_eq!(format_metric_name("my-metric", None), "my_metric");
-        assert_eq!(format_metric_name("my_metric", Some("app")), "app_my_metric");
+        assert_eq!(
+            format_metric_name("my_metric", Some("app")),
+            "app_my_metric"
+        );
     }
 
     #[test]

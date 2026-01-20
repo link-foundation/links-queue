@@ -3,12 +3,12 @@
 //! Provides structured logging with JSON format support, configurable log levels,
 //! and correlation IDs for request tracing.
 
+use std::cell::RefCell;
 use std::collections::HashMap;
 use std::fmt;
 use std::io::{self, Write};
 use std::sync::{Arc, RwLock};
 use std::time::{SystemTime, UNIX_EPOCH};
-use std::cell::RefCell;
 
 /// Log levels with numeric severity.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -95,7 +95,11 @@ impl LogEntry {
 
     /// Adds a field to the log entry.
     #[must_use]
-    pub fn with_field(mut self, key: impl Into<String>, value: impl Into<serde_json::Value>) -> Self {
+    pub fn with_field(
+        mut self,
+        key: impl Into<String>,
+        value: impl Into<serde_json::Value>,
+    ) -> Self {
         self.fields.insert(key.into(), value.into());
         self
     }
@@ -134,10 +138,7 @@ impl LogEntry {
             .map(|dt| dt.format("%Y-%m-%dT%H:%M:%S%.3fZ").to_string())
             .unwrap_or_else(|| self.timestamp.to_string());
 
-        let mut parts = vec![
-            datetime,
-            format!("[{}]", self.level),
-        ];
+        let mut parts = vec![datetime, format!("[{}]", self.level)];
 
         if let Some(ref cid) = self.correlation_id {
             parts.push(format!("[{}]", cid));
@@ -146,7 +147,8 @@ impl LogEntry {
         parts.push(self.message.clone());
 
         // Add extra fields
-        let extra: Vec<String> = self.fields
+        let extra: Vec<String> = self
+            .fields
             .iter()
             .filter(|(k, _)| !k.starts_with('_'))
             .map(|(k, v)| format!("{}={}", k, v))
@@ -286,7 +288,11 @@ impl Logger {
 
     /// Adds a default field.
     #[must_use]
-    pub fn with_field(mut self, key: impl Into<String>, value: impl Into<serde_json::Value>) -> Self {
+    pub fn with_field(
+        mut self,
+        key: impl Into<String>,
+        value: impl Into<serde_json::Value>,
+    ) -> Self {
         self.default_fields.insert(key.into(), value.into());
         self
     }
@@ -339,7 +345,12 @@ impl Logger {
     }
 
     /// Logs a message at the specified level.
-    pub fn log(&self, level: LogLevel, message: impl Into<String>, fields: Option<HashMap<String, serde_json::Value>>) {
+    pub fn log(
+        &self,
+        level: LogLevel,
+        message: impl Into<String>,
+        fields: Option<HashMap<String, serde_json::Value>>,
+    ) {
         if level < self.level {
             return;
         }
@@ -392,7 +403,11 @@ impl Logger {
     }
 
     /// Logs a debug message with fields.
-    pub fn debug_with(&self, message: impl Into<String>, fields: HashMap<String, serde_json::Value>) {
+    pub fn debug_with(
+        &self,
+        message: impl Into<String>,
+        fields: HashMap<String, serde_json::Value>,
+    ) {
         self.log(LogLevel::Debug, message, Some(fields));
     }
 
@@ -402,7 +417,11 @@ impl Logger {
     }
 
     /// Logs an info message with fields.
-    pub fn info_with(&self, message: impl Into<String>, fields: HashMap<String, serde_json::Value>) {
+    pub fn info_with(
+        &self,
+        message: impl Into<String>,
+        fields: HashMap<String, serde_json::Value>,
+    ) {
         self.log(LogLevel::Info, message, Some(fields));
     }
 
@@ -412,7 +431,11 @@ impl Logger {
     }
 
     /// Logs a warning message with fields.
-    pub fn warn_with(&self, message: impl Into<String>, fields: HashMap<String, serde_json::Value>) {
+    pub fn warn_with(
+        &self,
+        message: impl Into<String>,
+        fields: HashMap<String, serde_json::Value>,
+    ) {
         self.log(LogLevel::Warn, message, Some(fields));
     }
 
@@ -422,7 +445,11 @@ impl Logger {
     }
 
     /// Logs an error message with fields.
-    pub fn error_with(&self, message: impl Into<String>, fields: HashMap<String, serde_json::Value>) {
+    pub fn error_with(
+        &self,
+        message: impl Into<String>,
+        fields: HashMap<String, serde_json::Value>,
+    ) {
         self.log(LogLevel::Error, message, Some(fields));
     }
 
@@ -432,7 +459,11 @@ impl Logger {
     }
 
     /// Logs a fatal message with fields.
-    pub fn fatal_with(&self, message: impl Into<String>, fields: HashMap<String, serde_json::Value>) {
+    pub fn fatal_with(
+        &self,
+        message: impl Into<String>,
+        fields: HashMap<String, serde_json::Value>,
+    ) {
         self.log(LogLevel::Fatal, message, Some(fields));
     }
 }
@@ -460,9 +491,13 @@ impl Clone for Logger {
 #[must_use]
 pub fn create_queue_logger(queue_name: &str, component: Option<&str>) -> Logger {
     let mut logger = Logger::new();
-    logger.default_fields.insert("queue".to_string(), serde_json::json!(queue_name));
+    logger
+        .default_fields
+        .insert("queue".to_string(), serde_json::json!(queue_name));
     if let Some(comp) = component {
-        logger.default_fields.insert("component".to_string(), serde_json::json!(comp));
+        logger
+            .default_fields
+            .insert("component".to_string(), serde_json::json!(comp));
     }
     logger
 }
@@ -491,8 +526,7 @@ mod tests {
 
     #[test]
     fn test_log_entry_json() {
-        let entry = LogEntry::new(LogLevel::Info, "Test message")
-            .with_field("key", "value");
+        let entry = LogEntry::new(LogLevel::Info, "Test message").with_field("key", "value");
 
         let json = entry.to_json();
         assert!(json.contains("\"level\":\"INFO\""));
@@ -512,7 +546,10 @@ mod tests {
     #[test]
     fn test_correlation_id() {
         LogContext::set_correlation_id("test-123");
-        assert_eq!(LogContext::get_correlation_id(), Some("test-123".to_string()));
+        assert_eq!(
+            LogContext::get_correlation_id(),
+            Some("test-123".to_string())
+        );
 
         LogContext::clear_correlation_id();
         assert_eq!(LogContext::get_correlation_id(), None);
@@ -523,13 +560,22 @@ mod tests {
         LogContext::clear_correlation_id();
 
         LogContext::run_with("outer-id", || {
-            assert_eq!(LogContext::get_correlation_id(), Some("outer-id".to_string()));
+            assert_eq!(
+                LogContext::get_correlation_id(),
+                Some("outer-id".to_string())
+            );
 
             LogContext::run_with("inner-id", || {
-                assert_eq!(LogContext::get_correlation_id(), Some("inner-id".to_string()));
+                assert_eq!(
+                    LogContext::get_correlation_id(),
+                    Some("inner-id".to_string())
+                );
             });
 
-            assert_eq!(LogContext::get_correlation_id(), Some("outer-id".to_string()));
+            assert_eq!(
+                LogContext::get_correlation_id(),
+                Some("outer-id".to_string())
+            );
         });
 
         assert_eq!(LogContext::get_correlation_id(), None);
@@ -547,8 +593,7 @@ mod tests {
 
     #[test]
     fn test_logger_child() {
-        let parent = Logger::new()
-            .with_field("parent_field", "parent_value");
+        let parent = Logger::new().with_field("parent_field", "parent_value");
 
         let mut child_fields = HashMap::new();
         child_fields.insert("child_field".to_string(), serde_json::json!("child_value"));

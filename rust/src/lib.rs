@@ -156,18 +156,36 @@ pub use client::{
 
 // Re-export observability types
 pub use observability::{
+    create_queue_logger,
+    ComponentChecker,
+    ComponentHealth,
     // Metrics
-    Counter, Gauge, LatencyHistogram, HistogramStats, HistogramBucket,
-    QueueMetrics, QueueMetricsData, ThroughputMetrics, LatencyMetrics,
-    MetricsRegistry, DEFAULT_LATENCY_BUCKETS,
+    Counter,
+    Gauge,
+    HealthCheckResult,
+    HealthChecker,
+    // Health
+    HealthStatus,
+    HistogramBucket,
+    HistogramStats,
+    LatencyHistogram,
+    LatencyMetrics,
+    LivenessResult,
+    LogContext,
+    LogEntry,
+    LogFormat,
+    // Logging
+    LogLevel,
+    LogOutput,
+    Logger,
+    MetricsRegistry,
     // Prometheus
     PrometheusExporter,
-    // Logging
-    LogLevel, LogFormat, LogContext, Logger, LogEntry, LogOutput,
-    create_queue_logger,
-    // Health
-    HealthStatus, ComponentHealth, HealthCheckResult,
-    ComponentChecker, HealthChecker, LivenessResult, ReadinessResult,
+    QueueMetrics,
+    QueueMetricsData,
+    ReadinessResult,
+    ThroughputMetrics,
+    DEFAULT_LATENCY_BUCKETS,
 };
 
 // =============================================================================
