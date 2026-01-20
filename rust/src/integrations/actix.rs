@@ -7,7 +7,7 @@
 //!
 //! - [`LinksQueueMiddleware`]: Middleware for adding queue functionality
 //! - [`LinksQueue`]: Extractor for accessing the queue manager in handlers
-//! - [`configure_queue_routes`]: Configure RESTful queue endpoints
+//! - [`configure_queue_routes`]: Configure `RESTful` queue endpoints
 //!
 //! # Quick Start
 //!
@@ -82,7 +82,7 @@ pub struct QueueOptionsDto {
 
 impl From<QueueOptionsDto> for QueueOptions {
     fn from(dto: QueueOptionsDto) -> Self {
-        let mut opts = QueueOptions::new();
+        let mut opts = Self::new();
         if let Some(v) = dto.max_size {
             opts = opts.with_max_size(v);
         }
@@ -257,14 +257,18 @@ impl actix_web::FromRequest for LinksQueue {
         req: &actix_web::HttpRequest,
         _payload: &mut actix_web::dev::Payload,
     ) -> Self::Future {
-        match req.app_data::<Data<LinksQueueData>>() {
-            Some(data) => std::future::ready(Ok(Self {
-                data: data.get_ref().clone(),
-            })),
-            None => std::future::ready(Err(actix_web::error::ErrorInternalServerError(
-                "LinksQueueData not configured. Did you forget to add app_data?",
-            ))),
-        }
+        req.app_data::<Data<LinksQueueData>>().map_or_else(
+            || {
+                std::future::ready(Err(actix_web::error::ErrorInternalServerError(
+                    "LinksQueueData not configured. Did you forget to add app_data?",
+                )))
+            },
+            |data| {
+                std::future::ready(Ok(Self {
+                    data: data.get_ref().clone(),
+                }))
+            },
+        )
     }
 }
 
@@ -311,7 +315,7 @@ impl LinksQueueMiddleware {
 // Route Configuration
 // =============================================================================
 
-/// Configures RESTful queue routes for an Actix-web application.
+/// Configures `RESTful` queue routes for an Actix-web application.
 ///
 /// # Routes
 ///
@@ -413,7 +417,7 @@ async fn get_queue_handler(queue: LinksQueue, path: Path<String>) -> impl Respon
         }),
         Ok(None) => HttpResponse::NotFound().json(ErrorResponse {
             code: "QUEUE_NOT_FOUND".to_string(),
-            message: format!("Queue '{}' not found", name),
+            message: format!("Queue '{name}' not found"),
         }),
         Err(e) => HttpResponse::InternalServerError().json(ErrorResponse {
             code: format!("{}", e.code),
@@ -428,7 +432,7 @@ async fn delete_queue_handler(queue: LinksQueue, path: Path<String>) -> impl Res
         Ok(true) => HttpResponse::NoContent().finish(),
         Ok(false) => HttpResponse::NotFound().json(ErrorResponse {
             code: "QUEUE_NOT_FOUND".to_string(),
-            message: format!("Queue '{}' not found", name),
+            message: format!("Queue '{name}' not found"),
         }),
         Err(e) => HttpResponse::InternalServerError().json(ErrorResponse {
             code: format!("{}", e.code),
@@ -454,7 +458,7 @@ async fn get_stats_handler(queue: LinksQueue, path: Path<String>) -> impl Respon
         }
         Ok(None) => HttpResponse::NotFound().json(ErrorResponse {
             code: "QUEUE_NOT_FOUND".to_string(),
-            message: format!("Queue '{}' not found", name),
+            message: format!("Queue '{name}' not found"),
         }),
         Err(e) => HttpResponse::InternalServerError().json(ErrorResponse {
             code: format!("{}", e.code),
@@ -501,7 +505,7 @@ async fn enqueue_handler(
         }
         Ok(None) => HttpResponse::NotFound().json(ErrorResponse {
             code: "QUEUE_NOT_FOUND".to_string(),
-            message: format!("Queue '{}' not found", name),
+            message: format!("Queue '{name}' not found"),
         }),
         Err(e) => HttpResponse::InternalServerError().json(ErrorResponse {
             code: format!("{}", e.code),
@@ -518,10 +522,11 @@ async fn dequeue_handler(queue: LinksQueue, path: Path<String>) -> impl Responde
                 id: link.id,
                 source: link.source_id(),
                 target: link.target_id(),
-                values: link
-                    .values
-                    .as_ref()
-                    .map(|vals| vals.iter().map(|v| v.get_id()).collect()),
+                values: link.values.as_ref().map(|vals| {
+                    vals.iter()
+                        .map(super::super::traits::LinkRef::get_id)
+                        .collect()
+                }),
             }),
             Ok(None) => HttpResponse::NoContent().finish(),
             Err(e) => HttpResponse::InternalServerError().json(ErrorResponse {
@@ -531,7 +536,7 @@ async fn dequeue_handler(queue: LinksQueue, path: Path<String>) -> impl Responde
         },
         Ok(None) => HttpResponse::NotFound().json(ErrorResponse {
             code: "QUEUE_NOT_FOUND".to_string(),
-            message: format!("Queue '{}' not found", name),
+            message: format!("Queue '{name}' not found"),
         }),
         Err(e) => HttpResponse::InternalServerError().json(ErrorResponse {
             code: format!("{}", e.code),
@@ -548,10 +553,11 @@ async fn peek_handler(queue: LinksQueue, path: Path<String>) -> impl Responder {
                 id: link.id,
                 source: link.source_id(),
                 target: link.target_id(),
-                values: link
-                    .values
-                    .as_ref()
-                    .map(|vals| vals.iter().map(|v| v.get_id()).collect()),
+                values: link.values.as_ref().map(|vals| {
+                    vals.iter()
+                        .map(super::super::traits::LinkRef::get_id)
+                        .collect()
+                }),
             }),
             Ok(None) => HttpResponse::NoContent().finish(),
             Err(e) => HttpResponse::InternalServerError().json(ErrorResponse {
@@ -561,7 +567,7 @@ async fn peek_handler(queue: LinksQueue, path: Path<String>) -> impl Responder {
         },
         Ok(None) => HttpResponse::NotFound().json(ErrorResponse {
             code: "QUEUE_NOT_FOUND".to_string(),
-            message: format!("Queue '{}' not found", name),
+            message: format!("Queue '{name}' not found"),
         }),
         Err(e) => HttpResponse::InternalServerError().json(ErrorResponse {
             code: format!("{}", e.code),

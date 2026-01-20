@@ -7,7 +7,7 @@
 //!
 //! - [`LinksQueueLayer`]: Tower layer for adding queue functionality
 //! - [`LinksQueue`]: Extractor for accessing the queue manager in handlers
-//! - [`create_queue_router`]: Pre-built router with RESTful queue endpoints
+//! - [`create_queue_router`]: Pre-built router with `RESTful` queue endpoints
 //!
 //! # Quick Start
 //!
@@ -89,7 +89,7 @@ pub struct QueueOptionsDto {
 
 impl From<QueueOptionsDto> for QueueOptions {
     fn from(dto: QueueOptionsDto) -> Self {
-        let mut opts = QueueOptions::new();
+        let mut opts = Self::new();
         if let Some(v) = dto.max_size {
             opts = opts.with_max_size(v);
         }
@@ -364,7 +364,7 @@ where
         req.extensions_mut().insert(self.state.clone());
 
         let future = self.inner.call(req);
-        Box::pin(async move { future.await })
+        Box::pin(future)
     }
 }
 
@@ -372,7 +372,7 @@ where
 // Router Factory
 // =============================================================================
 
-/// Creates a router with RESTful queue endpoints.
+/// Creates a router with `RESTful` queue endpoints.
 ///
 /// # Endpoints
 ///
@@ -397,7 +397,6 @@ where
 ///     .nest("/api/queues", create_queue_router())
 ///     .layer(LinksQueueLayer::new());
 /// ```
-#[must_use]
 pub fn create_queue_router() -> Router<LinksQueueState> {
     Router::new()
         .route("/", get(list_queues_handler))
@@ -496,7 +495,7 @@ async fn get_queue_handler(
                 StatusCode::NOT_FOUND,
                 Json(ErrorResponse {
                     code: "QUEUE_NOT_FOUND".to_string(),
-                    message: format!("Queue '{}' not found", name),
+                    message: format!("Queue '{name}' not found"),
                 }),
             )
         })?;
@@ -529,7 +528,7 @@ async fn delete_queue_handler(
             StatusCode::NOT_FOUND,
             Json(ErrorResponse {
                 code: "QUEUE_NOT_FOUND".to_string(),
-                message: format!("Queue '{}' not found", name),
+                message: format!("Queue '{name}' not found"),
             }),
         ))
     }
@@ -557,20 +556,20 @@ async fn get_stats_handler(
                 StatusCode::NOT_FOUND,
                 Json(ErrorResponse {
                     code: "QUEUE_NOT_FOUND".to_string(),
-                    message: format!("Queue '{}' not found", name),
+                    message: format!("Queue '{name}' not found"),
                 }),
             )
         })?;
 
-    let stats = queue.stats();
+    let queue_stats = queue.stats();
     Ok(Json(QueueStatsResponse {
         name: name.clone(),
-        depth: stats.depth,
-        enqueued: stats.enqueued,
-        dequeued: stats.dequeued,
-        acknowledged: stats.acknowledged,
-        rejected: stats.rejected,
-        in_flight: stats.in_flight,
+        depth: queue_stats.depth,
+        enqueued: queue_stats.enqueued,
+        dequeued: queue_stats.dequeued,
+        acknowledged: queue_stats.acknowledged,
+        rejected: queue_stats.rejected,
+        in_flight: queue_stats.in_flight,
     }))
 }
 
@@ -597,7 +596,7 @@ async fn enqueue_handler(
                 StatusCode::NOT_FOUND,
                 Json(ErrorResponse {
                     code: "QUEUE_NOT_FOUND".to_string(),
-                    message: format!("Queue '{}' not found", name),
+                    message: format!("Queue '{name}' not found"),
                 }),
             )
         })?;
@@ -658,7 +657,7 @@ async fn dequeue_handler(
                 StatusCode::NOT_FOUND,
                 Json(ErrorResponse {
                     code: "QUEUE_NOT_FOUND".to_string(),
-                    message: format!("Queue '{}' not found", name),
+                    message: format!("Queue '{name}' not found"),
                 }),
             )
         })?;
@@ -678,10 +677,11 @@ async fn dequeue_handler(
             id: link.id,
             source: link.source_id(),
             target: link.target_id(),
-            values: link
-                .values
-                .as_ref()
-                .map(|vals| vals.iter().map(|v| v.get_id()).collect()),
+            values: link.values.as_ref().map(|vals| {
+                vals.iter()
+                    .map(super::super::traits::LinkRef::get_id)
+                    .collect()
+            }),
         })
         .into_response()),
         None => Ok(StatusCode::NO_CONTENT.into_response()),
@@ -710,7 +710,7 @@ async fn peek_handler(
                 StatusCode::NOT_FOUND,
                 Json(ErrorResponse {
                     code: "QUEUE_NOT_FOUND".to_string(),
-                    message: format!("Queue '{}' not found", name),
+                    message: format!("Queue '{name}' not found"),
                 }),
             )
         })?;
@@ -730,10 +730,11 @@ async fn peek_handler(
             id: link.id,
             source: link.source_id(),
             target: link.target_id(),
-            values: link
-                .values
-                .as_ref()
-                .map(|vals| vals.iter().map(|v| v.get_id()).collect()),
+            values: link.values.as_ref().map(|vals| {
+                vals.iter()
+                    .map(super::super::traits::LinkRef::get_id)
+                    .collect()
+            }),
         })
         .into_response()),
         None => Ok(StatusCode::NO_CONTENT.into_response()),
