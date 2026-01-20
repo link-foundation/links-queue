@@ -2,7 +2,11 @@
  * Type definitions for links-queue-fastify.
  */
 
-import type { FastifyPluginAsync, FastifyInstance, FastifyRequest } from 'fastify';
+import type {
+  FastifyPluginAsync,
+  FastifyInstance,
+  FastifyRequest,
+} from 'fastify';
 
 /**
  * Supported queue modes.

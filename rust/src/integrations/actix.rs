@@ -518,7 +518,10 @@ async fn dequeue_handler(queue: LinksQueue, path: Path<String>) -> impl Responde
                 id: link.id,
                 source: link.source_id(),
                 target: link.target_id(),
-                values: link.values.as_ref().map(|vals| vals.iter().map(|v| v.get_id()).collect()),
+                values: link
+                    .values
+                    .as_ref()
+                    .map(|vals| vals.iter().map(|v| v.get_id()).collect()),
             }),
             Ok(None) => HttpResponse::NoContent().finish(),
             Err(e) => HttpResponse::InternalServerError().json(ErrorResponse {
@@ -545,7 +548,10 @@ async fn peek_handler(queue: LinksQueue, path: Path<String>) -> impl Responder {
                 id: link.id,
                 source: link.source_id(),
                 target: link.target_id(),
-                values: link.values.as_ref().map(|vals| vals.iter().map(|v| v.get_id()).collect()),
+                values: link
+                    .values
+                    .as_ref()
+                    .map(|vals| vals.iter().map(|v| v.get_id()).collect()),
             }),
             Ok(None) => HttpResponse::NoContent().finish(),
             Err(e) => HttpResponse::InternalServerError().json(ErrorResponse {

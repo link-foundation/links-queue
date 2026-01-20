@@ -678,7 +678,10 @@ async fn dequeue_handler(
             id: link.id,
             source: link.source_id(),
             target: link.target_id(),
-            values: link.values.as_ref().map(|vals| vals.iter().map(|v| v.get_id()).collect()),
+            values: link
+                .values
+                .as_ref()
+                .map(|vals| vals.iter().map(|v| v.get_id()).collect()),
         })
         .into_response()),
         None => Ok(StatusCode::NO_CONTENT.into_response()),
@@ -727,7 +730,10 @@ async fn peek_handler(
             id: link.id,
             source: link.source_id(),
             target: link.target_id(),
-            values: link.values.as_ref().map(|vals| vals.iter().map(|v| v.get_id()).collect()),
+            values: link
+                .values
+                .as_ref()
+                .map(|vals| vals.iter().map(|v| v.get_id()).collect()),
         })
         .into_response()),
         None => Ok(StatusCode::NO_CONTENT.into_response()),

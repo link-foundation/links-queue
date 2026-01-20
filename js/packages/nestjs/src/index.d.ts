@@ -116,7 +116,9 @@ export interface LinksQueueModuleOptions {
  * Async module options factory.
  */
 export interface LinksQueueOptionsFactory {
-  createLinksQueueOptions(): Promise<LinksQueueModuleOptions> | LinksQueueModuleOptions;
+  createLinksQueueOptions():
+    | Promise<LinksQueueModuleOptions>
+    | LinksQueueModuleOptions;
 }
 
 /**
@@ -124,7 +126,9 @@ export interface LinksQueueOptionsFactory {
  */
 export interface LinksQueueModuleAsyncOptions {
   /** Factory function returning options */
-  useFactory?: (...args: unknown[]) => Promise<LinksQueueModuleOptions> | LinksQueueModuleOptions;
+  useFactory?: (
+    ...args: unknown[]
+  ) => Promise<LinksQueueModuleOptions> | LinksQueueModuleOptions;
   /** Providers to inject into factory */
   inject?: unknown[];
   /** Modules to import */
