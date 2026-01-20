@@ -3,9 +3,12 @@
  *
  * Tests metrics collection, Prometheus export, structured logging,
  * and health checks.
+ *
+ * Note: Uses inline setup/teardown instead of beforeEach/afterEach for Deno compatibility.
+ * Deno's node:test compatibility layer doesn't support beforeEach/afterEach.
  */
 
-import { describe, it, beforeEach, afterEach } from 'node:test';
+import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -461,19 +464,18 @@ describe('Logger', () => {
   });
 
   describe('Logger instance', () => {
-    let tmpDir;
-    let logPath;
+    // Helper functions for test setup/teardown (Deno compatibility - no beforeEach/afterEach)
+    const createTmpLogDir = async () => {
+      const tmpDir = await mkdtemp(join(tmpdir(), 'logger-test-'));
+      const logPath = join(tmpDir, 'test.log');
+      return { tmpDir, logPath };
+    };
 
-    beforeEach(async () => {
-      tmpDir = await mkdtemp(join(tmpdir(), 'logger-test-'));
-      logPath = join(tmpDir, 'test.log');
-    });
-
-    afterEach(async () => {
+    const cleanupTmpDir = async (tmpDir) => {
       if (tmpDir) {
         await rm(tmpDir, { recursive: true, force: true });
       }
-    });
+    };
 
     it('should create with default options', () => {
       const logger = new Logger();
@@ -494,90 +496,115 @@ describe('Logger', () => {
     });
 
     it('should write JSON format to file', async () => {
-      const logger = new Logger({
-        level: 'info',
-        format: 'json',
-        destination: logPath,
-        includeCorrelationId: false,
-      });
+      const { tmpDir, logPath } = await createTmpLogDir();
+      try {
+        const logger = new Logger({
+          level: 'info',
+          format: 'json',
+          destination: logPath,
+          includeCorrelationId: false,
+        });
 
-      logger.info('Test message', { foo: 'bar' });
-      await logger.close();
+        logger.info('Test message', { foo: 'bar' });
+        await logger.close();
 
-      const content = await readFile(logPath, 'utf8');
-      const entry = JSON.parse(content.trim());
-      assert.strictEqual(entry.level, 'INFO');
-      assert.strictEqual(entry.message, 'Test message');
-      assert.strictEqual(entry.foo, 'bar');
-      assert.ok(entry.timestamp);
+        const content = await readFile(logPath, 'utf8');
+        const entry = JSON.parse(content.trim());
+        assert.strictEqual(entry.level, 'INFO');
+        assert.strictEqual(entry.message, 'Test message');
+        assert.strictEqual(entry.foo, 'bar');
+        assert.ok(entry.timestamp);
+      } finally {
+        await cleanupTmpDir(tmpDir);
+      }
     });
 
     it('should write text format', async () => {
-      const logger = new Logger({
-        level: 'info',
-        format: 'text',
-        destination: logPath,
-        includeCorrelationId: false,
-      });
+      const { tmpDir, logPath } = await createTmpLogDir();
+      try {
+        const logger = new Logger({
+          level: 'info',
+          format: 'text',
+          destination: logPath,
+          includeCorrelationId: false,
+        });
 
-      logger.info('Text message');
-      await logger.close();
+        logger.info('Text message');
+        await logger.close();
 
-      const content = await readFile(logPath, 'utf8');
-      assert.ok(content.includes('[INFO]'));
-      assert.ok(content.includes('Text message'));
+        const content = await readFile(logPath, 'utf8');
+        assert.ok(content.includes('[INFO]'));
+        assert.ok(content.includes('Text message'));
+      } finally {
+        await cleanupTmpDir(tmpDir);
+      }
     });
 
     it('should create child logger with extra fields', async () => {
-      const logger = new Logger({
-        level: 'info',
-        format: 'json',
-        destination: logPath,
-        includeCorrelationId: false,
-      });
+      const { tmpDir, logPath } = await createTmpLogDir();
+      try {
+        const logger = new Logger({
+          level: 'info',
+          format: 'json',
+          destination: logPath,
+          includeCorrelationId: false,
+        });
 
-      const child = logger.child({ component: 'test-component' });
-      child.info('Child message');
-      await logger.close();
+        const child = logger.child({ component: 'test-component' });
+        child.info('Child message');
+        await logger.close();
 
-      const content = await readFile(logPath, 'utf8');
-      const entry = JSON.parse(content.trim());
-      assert.strictEqual(entry.component, 'test-component');
+        const content = await readFile(logPath, 'utf8');
+        const entry = JSON.parse(content.trim());
+        assert.strictEqual(entry.component, 'test-component');
+      } finally {
+        await cleanupTmpDir(tmpDir);
+      }
     });
 
     it('should handle Error objects', async () => {
-      const logger = new Logger({
-        level: 'info',
-        format: 'json',
-        destination: logPath,
-        includeCorrelationId: false,
-      });
+      const { tmpDir, logPath } = await createTmpLogDir();
+      try {
+        const logger = new Logger({
+          level: 'info',
+          format: 'json',
+          destination: logPath,
+          includeCorrelationId: false,
+        });
 
-      const error = new Error('Test error');
-      logger.error('An error occurred', error);
-      await logger.close();
+        const error = new Error('Test error');
+        logger.error('An error occurred', error);
+        await logger.close();
 
-      const content = await readFile(logPath, 'utf8');
-      const entry = JSON.parse(content.trim());
-      assert.strictEqual(entry.error, 'Test error');
-      assert.ok(entry.stack);
+        const content = await readFile(logPath, 'utf8');
+        const entry = JSON.parse(content.trim());
+        assert.strictEqual(entry.error, 'Test error');
+        assert.ok(entry.stack);
+      } finally {
+        await cleanupTmpDir(tmpDir);
+      }
     });
 
     it('should include correlation ID when in context', async () => {
-      const logger = new Logger({
-        level: 'info',
-        format: 'json',
-        destination: logPath,
-      });
+      const { tmpDir, logPath } = await createTmpLogDir();
+      try {
+        const logger = new Logger({
+          level: 'info',
+          format: 'json',
+          destination: logPath,
+        });
 
-      await LogContext.runAsync('my-correlation-id', async () => {
-        logger.info('Correlated message');
-      });
-      await logger.close();
+        await LogContext.runAsync('my-correlation-id', async () => {
+          logger.info('Correlated message');
+        });
+        await logger.close();
 
-      const content = await readFile(logPath, 'utf8');
-      const entry = JSON.parse(content.trim());
-      assert.strictEqual(entry.correlationId, 'my-correlation-id');
+        const content = await readFile(logPath, 'utf8');
+        const entry = JSON.parse(content.trim());
+        assert.strictEqual(entry.correlationId, 'my-correlation-id');
+      } finally {
+        await cleanupTmpDir(tmpDir);
+      }
     });
   });
 

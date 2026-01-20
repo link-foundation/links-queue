@@ -27,6 +27,22 @@ export const LogLevel = Object.freeze({
 });
 
 /**
+ * Safely gets an environment variable value.
+ * Returns undefined if access is denied (e.g., Deno without --allow-env).
+ *
+ * @param {string} name - Environment variable name
+ * @returns {string|undefined} Value or undefined
+ */
+const safeGetEnv = (name) => {
+  try {
+    return process.env[name];
+  } catch {
+    // Deno without --allow-env will throw
+    return undefined;
+  }
+};
+
+/**
  * Log level names for output.
  */
 const LOG_LEVEL_NAMES = {
@@ -608,8 +624,8 @@ export class Logger {
  * Default logger instance.
  */
 export const defaultLogger = new Logger({
-  level: process.env.LOG_LEVEL ?? 'info',
-  format: process.env.LOG_FORMAT ?? 'json',
+  level: safeGetEnv('LOG_LEVEL') ?? 'info',
+  format: safeGetEnv('LOG_FORMAT') ?? 'json',
 });
 
 /**
