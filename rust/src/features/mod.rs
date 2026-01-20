@@ -29,6 +29,13 @@ pub mod rate_limiter;
 pub mod router;
 pub mod pubsub;
 
+#[cfg(test)]
+mod scheduler_tests;
+#[cfg(test)]
+mod router_tests;
+#[cfg(test)]
+mod pubsub_tests;
+
 // Re-export main types
 pub use scheduler::{CronParser, CronSchedule, Scheduler, ScheduledItem, ScheduledQueue, SchedulerStats, CronJob};
 pub use rate_limiter::{
