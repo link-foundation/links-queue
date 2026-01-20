@@ -252,3 +252,33 @@ export {
   ClientConnection,
   ClientConnectionState,
 } from './client/index.js';
+
+// =============================================================================
+// Observability Exports
+// =============================================================================
+
+export {
+  // Metrics
+  Counter,
+  Gauge,
+  LatencyHistogram,
+  QueueMetrics,
+  MetricsRegistry,
+  defaultRegistry,
+  DEFAULT_LATENCY_BUCKETS,
+  // Prometheus
+  PrometheusExporter,
+  metricsMiddleware,
+  // Logger
+  LogLevel,
+  LogContext,
+  Logger,
+  defaultLogger,
+  createQueueLogger,
+  // Health
+  HealthStatus,
+  ComponentChecker,
+  HealthChecker,
+  healthMiddleware,
+  createServerHealthChecker,
+} from './observability/index.js';
