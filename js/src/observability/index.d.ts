@@ -198,7 +198,10 @@ export interface AllMetrics {
  */
 export declare class MetricsRegistry {
   constructor();
-  getQueueMetrics(queueName: string, options?: QueueMetricsOptions): QueueMetrics;
+  getQueueMetrics(
+    queueName: string,
+    options?: QueueMetricsOptions
+  ): QueueMetrics;
   removeQueueMetrics(queueName: string): boolean;
   counter(name: string, options?: CounterOptions): Counter;
   gauge(name: string, options?: GaugeOptions): Gauge;
@@ -232,8 +235,14 @@ export declare class PrometheusExporter {
   registry: MetricsRegistry;
   export(): string;
   static contentType(): string;
-  static format(registry: MetricsRegistry, options?: PrometheusExporterOptions): string;
-  static formatQueueMetrics(metrics: QueueMetricsData, options?: PrometheusExporterOptions): string;
+  static format(
+    registry: MetricsRegistry,
+    options?: PrometheusExporterOptions
+  ): string;
+  static formatQueueMetrics(
+    metrics: QueueMetricsData,
+    options?: PrometheusExporterOptions
+  ): string;
 }
 
 /**
@@ -269,7 +278,17 @@ export declare const LogLevel: {
 };
 
 export type LogLevelValue = 0 | 1 | 2 | 3 | 4;
-export type LogLevelName = 'DEBUG' | 'INFO' | 'WARN' | 'ERROR' | 'FATAL' | 'debug' | 'info' | 'warn' | 'error' | 'fatal';
+export type LogLevelName =
+  | 'DEBUG'
+  | 'INFO'
+  | 'WARN'
+  | 'ERROR'
+  | 'FATAL'
+  | 'debug'
+  | 'info'
+  | 'warn'
+  | 'error'
+  | 'fatal';
 
 /**
  * Context manager for correlation IDs.
@@ -362,7 +381,11 @@ export declare const HealthStatus: {
   readonly UNKNOWN: 'unknown';
 };
 
-export type HealthStatusValue = 'healthy' | 'unhealthy' | 'degraded' | 'unknown';
+export type HealthStatusValue =
+  | 'healthy'
+  | 'unhealthy'
+  | 'degraded'
+  | 'unknown';
 
 /**
  * Component health check result.
@@ -450,9 +473,21 @@ export declare class HealthChecker {
   isAlive(): Promise<LivenessResult>;
   isReady(): Promise<ReadinessResult>;
   getHealthDetails(): Promise<HealthCheckResult>;
-  registerBackend(name: string, backend: { isConnected?(): boolean; getStats?(): any }, options?: Partial<ComponentCheckerOptions>): void;
-  registerCluster(name: string, cluster: { getStats?(): any }, options?: Partial<ComponentCheckerOptions>): void;
-  registerQueue(name: string, queue: { getStats?(): any }, options?: Partial<ComponentCheckerOptions>): void;
+  registerBackend(
+    name: string,
+    backend: { isConnected?(): boolean; getStats?(): any },
+    options?: Partial<ComponentCheckerOptions>
+  ): void;
+  registerCluster(
+    name: string,
+    cluster: { getStats?(): any },
+    options?: Partial<ComponentCheckerOptions>
+  ): void;
+  registerQueue(
+    name: string,
+    queue: { getStats?(): any },
+    options?: Partial<ComponentCheckerOptions>
+  ): void;
 }
 
 /**
@@ -485,4 +520,6 @@ export interface ServerHealthCheckerOptions {
 /**
  * Creates a health checker pre-configured for a queue server.
  */
-export declare function createServerHealthChecker(options?: ServerHealthCheckerOptions): HealthChecker;
+export declare function createServerHealthChecker(
+  options?: ServerHealthCheckerOptions
+): HealthChecker;
