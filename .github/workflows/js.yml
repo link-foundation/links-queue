@@ -107,6 +107,7 @@ jobs:
   lint:
     name: Lint and Format Check
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     needs: [detect-changes]
     if: |
       github.event_name == 'push' ||
@@ -140,6 +141,7 @@ jobs:
   test:
     name: Test (${{ matrix.runtime }} on ${{ matrix.os }})
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
     needs: [detect-changes, changeset-check]
     if: always() && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || needs.changeset-check.result == 'success' || needs.changeset-check.result == 'skipped')
     strategy:
@@ -192,6 +194,7 @@ jobs:
   coverage:
     name: Test Coverage
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     needs: [detect-changes, changeset-check]
     if: always() && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || needs.changeset-check.result == 'success' || needs.changeset-check.result == 'skipped')
     steps:
