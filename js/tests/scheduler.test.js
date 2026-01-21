@@ -289,7 +289,7 @@ describe('Scheduler', () => {
 
   describe('start/stop', () => {
     it('should start and stop the scheduler', () => {
-      const scheduler = new Scheduler();
+      const scheduler = new Scheduler({ checkInterval: 60000 }); // Long interval to avoid timer firing during test
 
       scheduler.start();
       expect(scheduler.isRunning).toBe(true);
@@ -299,7 +299,7 @@ describe('Scheduler', () => {
     });
 
     it('should not start twice', () => {
-      const scheduler = new Scheduler();
+      const scheduler = new Scheduler({ checkInterval: 60000 }); // Long interval to avoid timer firing during test
 
       scheduler.start();
       scheduler.start(); // Should be no-op
@@ -329,7 +329,7 @@ describe('Scheduler', () => {
 
   describe('clear', () => {
     it('should clear all state', () => {
-      const scheduler = new Scheduler();
+      const scheduler = new Scheduler({ checkInterval: 60000 }); // Long interval to avoid timer firing during test
       const link = { id: 1, source: 'test', target: 'item' };
 
       scheduler.schedule(link, { delay: 5000 });
@@ -399,9 +399,13 @@ describe('ScheduledQueue', () => {
   describe('constructor', () => {
     it('should create scheduled queue from base queue', () => {
       const mockQueue = createMockQueue();
-      const scheduledQueue = new ScheduledQueue(mockQueue);
+      const scheduledQueue = new ScheduledQueue(mockQueue, {
+        checkInterval: 60000,
+      }); // Long interval to avoid timer firing during test
 
       expect(scheduledQueue.name).toBe('test-queue');
+
+      scheduledQueue.stop();
     });
   });
 
@@ -419,7 +423,9 @@ describe('ScheduledQueue', () => {
 
     it('should schedule with delay', async () => {
       const mockQueue = createMockQueue();
-      const scheduledQueue = new ScheduledQueue(mockQueue);
+      const scheduledQueue = new ScheduledQueue(mockQueue, {
+        checkInterval: 60000,
+      }); // Long interval to avoid timer firing during test
       const link = { id: 1, source: 'test', target: 'item' };
 
       const result = await scheduledQueue.enqueue(link, { delay: 5000 });
@@ -488,7 +494,9 @@ describe('ScheduledQueue', () => {
   describe('cancelScheduled', () => {
     it('should cancel a scheduled item', async () => {
       const mockQueue = createMockQueue();
-      const scheduledQueue = new ScheduledQueue(mockQueue);
+      const scheduledQueue = new ScheduledQueue(mockQueue, {
+        checkInterval: 60000,
+      }); // Long interval to avoid timer firing during test
 
       await scheduledQueue.enqueue(
         { id: 1, source: 'a', target: 'b' },

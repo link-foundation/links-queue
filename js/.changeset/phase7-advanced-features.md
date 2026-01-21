@@ -1,5 +1,5 @@
 ---
-"links-queue-js": minor
+'links-queue-js': minor
 ---
 
 Add Phase 7 advanced queue features

@@ -818,6 +818,10 @@ describe('QueueBackedPubSub', () => {
       const subs = pubsub.listSubscriptions();
       expect(subs.find((s) => s.id === sub.id).active).toBe(true);
 
+      // Small delay to allow the consumer's first iteration to complete
+      // and set up its timer, which we can then properly clear
+      await new Promise((resolve) => globalThis.setTimeout(resolve, 10));
+
       pubsub.stopConsumer(sub.id);
 
       const subsAfter = pubsub.listSubscriptions();

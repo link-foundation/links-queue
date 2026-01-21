@@ -1042,6 +1042,11 @@ export class QueueBackedPubSub {
         }
       }
 
+      // Check active again after async operations to avoid timer leak
+      if (!subscription.active) {
+        return;
+      }
+
       subscription.consumerHandle = globalThis.setTimeout(
         consume,
         pollInterval
