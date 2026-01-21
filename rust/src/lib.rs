@@ -70,6 +70,10 @@ pub mod queue;
 pub mod server;
 mod traits;
 
+// Web framework integrations (feature-gated)
+#[cfg(any(feature = "axum", feature = "actix"))]
+pub mod integrations;
+
 // =============================================================================
 // Public Re-exports
 // =============================================================================

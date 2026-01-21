@@ -1,0 +1,56 @@
+# Links Queue - Single Node Setup
+#
+# This docker-compose file provides a simple single-node setup
+# for Links Queue, suitable for development and testing.
+#
+# Usage:
+#   docker-compose up -d
+#   docker-compose logs -f
+#   docker-compose down
+#
+# Access the queue server at: tcp://localhost:5000
+
+services:
+  links-queue:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.js
+    container_name: links-queue
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      - NODE_ENV=production
+      - LINKS_QUEUE_HOST=0.0.0.0
+      - LINKS_QUEUE_PORT=5000
+      - LINKS_QUEUE_MAX_CONNECTIONS=1000
+      - LINKS_QUEUE_IDLE_TIMEOUT=60000
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('net').createConnection({port: 5000}).on('connect', () => process.exit(0)).on('error', () => process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+
+# Optional: Run the Rust version instead
+# Uncomment the following and comment out the above service
+#
+#   links-queue-rust:
+#     build:
+#       context: .
+#       dockerfile: docker/Dockerfile.rust
+#     container_name: links-queue-rust
+#     restart: unless-stopped
+#     ports:
+#       - "5000:5000"
+#     environment:
+#       - LINKS_QUEUE_HOST=0.0.0.0
+#       - LINKS_QUEUE_PORT=5000
