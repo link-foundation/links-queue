@@ -1,0 +1,206 @@
+# Links Queue Helm Chart Values
+#
+# This file contains the default configuration values for the Links Queue chart.
+
+# =============================================================================
+# Global Settings
+# =============================================================================
+
+# Number of replicas
+replicaCount: 1
+
+# Image configuration
+image:
+  repository: ghcr.io/link-foundation/links-queue
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion
+  tag: ""
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+# =============================================================================
+# Service Account
+# =============================================================================
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use
+  name: ""
+
+# =============================================================================
+# Pod Configuration
+# =============================================================================
+
+podAnnotations: {}
+podLabels: {}
+
+podSecurityContext:
+  fsGroup: 1001
+  runAsNonRoot: true
+  runAsUser: 1001
+  runAsGroup: 1001
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 1001
+
+# =============================================================================
+# Service Configuration
+# =============================================================================
+
+service:
+  type: ClusterIP
+  port: 5000
+  # nodePort: 30000  # Only used if type is NodePort
+  annotations: {}
+
+# =============================================================================
+# Ingress Configuration
+# =============================================================================
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: links-queue.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+  #  - secretName: links-queue-tls
+  #    hosts:
+  #      - links-queue.local
+
+# =============================================================================
+# Resource Limits
+# =============================================================================
+
+resources:
+  limits:
+    cpu: 1000m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+# =============================================================================
+# Autoscaling
+# =============================================================================
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80
+
+# =============================================================================
+# Node Selection
+# =============================================================================
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+# =============================================================================
+# Links Queue Configuration
+# =============================================================================
+
+config:
+  # Server host binding
+  host: "0.0.0.0"
+  # Server port
+  port: 5000
+  # Maximum concurrent connections
+  maxConnections: 1000
+  # Connection idle timeout in milliseconds
+  idleTimeout: 60000
+
+  # Backend configuration
+  backend:
+    # Backend type: memory or link-cli
+    type: memory
+
+  # Cluster configuration
+  cluster:
+    # Enable cluster mode
+    enabled: false
+    # Node ID (defaults to pod name)
+    nodeId: ""
+    # Seed nodes for cluster discovery
+    seeds: []
+
+# =============================================================================
+# Health Checks
+# =============================================================================
+
+livenessProbe:
+  enabled: true
+  initialDelaySeconds: 10
+  periodSeconds: 30
+  timeoutSeconds: 10
+  failureThreshold: 3
+  successThreshold: 1
+
+readinessProbe:
+  enabled: true
+  initialDelaySeconds: 5
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+  successThreshold: 1
+
+# =============================================================================
+# Metrics & Monitoring
+# =============================================================================
+
+metrics:
+  enabled: false
+  port: 9090
+  path: /metrics
+  serviceMonitor:
+    enabled: false
+    namespace: ""
+    interval: 30s
+    labels: {}
+
+# =============================================================================
+# Persistence (for link-cli backend)
+# =============================================================================
+
+persistence:
+  enabled: false
+  storageClass: ""
+  accessModes:
+    - ReadWriteOnce
+  size: 1Gi
+  annotations: {}
+
+# =============================================================================
+# ConfigMap for custom configuration
+# =============================================================================
+
+configMap:
+  enabled: false
+  # Custom configuration file content
+  config: |
+    {
+      "host": "0.0.0.0",
+      "port": 5000,
+      "backend": {
+        "type": "memory"
+      }
+    }

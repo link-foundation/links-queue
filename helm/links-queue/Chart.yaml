@@ -1,0 +1,27 @@
+apiVersion: v2
+name: links-queue
+description: A Helm chart for Links Queue - Universal queue system using links
+type: application
+
+# Chart version (follows SemVer 2)
+version: 0.1.0
+
+# App version (follows Links Queue version)
+appVersion: "0.11.0"
+
+home: https://github.com/link-foundation/links-queue
+sources:
+  - https://github.com/link-foundation/links-queue
+
+maintainers:
+  - name: Link Foundation
+    url: https://github.com/link-foundation
+
+keywords:
+  - queue
+  - message-queue
+  - links
+  - links-notation
+
+annotations:
+  category: Messaging

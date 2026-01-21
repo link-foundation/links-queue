@@ -1,0 +1,49 @@
+{
+  "name": "links-queue-nestjs",
+  "version": "0.1.0",
+  "description": "NestJS module for Links Queue",
+  "type": "module",
+  "main": "src/index.js",
+  "types": "src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "import": "./src/index.js"
+    }
+  },
+  "scripts": {
+    "test": "node --test tests/",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
+  },
+  "keywords": [
+    "links-queue",
+    "nestjs",
+    "module",
+    "queue",
+    "message-queue"
+  ],
+  "author": "",
+  "license": "Unlicense",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/link-foundation/links-queue",
+    "directory": "js/packages/nestjs"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "peerDependencies": {
+    "@nestjs/common": "^10.0.0",
+    "@nestjs/core": "^10.0.0"
+  },
+  "dependencies": {
+    "links-queue-js": "^0.11.0"
+  },
+  "devDependencies": {
+    "@nestjs/common": "^10.0.0",
+    "@nestjs/core": "^10.0.0",
+    "reflect-metadata": "^0.2.0",
+    "rxjs": "^7.8.0"
+  }
+}
