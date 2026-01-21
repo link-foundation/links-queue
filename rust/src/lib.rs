@@ -65,6 +65,7 @@
 pub mod backends;
 pub mod client;
 pub mod cluster;
+pub mod observability;
 pub mod queue;
 pub mod server;
 mod traits;
@@ -155,6 +156,40 @@ pub use server::{
 pub use client::{
     ClientConfig, ClientConnection, ClientConnectionState, ClientError, ClientErrorCode,
     ClientResult, LinksQueueClient, Subscription,
+};
+
+// Re-export observability types
+pub use observability::{
+    create_queue_logger,
+    ComponentChecker,
+    ComponentHealth,
+    // Metrics
+    Counter,
+    Gauge,
+    HealthCheckResult,
+    HealthChecker,
+    // Health
+    HealthStatus,
+    HistogramBucket,
+    HistogramStats,
+    LatencyHistogram,
+    LatencyMetrics,
+    LivenessResult,
+    LogContext,
+    LogEntry,
+    LogFormat,
+    // Logging
+    LogLevel,
+    LogOutput,
+    Logger,
+    MetricsRegistry,
+    // Prometheus
+    PrometheusExporter,
+    QueueMetrics,
+    QueueMetricsData,
+    ReadinessResult,
+    ThroughputMetrics,
+    DEFAULT_LATENCY_BUCKETS,
 };
 
 // =============================================================================

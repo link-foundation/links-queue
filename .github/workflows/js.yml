@@ -188,7 +188,7 @@ jobs:
 
       - name: Run tests (Deno)
         if: matrix.runtime == 'deno'
-        run: deno test --allow-read --allow-net
+        run: deno test --allow-read --allow-net --allow-env --allow-write
 
   # Coverage reporting (Node.js only with Vitest)
   coverage:

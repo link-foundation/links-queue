@@ -351,3 +351,62 @@ export {
   ClusterErrorCode,
   ClusterError,
 } from './cluster/index.d.ts';
+
+// =============================================================================
+// Observability Exports
+// =============================================================================
+
+export {
+  // Metrics types
+  DEFAULT_LATENCY_BUCKETS,
+  HistogramBucket,
+  HistogramStats,
+  LatencyHistogramOptions,
+  LatencyHistogram,
+  CounterOptions,
+  CounterMetadata,
+  Counter,
+  GaugeOptions,
+  GaugeMetadata,
+  Gauge,
+  QueueMetricsOptions,
+  ThroughputMetrics,
+  LatencyMetrics,
+  QueueMetricsData,
+  QueueMetrics,
+  AllMetrics,
+  MetricsRegistry,
+  defaultRegistry,
+  // Prometheus types
+  PrometheusExporterOptions,
+  PrometheusExporter,
+  MetricsMiddlewareOptions,
+  metricsMiddleware,
+  // Logger types
+  LogLevel,
+  LogLevelValue,
+  LogLevelName,
+  LogContext,
+  LogRotateOptions,
+  LoggerOptions,
+  LogFields,
+  Logger,
+  defaultLogger,
+  QueueLoggerOptions,
+  createQueueLogger,
+  // Health types
+  HealthStatus,
+  HealthStatusValue,
+  ComponentHealth,
+  HealthCheckResult,
+  LivenessResult,
+  ReadinessResult,
+  ComponentCheckerOptions,
+  ComponentChecker,
+  HealthCheckerOptions,
+  HealthChecker,
+  HealthMiddlewareOptions,
+  healthMiddleware,
+  ServerHealthCheckerOptions,
+  createServerHealthChecker,
+} from './observability/index.d.ts';
