@@ -511,6 +511,12 @@ export class Scheduler {
       console.error('Scheduler tick error:', error);
     }
 
+    // Check if still running after async operations before scheduling next tick
+    // This prevents timer leaks when stop() is called during processing
+    if (!this._running) {
+      return;
+    }
+
     // Schedule next tick
     this._timerHandle = globalThis.setTimeout(
       () => this._tick(),
