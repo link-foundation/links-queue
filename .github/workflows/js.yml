@@ -107,6 +107,7 @@ jobs:
   lint:
     name: Lint and Format Check
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     needs: [detect-changes]
     if: |
       github.event_name == 'push' ||
@@ -140,6 +141,7 @@ jobs:
   test:
     name: Test (${{ matrix.runtime }} on ${{ matrix.os }})
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
     needs: [detect-changes, changeset-check]
     if: always() && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || needs.changeset-check.result == 'success' || needs.changeset-check.result == 'skipped')
     strategy:
@@ -187,6 +189,35 @@ jobs:
       - name: Run tests (Deno)
         if: matrix.runtime == 'deno'
         run: deno test --allow-read --allow-net --allow-env --allow-write
+
+  # Coverage reporting (Node.js only with Vitest)
+  coverage:
+    name: Test Coverage
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [detect-changes, changeset-check]
+    if: always() && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || needs.changeset-check.result == 'success' || needs.changeset-check.result == 'skipped')
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run tests with coverage
+        run: npm run test:coverage
+        continue-on-error: true
+
+      - name: Upload coverage reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: js/coverage/
+          retention-days: 14
 
   # Release - only runs on main after tests pass (for push events)
   release:

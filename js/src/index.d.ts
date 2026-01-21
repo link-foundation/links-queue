@@ -257,6 +257,43 @@ export {
 } from './protocol/notation.d.ts';
 
 export {
+  BinaryNotation,
+  BinaryNotationError,
+  BinaryStreamEncoder,
+  BinaryStreamDecoder,
+  BufferPool,
+  EncodeOptions as BinaryEncodeOptions,
+  DecodeOptions as BinaryDecodeOptions,
+  StreamEncoderOptions as BinaryStreamEncoderOptions,
+  StreamDecoderOptions as BinaryStreamDecoderOptions,
+  BufferPoolOptions,
+  BufferPoolStats,
+  MAGIC as BINARY_MAGIC,
+  VERSION as BINARY_VERSION,
+  HEADER_SIZE as BINARY_HEADER_SIZE,
+} from './protocol/binary-notation.d.ts';
+
+export {
+  Protocol,
+  ProtocolType,
+  ProtocolVersion,
+  ProtocolVersionType,
+  CompressionAlgorithm,
+  CompressionAlgorithmType,
+  ProtocolCapabilities,
+  ProtocolCapabilitiesOptions,
+  CapabilitiesJSON,
+  NegotiationResult,
+  NegotiationResultOptions,
+  NegotiationResultJSON,
+  ProtocolNegotiator,
+  ProtocolCodec,
+  ConnectionState as NegotiationConnectionState,
+  ConnectionStateType as NegotiationConnectionStateType,
+  ProtocolConnection,
+} from './protocol/negotiation.d.ts';
+
+export {
   Message,
   MessageBuilder,
   RequestType,

@@ -1,5 +1,30 @@
 # links-queue-js
 
+## 0.13.0
+
+### Minor Changes
+
+- 8e7a8d7: Add Phase 7 advanced queue features
+  - **Scheduling**: Implement `CronParser`, `Scheduler`, and `ScheduledQueue` for delayed messages, cron jobs, TTL, and message expiration
+  - **Rate Limiting**: Implement `SlidingWindowCounter`, `TokenBucket`, `RateLimiter`, and `RateLimitedQueue` with sliding window algorithm
+  - **Routing**: Implement `TopicMatcher`, `DirectExchange`, `TopicExchange`, `FanoutExchange`, `HeadersExchange`, `Router`, and `RoutedQueueManager` for topic-based routing with AMQP-style wildcards
+  - **Pub/Sub**: Implement `MessageFilter`, `PubSubBroker`, `ObservableQueue`, and `QueueBackedPubSub` for publish/subscribe patterns with message filtering
+
+## 0.12.0
+
+### Minor Changes
+
+- ed40d4e: Add Binary Links Notation protocol for efficient link serialization
+  - Implement binary encoder/decoder with 20-40% size reduction over text notation
+  - Add LEB128 variable-length integer encoding for compact numeric values
+  - Support nested links, self-references, and typed values (null, boolean, string, integer)
+  - Add protocol negotiation mechanism for client-server capability exchange
+  - Include comprehensive benchmark tests comparing binary vs text performance
+
+### Patch Changes
+
+- a3b228f: Add comprehensive test infrastructure including Vitest for coverage, test fixtures, helpers, and mock backends
+
 ## 0.11.0
 
 ### Minor Changes
