@@ -901,7 +901,7 @@ impl BinaryNotation {
 
     /// Checks if data appears to be binary notation.
     #[must_use]
-    pub fn is_binary(data: &[u8]) -> bool {
+    pub const fn is_binary(data: &[u8]) -> bool {
         if data.len() < 4 {
             return false;
         }

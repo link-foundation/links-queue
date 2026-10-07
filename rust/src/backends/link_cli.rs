@@ -266,8 +266,7 @@ impl<T: LinkType + FromStr + Display> LinkCliBackend<T> {
     fn current_time_ms() -> u64 {
         SystemTime::now()
             .duration_since(UNIX_EPOCH)
-            .map(|d| d.as_millis() as u64)
-            .unwrap_or(0)
+            .map_or(0, |d| d.as_millis() as u64)
     }
 
     /// Ensures the backend is connected.

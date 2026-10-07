@@ -236,8 +236,7 @@ where
         // Use try_read to avoid blocking
         self.state
             .try_read()
-            .map(|s| *s == ConnectionState::Connected)
-            .unwrap_or(false)
+            .is_ok_and(|s| *s == ConnectionState::Connected)
     }
 
     fn server_address(&self) -> Option<String> {
