@@ -295,10 +295,7 @@ impl ClusterNode for Node {
 
     fn status(&self) -> NodeStatus {
         // Use try_read to avoid blocking, default to Joining if locked
-        self.status
-            .try_read()
-            .map(|s| *s)
-            .unwrap_or(NodeStatus::Joining)
+        self.status.try_read().map_or(NodeStatus::Joining, |s| *s)
     }
 
     async fn ping(&self) -> Result<u64, ClusterError> {
@@ -578,7 +575,7 @@ mod tests {
             assert_eq!(node.last_latency(), Duration::ZERO);
 
             node.update_latency(Duration::from_millis(50));
-            assert_eq!(node.last_latency(), Duration::from_micros(50000));
+            assert_eq!(node.last_latency(), Duration::from_millis(50));
         }
     }
 

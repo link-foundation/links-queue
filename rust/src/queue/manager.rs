@@ -170,8 +170,8 @@ impl<T: LinkType> MemoryQueueManager<T> {
         let dead_letters: Vec<(String, Vec<crate::Link<T>>)> = {
             let queues = self.queues.lock().expect("lock poisoned");
             queues
-                .iter()
-                .filter_map(|(_, entry)| {
+                .values()
+                .filter_map(|entry| {
                     let dlq_name = entry.queue.dead_letter_queue_name()?;
                     let items = entry.queue.drain_dead_letters();
                     if items.is_empty() {

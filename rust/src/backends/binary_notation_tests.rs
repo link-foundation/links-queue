@@ -101,8 +101,9 @@ mod link_tests {
         let mut buf = Vec::new();
         let size = encode_link_body(&link, &mut buf).unwrap();
 
-        // Self-ref should be compact
-        assert!(size <= 3);
+        assert_eq!(size, 3);
+        assert_eq!(buf, vec![0x0F, 0x05, 0x05]);
+        assert_eq!(link_body_size(&link), size);
 
         let mut cursor = std::io::Cursor::new(buf);
         let decoded = decode_link_body(&mut cursor).unwrap();
@@ -110,6 +111,65 @@ mod link_tests {
         assert_eq!(decoded.id, Some(5));
         assert!(matches!(decoded.source, EncodedValue::Int(5)));
         assert!(matches!(decoded.target, EncodedValue::Int(5)));
+    }
+
+    #[test]
+    fn test_self_ref_specification_example() {
+        let specification = include_str!("../../../docs/BINARY-NOTATION-SPEC.md");
+        let example = specification
+            .split("### Self-Referencing Link")
+            .nth(1)
+            .unwrap()
+            .split("\n### ")
+            .next()
+            .unwrap();
+        let documented_body: Vec<u8> = example
+            .lines()
+            .filter_map(|line| {
+                let (field, value) = line.split_once(": 0x")?;
+                if matches!(field, "Type" | "ID" | "Source" | "Target") {
+                    Some(u8::from_str_radix(value.split_whitespace().next().unwrap(), 16).unwrap())
+                } else {
+                    None
+                }
+            })
+            .collect();
+        let link = EncodedLink::new(Some(5), EncodedValue::Int(5), EncodedValue::Int(5));
+        let frame = BinaryNotation::encode(&[link], None).unwrap();
+        assert_eq!(&frame[HEADER_SIZE + 1..], documented_body);
+
+        let mut cursor = std::io::Cursor::new(documented_body);
+        let decoded = decode_link_body(&mut cursor).unwrap();
+        assert_eq!(decoded.id, Some(5));
+        assert!(matches!(decoded.source, EncodedValue::Int(5)));
+        assert!(matches!(decoded.target, EncodedValue::Int(5)));
+        assert_eq!(cursor.position(), 3);
+    }
+
+    #[test]
+    fn test_self_ref_wire_format() {
+        let cases: [(Option<u64>, u64, &[u8]); 3] = [
+            (Some(7), 5, &[0x0F, 0x07, 0x05]),
+            (Some(128), 128, &[0x0F, 0x80, 0x01, 0x80, 0x01]),
+            (None, 5, &[0x07, 0x05]),
+        ];
+        for (id, reference, body) in cases {
+            let link = EncodedLink::new(
+                id,
+                EncodedValue::Int(reference),
+                EncodedValue::Int(reference),
+            );
+            let mut buffer = Vec::new();
+            assert_eq!(encode_link_body(&link, &mut buffer).unwrap(), body.len());
+            assert_eq!(link_body_size(&link), body.len());
+            assert_eq!(buffer, body);
+            let mut cursor = std::io::Cursor::new(body);
+            let decoded = decode_link_body(&mut cursor).unwrap();
+            assert_eq!(decoded.id, id);
+            assert!(matches!(decoded.source, EncodedValue::Int(n) if n == reference));
+            assert!(matches!(decoded.target, EncodedValue::Int(n) if n == reference));
+            assert_eq!(cursor.position(), body.len() as u64);
+        }
     }
 
     #[test]

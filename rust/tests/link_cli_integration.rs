@@ -20,8 +20,7 @@ fn clink_available() -> bool {
     std::process::Command::new("clink")
         .arg("--version")
         .output()
-        .map(|output| output.status.success())
-        .unwrap_or(false)
+        .is_ok_and(|output| output.status.success())
 }
 
 /// Checks if tests should be skipped.
