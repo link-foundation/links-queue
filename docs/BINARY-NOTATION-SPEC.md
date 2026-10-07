@@ -1,6 +1,6 @@
 # Binary Links Notation Specification
 
-**Version**: 1.0.0
+**Version**: 1.0.1 (documentation revision; wire version remains 1.0)
 **Status**: Draft
 **Authors**: links-queue contributors
 
@@ -53,10 +53,10 @@ Every binary message starts with a fixed 11-byte header:
 Each link is encoded with a type byte followed by variable-length fields:
 
 ```
-┌────────┬────────────┬────────────┬──────────────┐
-│  Type  │   Source   │   Target   │  Values (opt) │
-│ 1 byte │  Variable  │  Variable  │    Variable   │
-└────────┴────────────┴────────────┴──────────────┘
+┌────────┬────────────┬────────────┬────────────┬──────────────┐
+│  Type  │  ID (opt)  │   Source   │Target (opt)│ Values (opt) │
+│ 1 byte │   VarInt   │  Variable  │  Variable  │   Variable   │
+└────────┴────────────┴────────────┴────────────┴──────────────┘
 ```
 
 #### Type Byte
@@ -65,11 +65,15 @@ Each link is encoded with a type byte followed by variable-length fields:
 |-----|------|-------------|
 | 0 | SOURCE_IS_ID | Source is a link ID reference (vs inline link/literal) |
 | 1 | TARGET_IS_ID | Target is a link ID reference (vs inline link/literal) |
-| 2 | SELF_REF | Self-referencing link (source == target, only encode once) |
+| 2 | SELF_REF | Source and target are equal numeric ID references; encode the source and omit the target |
 | 3 | HAS_ID | Link has an explicit ID |
 | 4 | HAS_VALUES | Link has additional values array |
 | 5-6 | ID_SIZE | 00=varint, 01=4 bytes, 10=8 bytes, 11=reserved |
 | 7 | RESERVED | Reserved for future use |
+
+Fields appear in this order: type, explicit ID if `HAS_ID` is set, source, target unless `SELF_REF` is set, and values if `HAS_VALUES` is set. The source is always encoded, including when it equals the explicit ID.
+
+`SELF_REF` only indicates that source equals target; the link's explicit ID may differ from both. For example, `(7: 5 5)` has body bytes `0F 07 05`. `HAS_ID` and `SELF_REF` are independent: combining them does not omit the source or imply that it equals the explicit ID.
 
 ### Value Encoding
 
@@ -123,6 +127,8 @@ Arrays are encoded as:
 
 ## Examples
 
+The sizes below describe link bodies only. They exclude the 11-byte message header and the payload's VarInt link count.
+
 ### Simple Link `(1, 2)`
 
 Text notation: `(1 2)` (5 bytes)
@@ -134,15 +140,18 @@ Target: 0x02 (varint 2)
 Total: 3 bytes (40% reduction)
 ```
 
-### Self-Referencing Link `(5: 5)`
+### Self-Referencing Link `(5: 5 5)`
 
-Text notation: `(5: 5 5)` (10 bytes)
+Text notation: `(5: 5 5)` (8 bytes)
 Binary encoding:
 ```
 Type: 0x0F (SOURCE_IS_ID | TARGET_IS_ID | SELF_REF | HAS_ID)
 ID: 0x05 (varint 5)
-Total: 2 bytes (80% reduction)
+Source: 0x05 (varint 5; target reuses source)
+Total: 3 bytes (62.5% reduction)
 ```
+
+The body bytes are `0F 05 05`. The explicit ID and the shared source/target reference are separate fields, even though both equal 5. This corrects the example without changing the version 1.0 wire format (`0x0100`).
 
 ### Named Link `(type: enqueue)`
 
@@ -336,6 +345,7 @@ socket.on('data', (chunk) => {
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 1.0.1 | 2026-10 | Clarify independent ID and source fields; correct self-referencing example sizes (wire version unchanged) |
 | 1.0.0 | 2024-01 | Initial specification |
 
 ## References
