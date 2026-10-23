@@ -34,7 +34,7 @@ Add to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-links-queue = "0.11"
+links-queue = "0.3"
 tokio = { version = "1", features = ["full"] }
 ```
 
