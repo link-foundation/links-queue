@@ -10,6 +10,8 @@ categories = ["development-tools"]
 repository = "https://github.com/link-foundation/links-queue"
 documentation = "https://github.com/link-foundation/links-queue"
 rust-version = "1.70"
+# Release tooling stays in the repository; the crate ships the library and binary.
+exclude = ["changelog.d/", "scripts/", "package-lock.json"]
 
 [lib]
 name = "links_queue"

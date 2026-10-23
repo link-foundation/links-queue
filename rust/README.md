@@ -11,6 +11,17 @@ Rust implementation of Links Queue - a universal queue system using links.
 
 ## Quick Start
 
+### Installation
+
+The crate is published to [crates.io](https://crates.io/crates/links-queue):
+
+```bash
+cargo add links-queue
+
+# Or install the command-line binary
+cargo install links-queue
+```
+
 ### Development
 
 ```bash
@@ -51,6 +62,31 @@ rust/
 ├── Cargo.toml            # Rust package manifest
 └── CHANGELOG.md          # Release history
 ```
+
+## Releasing
+
+Merging changelog fragments to `main` (or running the workflow manually)
+bumps the version, publishes the crate to crates.io and creates a GitHub
+release. Publishing tries **trusted publishing (OIDC)** first and falls back
+to the `CARGO_REGISTRY_TOKEN` or `CARGO_TOKEN` repository secret, so no
+long-lived token is needed once the trusted publisher is registered.
+
+crates.io registers trusted publishers only for existing crates, so the first
+version needs a one-time setup by a maintainer:
+
+```bash
+package-registry-manager setup --repository . --registry crates-io --execute
+```
+
+It publishes the first version with a short-lived crate-scoped token and
+registers the trusted publisher. To do it by hand instead, publish once with a
+token, then open <https://crates.io/crates/links-queue/settings> and add the
+GitHub trusted publisher: owner `link-foundation`, repository `links-queue`,
+workflow `rust.yml`, no environment. If neither credential works, the release
+job fails with these instructions.
+
+A version that was tagged but never reached crates.io is published by the next
+run on `main`, or by re-running the failed run.
 
 ## API
 
