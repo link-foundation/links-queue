@@ -71,3 +71,10 @@ js/
 ## License
 
 [Unlicense](../LICENSE) - Public Domain
+
+## Package and integrations
+
+Install `npm install links-queue`. Framework integrations ship in the same package:
+`links-queue/express`, `links-queue/fastify`, `links-queue/hono`, and
+`links-queue/nestjs`. Install the framework you use separately. Each subpath includes
+TypeScript declarations. See [publishing and registry setup](../docs/guides/releasing.md).

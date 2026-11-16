@@ -26,7 +26,7 @@ Links Queue can run as a standalone TCP server, allowing clients to connect over
 ### JavaScript
 
 ```javascript
-import { LinksQueueServer } from "links-queue-js/server";
+import { LinksQueueServer } from "links-queue/server";
 
 const server = new LinksQueueServer({
   port: 5000,
@@ -62,10 +62,10 @@ println!("Server listening on port 5000");
 
 ```bash
 # JavaScript
-npx links-queue-js server --port 5000
+npx links-queue server --port 5000
 
 # With custom host
-npx links-queue-js server --host 127.0.0.1 --port 8080
+npx links-queue server --host 127.0.0.1 --port 8080
 
 # Rust
 links-queue server --port 5000 --host 0.0.0.0 --max-conn 500
@@ -107,7 +107,7 @@ let config = ServerConfig::new()
 ### JavaScript
 
 ```javascript
-import { LinksQueueClient } from "links-queue-js/client";
+import { LinksQueueClient } from "links-queue/client";
 
 const client = new LinksQueueClient("localhost:5000");
 await client.connect();
@@ -309,7 +309,7 @@ client.on("reconnected", () => {
 For high-throughput applications:
 
 ```javascript
-import { ConnectionPool } from "links-queue-js/client";
+import { ConnectionPool } from "links-queue/client";
 
 const pool = new ConnectionPool({
   address: "localhost:5000",
@@ -341,7 +341,7 @@ try {
 ### JavaScript Error Handling
 
 ```javascript
-import { LinksQueueClient } from "links-queue-js/client";
+import { LinksQueueClient } from "links-queue/client";
 
 try {
   await client.enqueue("nonexistent", link);

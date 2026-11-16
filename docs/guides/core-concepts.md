@@ -29,7 +29,7 @@ In code, a link has three required properties:
 The simplest link connects two IDs:
 
 ```javascript
-import { createLink } from "links-queue-js";
+import { createLink } from "links-queue";
 
 // A link from ID 2 to ID 3
 const link = createLink(1, 2, 3);
@@ -73,7 +73,7 @@ Link IDs can be:
 - **Strings**: `"uuid-123"`, `"user-456"` (for UUID-based systems)
 
 ```javascript
-import { isLinkId } from "links-queue-js";
+import { isLinkId } from "links-queue";
 
 isLinkId(42); // true
 isLinkId(1n); // true
@@ -180,7 +180,7 @@ const queue = await manager.createQueue("tasks", {
 Links Queue supports pattern-based queries to find links:
 
 ```javascript
-import { Any, matchesPattern } from "links-queue-js";
+import { Any, matchesPattern } from "links-queue";
 
 const links = [
   createLink(1, 10, 20),
@@ -240,7 +240,7 @@ Response:
 The `LinkStore` interface provides persistence for links:
 
 ```javascript
-import { MemoryLinkStore } from "links-queue-js";
+import { MemoryLinkStore } from "links-queue";
 
 const store = new MemoryLinkStore();
 

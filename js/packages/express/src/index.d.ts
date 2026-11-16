@@ -1,5 +1,5 @@
 /**
- * Type definitions for links-queue-express.
+ * Type definitions for links-queue/express.
  */
 
 import type { Request, Response, NextFunction, Router } from 'express';

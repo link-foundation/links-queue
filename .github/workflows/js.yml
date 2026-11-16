@@ -83,7 +83,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20.x'
+          node-version: '24.x'
 
       - name: Install dependencies
         run: npm install
@@ -110,20 +110,20 @@ jobs:
     timeout-minutes: 10
     needs: [detect-changes]
     if: |
-      github.event_name == 'push' ||
+      always() && (github.event_name == 'push' ||
       github.event_name == 'workflow_dispatch' ||
       needs.detect-changes.outputs.mjs-changed == 'true' ||
       needs.detect-changes.outputs.js-changed == 'true' ||
       needs.detect-changes.outputs.docs-changed == 'true' ||
       needs.detect-changes.outputs.package-changed == 'true' ||
-      needs.detect-changes.outputs.workflow-changed == 'true'
+      needs.detect-changes.outputs.workflow-changed == 'true')
     steps:
       - uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20.x'
+          node-version: '24.x'
 
       - name: Install dependencies
         run: npm install
@@ -203,7 +203,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20.x'
+          node-version: '24.x'
 
       - name: Install dependencies
         run: npm install
@@ -219,11 +219,24 @@ jobs:
           path: js/coverage/
           retention-days: 14
 
+  # Test the tarball in an isolated consumer, including all integration exports.
+  package:
+    name: Verify npm Package
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.x'
+      - run: node --test scripts/publish-to-npm.test.mjs
+      - run: npm run test:package
+
   # Release - only runs on main after tests pass (for push events)
   release:
     name: Release
-    needs: [lint, test]
-    if: always() && github.ref == 'refs/heads/main' && github.event_name == 'push' && needs.lint.result == 'success' && needs.test.result == 'success'
+    needs: [lint, test, package]
+    if: always() && github.ref == 'refs/heads/main' && github.event_name == 'push' && needs.lint.result == 'success' && needs.test.result == 'success' && needs.package.result == 'success'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -237,7 +250,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20.x'
+          node-version: '24.x'
           registry-url: 'https://registry.npmjs.org'
 
       - name: Install dependencies
@@ -279,7 +292,8 @@ jobs:
   # Manual Instant Release
   instant-release:
     name: Instant Release
-    if: github.event_name == 'workflow_dispatch' && github.event.inputs.release_mode == 'instant'
+    if: always() && github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' && github.event.inputs.release_mode == 'instant' && needs.lint.result == 'success' && needs.test.result == 'success' && needs.package.result == 'success'
+    needs: [lint, test, package]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -293,7 +307,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20.x'
+          node-version: '24.x'
           registry-url: 'https://registry.npmjs.org'
 
       - name: Install dependencies
@@ -339,7 +353,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20.x'
+          node-version: '24.x'
 
       - name: Install dependencies
         run: npm install

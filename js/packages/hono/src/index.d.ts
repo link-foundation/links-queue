@@ -1,5 +1,5 @@
 /**
- * Type definitions for links-queue-hono.
+ * Type definitions for links-queue/hono.
  */
 
 import type { MiddlewareHandler, Hono, Context } from 'hono';

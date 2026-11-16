@@ -35,7 +35,7 @@ Links Queue provides implementations in multiple languages:
 
 | Language              | Package                                                        | Documentation                       |
 | --------------------- | -------------------------------------------------------------- | ----------------------------------- |
-| JavaScript/TypeScript | [links-queue-js](https://www.npmjs.com/package/links-queue-js) | [js/README.md](../js/README.md)     |
+| JavaScript/TypeScript | [links-queue](https://www.npmjs.com/package/links-queue) | [js/README.md](../js/README.md)     |
 | Rust                  | [links-queue](https://crates.io/crates/links-queue)            | [rust/README.md](../rust/README.md) |
 
 ## Feature Status

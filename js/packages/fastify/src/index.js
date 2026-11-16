@@ -3,11 +3,11 @@
  *
  * Provides a plugin for integrating Links Queue into Fastify applications.
  *
- * @module links-queue-fastify
+ * @module links-queue/fastify
  *
  * @example
  * import Fastify from 'fastify';
- * import linksQueuePlugin from 'links-queue-fastify';
+ * import linksQueuePlugin from 'links-queue/fastify';
  *
  * const fastify = Fastify();
  * await fastify.register(linksQueuePlugin, { mode: 'single-memory' });
@@ -23,7 +23,7 @@ import {
   MemoryQueueManager,
   LinksQueueManager,
   MemoryLinkStore,
-} from 'links-queue-js';
+} from 'links-queue';
 
 // =============================================================================
 // Constants
@@ -52,7 +52,7 @@ export const QueueMode = Object.freeze({
  * @param {Object} options - Plugin options
  * @param {string} [options.mode='single-memory'] - Queue mode
  * @param {string} [options.decoratorName='linksQueue'] - Decorator name
- * @param {import('links-queue-js').MemoryQueueManager|import('links-queue-js').LinksQueueManager} [options.queueManager] - Custom queue manager
+ * @param {import('links-queue').MemoryQueueManager|import('links-queue').LinksQueueManager} [options.queueManager] - Custom queue manager
  */
 function linksQueuePluginImpl(fastify, options = {}) {
   const {
@@ -113,7 +113,7 @@ export class LinksQueueFacade {
   /**
    * Creates a new LinksQueueFacade.
    *
-   * @param {import('links-queue-js').MemoryQueueManager|import('links-queue-js').LinksQueueManager} queueManager - The queue manager
+   * @param {import('links-queue').MemoryQueueManager|import('links-queue').LinksQueueManager} queueManager - The queue manager
    */
   constructor(queueManager) {
     this._manager = queueManager;
@@ -122,7 +122,7 @@ export class LinksQueueFacade {
   /**
    * Gets the underlying queue manager.
    *
-   * @returns {import('links-queue-js').MemoryQueueManager|import('links-queue-js').LinksQueueManager}
+   * @returns {import('links-queue').MemoryQueueManager|import('links-queue').LinksQueueManager}
    */
   get manager() {
     return this._manager;
@@ -133,7 +133,7 @@ export class LinksQueueFacade {
    *
    * @param {string} name - Queue name
    * @param {Object} [options] - Queue options
-   * @returns {Promise<import('links-queue-js').Queue>}
+   * @returns {Promise<import('links-queue').Queue>}
    */
   createQueue(name, options = {}) {
     return this._manager.createQueue(name, options);
@@ -143,7 +143,7 @@ export class LinksQueueFacade {
    * Gets an existing queue.
    *
    * @param {string} name - Queue name
-   * @returns {Promise<import('links-queue-js').Queue|null>}
+   * @returns {Promise<import('links-queue').Queue|null>}
    */
   getQueue(name) {
     return this._manager.getQueue(name);
@@ -154,7 +154,7 @@ export class LinksQueueFacade {
    *
    * @param {string} name - Queue name
    * @param {Object} [options] - Queue options
-   * @returns {Promise<import('links-queue-js').Queue>}
+   * @returns {Promise<import('links-queue').Queue>}
    */
   async getOrCreateQueue(name, options = {}) {
     let queue = await this._manager.getQueue(name);
@@ -177,7 +177,7 @@ export class LinksQueueFacade {
   /**
    * Lists all queues.
    *
-   * @returns {Promise<import('links-queue-js').QueueInfo[]>}
+   * @returns {Promise<import('links-queue').QueueInfo[]>}
    */
   listQueues() {
     return this._manager.listQueues();
@@ -284,7 +284,7 @@ export class LinksQueueFacade {
  *
  * @example
  * import Fastify from 'fastify';
- * import linksQueuePlugin, { createQueueRoutes } from 'links-queue-fastify';
+ * import linksQueuePlugin, { createQueueRoutes } from 'links-queue/fastify';
  *
  * const fastify = Fastify();
  * await fastify.register(linksQueuePlugin);

@@ -1,18 +1,18 @@
-# links-queue-express
+# links-queue/express
 
 Express.js middleware for [Links Queue](https://github.com/link-foundation/links-queue).
 
 ## Installation
 
 ```bash
-npm install links-queue-express
+npm install links-queue express
 ```
 
 ## Quick Start
 
 ```javascript
 import express from 'express';
-import { linksQueueMiddleware } from 'links-queue-express';
+import { linksQueueMiddleware } from 'links-queue/express';
 
 const app = express();
 app.use(express.json());
@@ -57,7 +57,7 @@ For a full RESTful API, use the queue router:
 
 ```javascript
 import express from 'express';
-import { linksQueueMiddleware, createQueueRouter } from 'links-queue-express';
+import { linksQueueMiddleware, createQueueRouter } from 'links-queue/express';
 
 const app = express();
 app.use(express.json());
@@ -99,7 +99,7 @@ The `req.linksQueue` facade provides these methods:
 Use the error handler middleware for queue-specific errors:
 
 ```javascript
-import { linksQueueErrorHandler } from 'links-queue-express';
+import { linksQueueErrorHandler } from 'links-queue/express';
 
 app.use(linksQueueErrorHandler);
 ```

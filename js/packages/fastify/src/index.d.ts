@@ -1,5 +1,5 @@
 /**
- * Type definitions for links-queue-fastify.
+ * Type definitions for links-queue/fastify.
  */
 
 import type {

@@ -1,5 +1,5 @@
 {
-  "name": "links-queue-js",
+  "name": "links-queue",
   "version": "0.15.1",
   "description": "Links Queue - a universal queue system using links (JavaScript implementation)",
   "type": "module",
@@ -18,6 +18,22 @@
     },
     "./client": {
       "import": "./src/client/index.js"
+    },
+    "./express": {
+      "types": "./packages/express/src/index.d.ts",
+      "import": "./packages/express/src/index.js"
+    },
+    "./fastify": {
+      "types": "./packages/fastify/src/index.d.ts",
+      "import": "./packages/fastify/src/index.js"
+    },
+    "./hono": {
+      "types": "./packages/hono/src/index.d.ts",
+      "import": "./packages/hono/src/index.js"
+    },
+    "./nestjs": {
+      "types": "./packages/nestjs/src/index.d.ts",
+      "import": "./packages/nestjs/src/index.js"
     }
   },
   "scripts": {
@@ -35,8 +51,9 @@
     "prepare": "cd .. && husky js/.husky || true",
     "changeset": "changeset",
     "changeset:version": "node scripts/changeset-version.mjs",
-    "changeset:publish": "changeset publish",
-    "changeset:status": "changeset status --since=origin/main"
+    "changeset:publish": "npm publish --access public --provenance",
+    "changeset:status": "changeset status --since=origin/main",
+    "test:package": "node --test scripts/package.test.mjs"
   },
   "keywords": [
     "links-queue",
@@ -82,6 +99,46 @@
     ]
   },
   "dependencies": {
-    "links-notation": "^0.13.0"
+    "links-notation": "^0.13.0",
+    "fastify-plugin": "^5.0.0"
+  },
+  "files": [
+    "src",
+    "packages/express/src",
+    "packages/fastify/src",
+    "packages/hono/src",
+    "packages/nestjs/src",
+    "packages/*/README.md",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "peerDependencies": {
+    "express": "^4.18.0 || ^5.0.0",
+    "fastify": "^4.0.0 || ^5.0.0",
+    "hono": "^4.0.0",
+    "@nestjs/common": "^10.0.0",
+    "@nestjs/core": "^10.0.0"
+  },
+  "peerDependenciesMeta": {
+    "express": {
+      "optional": true
+    },
+    "fastify": {
+      "optional": true
+    },
+    "hono": {
+      "optional": true
+    },
+    "@nestjs/common": {
+      "optional": true
+    },
+    "@nestjs/core": {
+      "optional": true
+    }
   }
 }

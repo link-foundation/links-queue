@@ -10,22 +10,22 @@ Links Queue supports Node.js, Bun, and Deno.
 
 ```bash
 # Using npm
-npm install links-queue-js
+npm install links-queue
 
 # Using yarn
-yarn add links-queue-js
+yarn add links-queue
 
 # Using bun
-bun add links-queue-js
+bun add links-queue
 
 # Using pnpm
-pnpm add links-queue-js
+pnpm add links-queue
 ```
 
 For Deno, import directly from npm:
 
 ```typescript
-import { LinksQueue } from "npm:links-queue-js";
+import { LinksQueue } from "npm:links-queue";
 ```
 
 ### Rust
@@ -43,7 +43,7 @@ tokio = { version = "1", features = ["full"] }
 ### JavaScript
 
 ```javascript
-import { MemoryLinkStore, MemoryQueue, createLink } from "links-queue-js";
+import { MemoryLinkStore, MemoryQueue, createLink } from "links-queue";
 
 // Create a link store and queue
 const store = new MemoryLinkStore();
@@ -94,7 +94,7 @@ For applications with multiple queues, use the queue manager:
 ### JavaScript
 
 ```javascript
-import { LinksQueueManager, MemoryLinkStore } from "links-queue-js";
+import { LinksQueueManager, MemoryLinkStore } from "links-queue";
 
 const store = new MemoryLinkStore();
 const manager = new LinksQueueManager({ store });
@@ -143,7 +143,7 @@ Links Queue supports multiple operating modes through configuration:
 Best for development and testing:
 
 ```javascript
-import { MemoryQueueManager, MemoryLinkStore } from "links-queue-js";
+import { MemoryQueueManager, MemoryLinkStore } from "links-queue";
 
 const store = new MemoryLinkStore();
 const manager = new MemoryQueueManager({ store });
@@ -154,7 +154,7 @@ const manager = new MemoryQueueManager({ store });
 For production use with data persistence:
 
 ```javascript
-import { LinksQueueManager, LinkCliBackend } from "links-queue-js";
+import { LinksQueueManager, LinkCliBackend } from "links-queue";
 
 const backend = new LinkCliBackend({
   path: "./data/queue.links",
@@ -169,7 +169,7 @@ const manager = new LinksQueueManager({ backend });
 Run as a standalone TCP server:
 
 ```javascript
-import { LinksQueueServer } from "links-queue-js/server";
+import { LinksQueueServer } from "links-queue/server";
 
 const server = new LinksQueueServer({
   port: 5000,
@@ -183,7 +183,7 @@ console.log("Server listening on port 5000");
 Connect from a client:
 
 ```javascript
-import { LinksQueueClient } from "links-queue-js/client";
+import { LinksQueueClient } from "links-queue/client";
 
 const client = new LinksQueueClient("localhost:5000");
 await client.connect();
@@ -199,7 +199,7 @@ Process queue items with automatic acknowledgment:
 ### JavaScript
 
 ```javascript
-import { MemoryQueue, createLink } from "links-queue-js";
+import { MemoryQueue, createLink } from "links-queue";
 
 const queue = new MemoryQueue("tasks");
 
@@ -224,10 +224,10 @@ Links Queue includes a command-line interface:
 
 ```bash
 # Start a server
-npx links-queue-js server --port 5000
+npx links-queue server --port 5000
 
 # With custom host
-npx links-queue-js server --host 127.0.0.1 --port 8080
+npx links-queue server --host 127.0.0.1 --port 8080
 ```
 
 ## Next Steps

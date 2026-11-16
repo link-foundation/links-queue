@@ -1,5 +1,5 @@
 /**
- * Type definitions for links-queue-nestjs.
+ * Type definitions for links-queue/nestjs.
  */
 
 import type { DynamicModule, OnModuleDestroy, Type } from '@nestjs/common';
