@@ -13,7 +13,7 @@ function run(command, args, cwd) {
   return execFileSync(command, args, {
     cwd,
     encoding: 'utf8',
-    shell: process.platform === 'win32',
+    shell: command === 'npm.cmd',
   });
 }
 
@@ -56,15 +56,11 @@ test(
         dir
       );
       // Core must load without any optional framework installed.
-      run(
-        process.execPath,
-        [
-          '--input-type=module',
-          '-e',
-          "import 'links-queue'; import 'links-queue/server'; import 'links-queue/client';",
-        ],
-        dir
+      writeFileSync(
+        join(dir, 'core.mjs'),
+        "import 'links-queue'; import 'links-queue/server'; import 'links-queue/client';"
       );
+      run(process.execPath, ['core.mjs'], dir);
       run(
         npm,
         [
