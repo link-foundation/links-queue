@@ -1,6 +1,6 @@
 {
   "name": "links-queue",
-  "version": "0.15.1",
+  "version": "0.16.0",
   "description": "Links Queue - a universal queue system using links (JavaScript implementation)",
   "type": "module",
   "main": "src/index.js",
