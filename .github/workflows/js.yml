@@ -229,6 +229,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24.x'
+      - name: Verify release tooling startup on Node 24
+        run: node scripts/version-and-commit.mjs --help
       - run: node --test scripts/publish-to-npm.test.mjs
       - run: npm run test:package
 

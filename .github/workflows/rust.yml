@@ -153,6 +153,9 @@ jobs:
       - name: Check file size limit
         run: node scripts/check-file-size.mjs
 
+      - name: Verify release tooling startup on Node 24
+        run: node scripts/version-and-commit.mjs --help
+
       - name: Test release scripts
         run: node --test scripts/crates-io.test.mjs
 

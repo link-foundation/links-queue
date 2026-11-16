@@ -33,15 +33,30 @@ export async function publishPackage({
   const { name, version } = manifest;
   if (await lookup(name, version)) {
     console.log(`${name}@${version} is already published`);
-    return;
+    return { alreadyPublished: true };
   }
   // npm >= 11.5.1 discovers the Actions OIDC credentials automatically.
   // Publish only the current package, never traverse integration directories.
-  run('npm', ['publish', '--access', 'public', '--provenance']);
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      await run('npm', ['publish', '--access', 'public', '--provenance']);
+      break;
+    } catch (error) {
+      // A registry may accept an upload before the client loses its connection.
+      if (await lookup(name, version)) {
+        return { alreadyPublished: true };
+      }
+      if (attempt === 2) {
+        throw error;
+      }
+      console.log(`Publish attempt ${attempt + 1} failed: ${error.message}`);
+      await wait();
+    }
+  }
   for (let attempt = 0; attempt < 12; attempt++) {
     if (await lookup(name, version)) {
       console.log(`Verified ${name}@${version} on npm`);
-      return;
+      return { alreadyPublished: false };
     }
     if (attempt < 11) {
       await wait();
@@ -51,17 +66,20 @@ export async function publishPackage({
 }
 
 async function main() {
-  if (process.argv.includes('--should-pull')) {
+  if (
+    process.argv.includes('--should-pull') ||
+    process.env.SHOULD_PULL === 'true'
+  ) {
     execFileSync('git', ['pull', '--ff-only', 'origin', 'main'], {
       stdio: 'inherit',
     });
   }
   const manifest = JSON.parse(readFileSync('package.json', 'utf8'));
-  await publishPackage({ manifest });
+  const result = await publishPackage({ manifest });
   if (process.env.GITHUB_OUTPUT) {
     appendFileSync(
       process.env.GITHUB_OUTPUT,
-      `published=true\npublished_version=${manifest.version}\n`
+      `published=true\npublished_version=${manifest.version}\nalready_published=${result.alreadyPublished}\n`
     );
   }
 }

@@ -38,6 +38,7 @@ test('failed or invisible publishes cannot report success', async () => {
       run: () => {
         throw new Error('OIDC rejected');
       },
+      wait: async () => {},
     }),
     /OIDC rejected/
   );
@@ -70,4 +71,35 @@ test('registry failures are distinguished from absent versions', async () => {
     registryVersion('links-queue', '1', async () => ({ status: 503 })),
     /HTTP 503/
   );
+});
+
+test('retries transient publish failures without uploading existing versions twice', async () => {
+  let uploads = 0;
+  let visible = false;
+  await publishPackage({
+    manifest,
+    lookup: async () => visible,
+    run: () => {
+      if (++uploads === 1) {
+        throw new Error('connection reset');
+      }
+      visible = true;
+    },
+    wait: async () => {},
+  });
+  assert.equal(uploads, 2);
+  uploads = 0;
+  visible = false;
+  const result = await publishPackage({
+    manifest,
+    lookup: async () => visible,
+    run: () => {
+      uploads++;
+      visible = true;
+      throw new Error('connection lost after upload');
+    },
+    wait: async () => {},
+  });
+  assert.equal(uploads, 1);
+  assert.equal(result.alreadyPublished, true);
 });
