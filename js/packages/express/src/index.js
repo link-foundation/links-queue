@@ -3,11 +3,11 @@
  *
  * Provides middleware for integrating Links Queue into Express.js applications.
  *
- * @module links-queue-express
+ * @module links-queue/express
  *
  * @example
  * import express from 'express';
- * import { linksQueueMiddleware } from 'links-queue-express';
+ * import { linksQueueMiddleware } from 'links-queue/express';
  *
  * const app = express();
  * app.use(linksQueueMiddleware({ mode: 'single-memory' }));
@@ -18,11 +18,12 @@
  * });
  */
 
+import { Router } from 'express';
 import {
   MemoryQueueManager,
   LinksQueueManager,
   MemoryLinkStore,
-} from 'links-queue-js';
+} from 'links-queue';
 
 // =============================================================================
 // Constants
@@ -51,7 +52,7 @@ export const QueueMode = Object.freeze({
  * @param {string} [options.mode='single-memory'] - Queue mode ('single-memory' or 'single-stored')
  * @param {string} [options.requestProperty='linksQueue'] - Property name on request object
  * @param {Object} [options.storeOptions] - Options for the link store (for single-stored mode)
- * @param {import('links-queue-js').MemoryQueueManager|import('links-queue-js').LinksQueueManager} [options.queueManager] - Custom queue manager
+ * @param {import('links-queue').MemoryQueueManager|import('links-queue').LinksQueueManager} [options.queueManager] - Custom queue manager
  * @returns {Function} Express middleware function
  *
  * @example
@@ -117,12 +118,12 @@ export class LinksQueueFacade {
   /**
    * Creates a new LinksQueueFacade.
    *
-   * @param {import('links-queue-js').MemoryQueueManager|import('links-queue-js').LinksQueueManager} queueManager - The queue manager
+   * @param {import('links-queue').MemoryQueueManager|import('links-queue').LinksQueueManager} queueManager - The queue manager
    */
   constructor(queueManager) {
     /**
      * The underlying queue manager.
-     * @type {import('links-queue-js').MemoryQueueManager|import('links-queue-js').LinksQueueManager}
+     * @type {import('links-queue').MemoryQueueManager|import('links-queue').LinksQueueManager}
      * @private
      */
     this._manager = queueManager;
@@ -131,7 +132,7 @@ export class LinksQueueFacade {
   /**
    * Gets the underlying queue manager.
    *
-   * @returns {import('links-queue-js').MemoryQueueManager|import('links-queue-js').LinksQueueManager}
+   * @returns {import('links-queue').MemoryQueueManager|import('links-queue').LinksQueueManager}
    */
   get manager() {
     return this._manager;
@@ -142,7 +143,7 @@ export class LinksQueueFacade {
    *
    * @param {string} name - Queue name
    * @param {Object} [options] - Queue options
-   * @returns {Promise<import('links-queue-js').Queue>}
+   * @returns {Promise<import('links-queue').Queue>}
    */
   createQueue(name, options = {}) {
     return this._manager.createQueue(name, options);
@@ -152,7 +153,7 @@ export class LinksQueueFacade {
    * Gets an existing queue.
    *
    * @param {string} name - Queue name
-   * @returns {Promise<import('links-queue-js').Queue|null>}
+   * @returns {Promise<import('links-queue').Queue|null>}
    */
   getQueue(name) {
     return this._manager.getQueue(name);
@@ -163,7 +164,7 @@ export class LinksQueueFacade {
    *
    * @param {string} name - Queue name
    * @param {Object} [options] - Queue options (used only if creating)
-   * @returns {Promise<import('links-queue-js').Queue>}
+   * @returns {Promise<import('links-queue').Queue>}
    */
   async getOrCreateQueue(name, options = {}) {
     let queue = await this._manager.getQueue(name);
@@ -186,7 +187,7 @@ export class LinksQueueFacade {
   /**
    * Lists all queues.
    *
-   * @returns {Promise<import('links-queue-js').QueueInfo[]>}
+   * @returns {Promise<import('links-queue').QueueInfo[]>}
    */
   listQueues() {
     return this._manager.listQueues();
@@ -293,7 +294,7 @@ export class LinksQueueFacade {
  *
  * @example
  * import express from 'express';
- * import { linksQueueMiddleware, createQueueRouter } from 'links-queue-express';
+ * import { linksQueueMiddleware, createQueueRouter } from 'links-queue/express';
  *
  * const app = express();
  * app.use(express.json());
@@ -313,9 +314,6 @@ export class LinksQueueFacade {
 export function createQueueRouter(options = {}) {
   const { basePath = '/queues', requestProperty = 'linksQueue' } = options;
 
-  // Use dynamic require to get express Router
-  // eslint-disable-next-line no-undef
-  const { Router } = require('express');
   const router = Router();
 
   // List queues

@@ -1,126 +1,95 @@
 #!/usr/bin/env node
 
-/**
- * Publish to npm using OIDC trusted publishing
- * Usage: node scripts/publish-to-npm.mjs [--should-pull]
- *   should_pull: Optional flag to pull latest changes before publishing (for release job)
- *
- * Uses link-foundation libraries:
- * - use-m: Dynamic package loading without package.json dependencies
- * - command-stream: Modern shell command execution with streaming support
- * - lino-arguments: Unified configuration from CLI args, env vars, and .lenv files
- */
+/** Publish the single npm package with GitHub Actions OIDC, then verify it. */
+import { readFileSync, appendFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { pathToFileURL } from 'node:url';
 
-import { readFileSync, appendFileSync } from 'fs';
-
-const PACKAGE_NAME = 'links-queue-js';
-
-// Load use-m dynamically
-const { use } = eval(
-  await (await fetch('https://unpkg.com/use-m/use.js')).text()
-);
-
-// Import link-foundation libraries
-const { $ } = await use('command-stream');
-const { makeConfig } = await use('lino-arguments');
-
-// Parse CLI arguments using lino-arguments
-const config = makeConfig({
-  yargs: ({ yargs, getenv }) =>
-    yargs.option('should-pull', {
-      type: 'boolean',
-      default: getenv('SHOULD_PULL', false),
-      describe: 'Pull latest changes before publishing',
-    }),
-});
-
-const { shouldPull } = config;
-const MAX_RETRIES = 3;
-const RETRY_DELAY = 10000; // 10 seconds
-
-/**
- * Sleep for specified milliseconds
- * @param {number} ms
- */
-function sleep(ms) {
-  return new Promise((resolve) => globalThis.setTimeout(resolve, ms));
+export async function registryVersion(name, version, fetchImpl = fetch) {
+  const response = await fetchImpl(
+    `https://registry.npmjs.org/${name}/${version}`
+  );
+  if (response.status === 404) {
+    return false;
+  }
+  if (!response.ok) {
+    throw new Error(`npm registry returned HTTP ${response.status}`);
+  }
+  const data = await response.json();
+  return data.name === name && data.version === version;
 }
 
-/**
- * Append to GitHub Actions output file
- * @param {string} key
- * @param {string} value
- */
-function setOutput(key, value) {
-  const outputFile = process.env.GITHUB_OUTPUT;
-  if (outputFile) {
-    appendFileSync(outputFile, `${key}=${value}\n`);
+export async function publishPackage({
+  manifest,
+  run = (command, args) => execFileSync(command, args, { stdio: 'inherit' }),
+  lookup = registryVersion,
+  wait = () => new Promise((resolve) => setTimeout(resolve, 10000)),
+}) {
+  if (manifest.name !== 'links-queue') {
+    throw new Error(
+      'Only the consolidated links-queue package may be published'
+    );
   }
+  const { name, version } = manifest;
+  if (await lookup(name, version)) {
+    console.log(`${name}@${version} is already published`);
+    return { alreadyPublished: true };
+  }
+  // npm >= 11.5.1 discovers the Actions OIDC credentials automatically.
+  // Publish only the current package, never traverse integration directories.
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      await run('npm', ['publish', '--access', 'public', '--provenance']);
+      break;
+    } catch (error) {
+      // A registry may accept an upload before the client loses its connection.
+      if (await lookup(name, version)) {
+        return { alreadyPublished: true };
+      }
+      if (attempt === 2) {
+        throw error;
+      }
+      console.log(`Publish attempt ${attempt + 1} failed: ${error.message}`);
+      await wait();
+    }
+  }
+  for (let attempt = 0; attempt < 12; attempt++) {
+    if (await lookup(name, version)) {
+      console.log(`Verified ${name}@${version} on npm`);
+      return { alreadyPublished: false };
+    }
+    if (attempt < 11) {
+      await wait();
+    }
+  }
+  throw new Error(`${name}@${version} is missing from npm after publication`);
 }
 
 async function main() {
-  try {
-    if (shouldPull) {
-      // Pull the latest changes we just pushed
-      await $`git pull origin main`;
-    }
-
-    // Get current version
-    const packageJson = JSON.parse(readFileSync('./package.json', 'utf8'));
-    const currentVersion = packageJson.version;
-    console.log(`Current version to publish: ${currentVersion}`);
-
-    // Check if this version is already published on npm
-    console.log(
-      `Checking if version ${currentVersion} is already published...`
+  if (
+    process.argv.includes('--should-pull') ||
+    process.env.SHOULD_PULL === 'true'
+  ) {
+    execFileSync('git', ['pull', '--ff-only', 'origin', 'main'], {
+      stdio: 'inherit',
+    });
+  }
+  const manifest = JSON.parse(readFileSync('package.json', 'utf8'));
+  const result = await publishPackage({ manifest });
+  if (process.env.GITHUB_OUTPUT) {
+    appendFileSync(
+      process.env.GITHUB_OUTPUT,
+      `published=true\npublished_version=${manifest.version}\nalready_published=${result.alreadyPublished}\n`
     );
-    const checkResult =
-      await $`npm view "${PACKAGE_NAME}@${currentVersion}" version`.run({
-        capture: true,
-      });
-
-    // command-stream returns { code: 0 } on success, { code: 1 } on failure (e.g., E404)
-    // Exit code 0 means version exists, non-zero means version not found
-    if (checkResult.code === 0) {
-      console.log(`Version ${currentVersion} is already published to npm`);
-      setOutput('published', 'true');
-      setOutput('published_version', currentVersion);
-      setOutput('already_published', 'true');
-      return;
-    } else {
-      // Version not found on npm (E404), proceed with publish
-      console.log(
-        `Version ${currentVersion} not found on npm, proceeding with publish...`
-      );
-    }
-
-    // Publish to npm using OIDC trusted publishing with retry logic
-    for (let i = 1; i <= MAX_RETRIES; i++) {
-      console.log(`Publish attempt ${i} of ${MAX_RETRIES}...`);
-      try {
-        await $`npm run changeset:publish`;
-        setOutput('published', 'true');
-        setOutput('published_version', currentVersion);
-        console.log(
-          `\u2705 Published ${PACKAGE_NAME}@${currentVersion} to npm`
-        );
-        return;
-      } catch (error) {
-        if (i < MAX_RETRIES) {
-          console.log(
-            `Publish failed: ${error.message}, waiting ${RETRY_DELAY / 1000}s before retry...`
-          );
-          await sleep(RETRY_DELAY);
-        }
-      }
-    }
-
-    console.error(`\u274C Failed to publish after ${MAX_RETRIES} attempts`);
-    process.exit(1);
-  } catch (error) {
-    console.error('Error:', error.message);
-    process.exit(1);
   }
 }
 
-main();
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+  main().catch((error) => {
+    console.error(error.message);
+    console.error(
+      'Register link-foundation/links-queue and workflow js.yml as the npm trusted publisher. See docs/guides/releasing.md for first-publication setup.'
+    );
+    process.exitCode = 1;
+  });
+}

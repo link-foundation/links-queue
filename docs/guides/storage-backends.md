@@ -46,7 +46,7 @@ The default backend. Stores all data in memory for maximum performance.
 ### JavaScript
 
 ```javascript
-import { MemoryLinkStore } from "links-queue-js";
+import { MemoryLinkStore } from "links-queue";
 
 const store = new MemoryLinkStore();
 
@@ -87,7 +87,7 @@ println!("Found {} links", links.len()); // 2
 ### Configuration
 
 ```javascript
-import { BackendRegistry } from "links-queue-js";
+import { BackendRegistry } from "links-queue";
 
 const registry = new BackendRegistry();
 const backend = registry.create({
@@ -124,7 +124,7 @@ clink --version
 ### JavaScript
 
 ```javascript
-import { LinkCliBackend, LinkCliProcess } from "links-queue-js";
+import { LinkCliBackend, LinkCliProcess } from "links-queue";
 
 // Create and connect the backend
 const backend = new LinkCliBackend({
@@ -169,7 +169,7 @@ backend.disconnect().await?;
 The link-cli backend manages a child process:
 
 ```javascript
-import { LinkCliProcess, ProcessState } from "links-queue-js";
+import { LinkCliProcess, ProcessState } from "links-queue";
 
 const process = new LinkCliProcess({
   path: "./data/queue.links",
@@ -217,7 +217,7 @@ Use the registry to create backends dynamically:
 ### JavaScript
 
 ```javascript
-import { BackendRegistry } from "links-queue-js";
+import { BackendRegistry } from "links-queue";
 
 const registry = new BackendRegistry();
 
@@ -325,7 +325,7 @@ class RedisBackend {
 }
 
 // Register the custom backend
-import { BackendRegistry } from "links-queue-js";
+import { BackendRegistry } from "links-queue";
 
 const registry = new BackendRegistry();
 registry.register("redis", RedisBackend);

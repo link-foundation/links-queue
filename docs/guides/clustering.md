@@ -44,7 +44,7 @@ Links Queue supports multi-node clustering for:
 ### JavaScript
 
 ```javascript
-import { createClusterCoordinator, LinksQueueManager } from "links-queue-js";
+import { createClusterCoordinator, LinksQueueManager } from "links-queue";
 
 // Create a cluster coordinator for this node
 const coordinator = createClusterCoordinator({

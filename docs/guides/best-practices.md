@@ -53,7 +53,7 @@ if (stats.depth > 100) {
 Implement exponential backoff for transient failures:
 
 ```javascript
-import { MemoryQueue } from "links-queue-js";
+import { MemoryQueue } from "links-queue";
 
 const queue = new MemoryQueue("tasks", {
   retryDelay: (attempt) => Math.min(1000 * Math.pow(2, attempt), 60000),
@@ -115,7 +115,7 @@ async function processBatch(queue, batchSize = 10) {
 Use connection pools for client connections:
 
 ```javascript
-import { ConnectionPool } from "links-queue-js/client";
+import { ConnectionPool } from "links-queue/client";
 
 const pool = new ConnectionPool({
   address: "localhost:5000",
@@ -494,7 +494,7 @@ const server = new LinksQueueServer({
 Test individual components:
 
 ```javascript
-import { MemoryQueue, createLink } from "links-queue-js";
+import { MemoryQueue, createLink } from "links-queue";
 import { test } from "node:test";
 import assert from "node:assert";
 
@@ -586,7 +586,7 @@ DEBUG=links-queue:* node app.js
 
 ```javascript
 // Programmatic debug
-import { setLogLevel } from "links-queue-js";
+import { setLogLevel } from "links-queue";
 setLogLevel("debug");
 ```
 

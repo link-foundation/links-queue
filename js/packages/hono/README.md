@@ -1,4 +1,4 @@
-# links-queue-hono
+# links-queue/hono
 
 Hono middleware for [Links Queue](https://github.com/link-foundation/links-queue).
 
@@ -7,14 +7,14 @@ Works great for edge environments like Cloudflare Workers, Deno Deploy, Bun, and
 ## Installation
 
 ```bash
-npm install links-queue-hono
+npm install links-queue hono
 ```
 
 ## Quick Start
 
 ```javascript
 import { Hono } from 'hono';
-import { linksQueue } from 'links-queue-hono';
+import { linksQueue } from 'links-queue/hono';
 
 const app = new Hono();
 app.use('*', linksQueue({ mode: 'single-memory' }));
@@ -59,7 +59,7 @@ For a full RESTful API, use the queue app:
 
 ```javascript
 import { Hono } from 'hono';
-import { linksQueue, createQueueApp } from 'links-queue-hono';
+import { linksQueue, createQueueApp } from 'links-queue/hono';
 
 const app = new Hono();
 app.use('*', linksQueue());
@@ -99,7 +99,7 @@ The `c.get('linksQueue')` facade provides these methods:
 
 ```javascript
 import { Hono } from 'hono';
-import { linksQueue } from 'links-queue-hono';
+import { linksQueue } from 'links-queue/hono';
 
 const app = new Hono();
 app.use('*', linksQueue());

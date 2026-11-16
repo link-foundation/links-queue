@@ -34,7 +34,7 @@ The simplest and fastest mode. Data is stored only in memory and lost on restart
 ### JavaScript
 
 ```javascript
-import { MemoryLinkStore, MemoryQueueManager } from "links-queue-js";
+import { MemoryLinkStore, MemoryQueueManager } from "links-queue";
 
 const store = new MemoryLinkStore();
 const manager = new MemoryQueueManager({ store });
@@ -72,7 +72,7 @@ Persistent storage using the link-cli backend. Data survives restarts.
 ### JavaScript
 
 ```javascript
-import { LinkCliBackend, LinksQueueManager } from "links-queue-js";
+import { LinkCliBackend, LinksQueueManager } from "links-queue";
 
 const backend = new LinkCliBackend({
   path: "./data/queue.links",
@@ -130,8 +130,8 @@ Distributed queue across multiple nodes, but without persistence.
 ### JavaScript
 
 ```javascript
-import { LinksQueueManager, MemoryLinkStore } from "links-queue-js";
-import { createClusterCoordinator } from "links-queue-js";
+import { LinksQueueManager, MemoryLinkStore } from "links-queue";
+import { createClusterCoordinator } from "links-queue";
 
 const store = new MemoryLinkStore();
 const coordinator = createClusterCoordinator({
@@ -190,8 +190,8 @@ Full distributed queue with persistence on each node.
 ### JavaScript
 
 ```javascript
-import { LinksQueueManager, LinkCliBackend } from "links-queue-js";
-import { createClusterCoordinator } from "links-queue-js";
+import { LinksQueueManager, LinkCliBackend } from "links-queue";
+import { createClusterCoordinator } from "links-queue";
 
 const backend = new LinkCliBackend({
   path: "./data/queue.links",

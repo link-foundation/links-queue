@@ -4,11 +4,11 @@
  * Provides middleware for integrating Links Queue into Hono applications.
  * Works great for edge environments like Cloudflare Workers, Deno Deploy, etc.
  *
- * @module links-queue-hono
+ * @module links-queue/hono
  *
  * @example
  * import { Hono } from 'hono';
- * import { linksQueue } from 'links-queue-hono';
+ * import { linksQueue } from 'links-queue/hono';
  *
  * const app = new Hono();
  * app.use('*', linksQueue({ mode: 'single-memory' }));
@@ -20,11 +20,12 @@
  * });
  */
 
+import { Hono } from 'hono';
 import {
   MemoryQueueManager,
   LinksQueueManager,
   MemoryLinkStore,
-} from 'links-queue-js';
+} from 'links-queue';
 
 // =============================================================================
 // Constants
@@ -53,7 +54,7 @@ export class LinksQueueFacade {
   /**
    * Creates a new LinksQueueFacade.
    *
-   * @param {import('links-queue-js').MemoryQueueManager|import('links-queue-js').LinksQueueManager} queueManager - The queue manager
+   * @param {import('links-queue').MemoryQueueManager|import('links-queue').LinksQueueManager} queueManager - The queue manager
    */
   constructor(queueManager) {
     this._manager = queueManager;
@@ -62,7 +63,7 @@ export class LinksQueueFacade {
   /**
    * Gets the underlying queue manager.
    *
-   * @returns {import('links-queue-js').MemoryQueueManager|import('links-queue-js').LinksQueueManager}
+   * @returns {import('links-queue').MemoryQueueManager|import('links-queue').LinksQueueManager}
    */
   get manager() {
     return this._manager;
@@ -73,7 +74,7 @@ export class LinksQueueFacade {
    *
    * @param {string} name - Queue name
    * @param {Object} [options] - Queue options
-   * @returns {Promise<import('links-queue-js').Queue>}
+   * @returns {Promise<import('links-queue').Queue>}
    */
   createQueue(name, options = {}) {
     return this._manager.createQueue(name, options);
@@ -83,7 +84,7 @@ export class LinksQueueFacade {
    * Gets an existing queue.
    *
    * @param {string} name - Queue name
-   * @returns {Promise<import('links-queue-js').Queue|null>}
+   * @returns {Promise<import('links-queue').Queue|null>}
    */
   getQueue(name) {
     return this._manager.getQueue(name);
@@ -94,7 +95,7 @@ export class LinksQueueFacade {
    *
    * @param {string} name - Queue name
    * @param {Object} [options] - Queue options
-   * @returns {Promise<import('links-queue-js').Queue>}
+   * @returns {Promise<import('links-queue').Queue>}
    */
   async getOrCreateQueue(name, options = {}) {
     let queue = await this._manager.getQueue(name);
@@ -117,7 +118,7 @@ export class LinksQueueFacade {
   /**
    * Lists all queues.
    *
-   * @returns {Promise<import('links-queue-js').QueueInfo[]>}
+   * @returns {Promise<import('links-queue').QueueInfo[]>}
    */
   listQueues() {
     return this._manager.listQueues();
@@ -220,12 +221,12 @@ export class LinksQueueFacade {
  * @param {Object} [options] - Middleware options
  * @param {string} [options.mode='single-memory'] - Queue mode ('single-memory' or 'single-stored')
  * @param {string} [options.contextKey='linksQueue'] - Key on context object
- * @param {import('links-queue-js').MemoryQueueManager|import('links-queue-js').LinksQueueManager} [options.queueManager] - Custom queue manager
+ * @param {import('links-queue').MemoryQueueManager|import('links-queue').LinksQueueManager} [options.queueManager] - Custom queue manager
  * @returns {import('hono').MiddlewareHandler} Hono middleware
  *
  * @example
  * import { Hono } from 'hono';
- * import { linksQueue } from 'links-queue-hono';
+ * import { linksQueue } from 'links-queue/hono';
  *
  * const app = new Hono();
  * app.use('*', linksQueue());
@@ -283,7 +284,7 @@ export function linksQueue(options = {}) {
  *
  * @example
  * import { Hono } from 'hono';
- * import { linksQueue, createQueueApp } from 'links-queue-hono';
+ * import { linksQueue, createQueueApp } from 'links-queue/hono';
  *
  * const app = new Hono();
  * app.use('*', linksQueue());
@@ -292,8 +293,6 @@ export function linksQueue(options = {}) {
 export function createQueueApp(options = {}) {
   const { contextKey = 'linksQueue' } = options;
 
-  // Dynamic import for Hono
-  const { Hono } = globalThis.Hono || {};
   const app = new Hono();
 
   // List queues

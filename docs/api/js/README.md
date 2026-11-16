@@ -5,7 +5,7 @@ Complete API documentation for the Links Queue JavaScript/TypeScript implementat
 ## Installation
 
 ```bash
-npm install links-queue-js
+npm install links-queue
 ```
 
 ## Quick Reference
@@ -73,7 +73,7 @@ interface LinkPattern {
 Special symbol for wildcard matching in patterns.
 
 ```typescript
-import { Any } from "links-queue-js";
+import { Any } from "links-queue";
 
 // Match any source, specific target
 const pattern = { source: Any, target: 30 };
@@ -99,7 +99,7 @@ function createLink(
 **Example:**
 
 ```javascript
-import { createLink } from "links-queue-js";
+import { createLink } from "links-queue";
 
 const link = createLink(1, "task", "process-data");
 // { id: 1, source: 'task', target: 'process-data' }
@@ -151,7 +151,7 @@ function matchesPattern(link: Link, pattern: LinkPattern): boolean;
 **Example:**
 
 ```javascript
-import { createLink, matchesPattern, Any } from "links-queue-js";
+import { createLink, matchesPattern, Any } from "links-queue";
 
 const link = createLink(1, 10, 20);
 
@@ -221,7 +221,7 @@ const store = new MemoryLinkStore();
 **Example:**
 
 ```javascript
-import { MemoryLinkStore, Any } from "links-queue-js";
+import { MemoryLinkStore, Any } from "links-queue";
 
 const store = new MemoryLinkStore();
 
@@ -323,7 +323,7 @@ const queue = new LinksQueue(config);
 **Example:**
 
 ```javascript
-import { LinksQueue, MemoryLinkStore, createLink } from "links-queue-js";
+import { LinksQueue, MemoryLinkStore, createLink } from "links-queue";
 
 const store = new MemoryLinkStore();
 const queue = new LinksQueue({
@@ -376,7 +376,7 @@ const queue = new MemoryQueue(name, options?);
 **Example:**
 
 ```javascript
-import { MemoryQueue, createLink } from "links-queue-js";
+import { MemoryQueue, createLink } from "links-queue";
 
 const queue = new MemoryQueue("tasks");
 
@@ -426,7 +426,7 @@ class MemoryQueueManager implements QueueManager
 **Example:**
 
 ```javascript
-import { MemoryQueueManager, MemoryLinkStore } from "links-queue-js";
+import { MemoryQueueManager, MemoryLinkStore } from "links-queue";
 
 const store = new MemoryLinkStore();
 const manager = new MemoryQueueManager({ store });
@@ -457,7 +457,7 @@ await manager.deleteQueue("events");
 TCP server for remote queue access.
 
 ```typescript
-import { LinksQueueServer } from "links-queue-js/server";
+import { LinksQueueServer } from "links-queue/server";
 ```
 
 **Constructor Options:**
@@ -480,7 +480,7 @@ import { LinksQueueServer } from "links-queue-js/server";
 **Example:**
 
 ```javascript
-import { LinksQueueServer } from "links-queue-js/server";
+import { LinksQueueServer } from "links-queue/server";
 
 const server = new LinksQueueServer({
   port: 5000,
@@ -503,7 +503,7 @@ process.on("SIGTERM", async () => {
 TCP client for connecting to Links Queue servers.
 
 ```typescript
-import { LinksQueueClient } from "links-queue-js/client";
+import { LinksQueueClient } from "links-queue/client";
 ```
 
 **Constructor:**
@@ -541,8 +541,8 @@ const client = new LinksQueueClient(address, options?);
 **Example:**
 
 ```javascript
-import { LinksQueueClient } from "links-queue-js/client";
-import { createLink } from "links-queue-js";
+import { LinksQueueClient } from "links-queue/client";
+import { createLink } from "links-queue";
 
 const client = new LinksQueueClient("localhost:5000");
 await client.connect();
@@ -591,7 +591,7 @@ type QueueErrorCode =
 **Example:**
 
 ```javascript
-import { QueueError } from "links-queue-js";
+import { QueueError } from "links-queue";
 
 try {
   await queue.enqueue(link);
@@ -620,7 +620,7 @@ import {
   LinksNotation,
   NotationParser,
   NotationStreamParser,
-} from "links-queue-js";
+} from "links-queue";
 ```
 
 ### LinksNotation
@@ -635,7 +635,7 @@ class LinksNotation {
 **Example:**
 
 ```javascript
-import { LinksNotation } from "links-queue-js";
+import { LinksNotation } from "links-queue";
 
 // Parse Links Notation
 const links = LinksNotation.parse("((1 2) (3 4))");
@@ -664,14 +664,14 @@ import {
   RequestType,
   ResponseStatus,
   ErrorCode,
-} from "links-queue-js";
+} from "links-queue";
 ```
 
 ---
 
 ## Exports Summary
 
-### Main Module (`links-queue-js`)
+### Main Module (`links-queue`)
 
 ```javascript
 // Core
@@ -698,13 +698,13 @@ export { LinksNotation, NotationParser, NotationStreamParser };
 export { Message, MessageBuilder, RequestType, ResponseStatus, ErrorCode };
 ```
 
-### Server Module (`links-queue-js/server`)
+### Server Module (`links-queue/server`)
 
 ```javascript
 export { LinksQueueServer, ServerConnection, RequestRouter };
 ```
 
-### Client Module (`links-queue-js/client`)
+### Client Module (`links-queue/client`)
 
 ```javascript
 export { LinksQueueClient, ClientConnection };

@@ -111,3 +111,5 @@ Changes to files in `js/` trigger the JS workflow, and changes to files in `rust
 ## License
 
 [Unlicense](LICENSE) - Public Domain
+
+Publishing: [npm and crates.io release setup](docs/guides/releasing.md).

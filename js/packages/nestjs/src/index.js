@@ -3,11 +3,11 @@
  *
  * Provides a NestJS module for integrating Links Queue into NestJS applications.
  *
- * @module links-queue-nestjs
+ * @module links-queue/nestjs
  *
  * @example
  * import { Module } from '@nestjs/common';
- * import { LinksQueueModule } from 'links-queue-nestjs';
+ * import { LinksQueueModule } from 'links-queue/nestjs';
  *
  * @Module({
  *   imports: [LinksQueueModule.forRoot({ mode: 'single-memory' })]
@@ -19,7 +19,7 @@ import {
   MemoryQueueManager,
   LinksQueueManager,
   MemoryLinkStore,
-} from 'links-queue-js';
+} from 'links-queue';
 
 // =============================================================================
 // Constants & Tokens
@@ -63,7 +63,7 @@ export const QueueMode = Object.freeze({
  *
  * @example
  * import { Injectable } from '@nestjs/common';
- * import { LinksQueueService } from 'links-queue-nestjs';
+ * import { LinksQueueService } from 'links-queue/nestjs';
  *
  * @Injectable()
  * export class TaskService {
@@ -78,7 +78,7 @@ export class LinksQueueService {
   /**
    * Creates a new LinksQueueService.
    *
-   * @param {import('links-queue-js').MemoryQueueManager|import('links-queue-js').LinksQueueManager} queueManager - The queue manager
+   * @param {import('links-queue').MemoryQueueManager|import('links-queue').LinksQueueManager} queueManager - The queue manager
    */
   constructor(queueManager) {
     this._manager = queueManager;
@@ -87,7 +87,7 @@ export class LinksQueueService {
   /**
    * Gets the underlying queue manager.
    *
-   * @returns {import('links-queue-js').MemoryQueueManager|import('links-queue-js').LinksQueueManager}
+   * @returns {import('links-queue').MemoryQueueManager|import('links-queue').LinksQueueManager}
    */
   get manager() {
     return this._manager;
@@ -98,7 +98,7 @@ export class LinksQueueService {
    *
    * @param {string} name - Queue name
    * @param {Object} [options] - Queue options
-   * @returns {Promise<import('links-queue-js').Queue>}
+   * @returns {Promise<import('links-queue').Queue>}
    */
   createQueue(name, options = {}) {
     return this._manager.createQueue(name, options);
@@ -108,7 +108,7 @@ export class LinksQueueService {
    * Gets an existing queue.
    *
    * @param {string} name - Queue name
-   * @returns {Promise<import('links-queue-js').Queue|null>}
+   * @returns {Promise<import('links-queue').Queue|null>}
    */
   getQueue(name) {
     return this._manager.getQueue(name);
@@ -119,7 +119,7 @@ export class LinksQueueService {
    *
    * @param {string} name - Queue name
    * @param {Object} [options] - Queue options
-   * @returns {Promise<import('links-queue-js').Queue>}
+   * @returns {Promise<import('links-queue').Queue>}
    */
   async getOrCreateQueue(name, options = {}) {
     let queue = await this._manager.getQueue(name);
@@ -142,7 +142,7 @@ export class LinksQueueService {
   /**
    * Lists all queues.
    *
-   * @returns {Promise<import('links-queue-js').QueueInfo[]>}
+   * @returns {Promise<import('links-queue').QueueInfo[]>}
    */
   listQueues() {
     return this._manager.listQueues();
@@ -252,7 +252,7 @@ export class LinksQueueService {
  * Creates the queue manager based on options.
  *
  * @param {Object} options - Module options
- * @returns {import('links-queue-js').MemoryQueueManager|import('links-queue-js').LinksQueueManager}
+ * @returns {import('links-queue').MemoryQueueManager|import('links-queue').LinksQueueManager}
  */
 function createQueueManager(options = {}) {
   const { mode = QueueMode.SINGLE_MEMORY, queueManager: customManager } =

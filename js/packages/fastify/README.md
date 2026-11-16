@@ -1,18 +1,18 @@
-# links-queue-fastify
+# links-queue/fastify
 
 Fastify plugin for [Links Queue](https://github.com/link-foundation/links-queue).
 
 ## Installation
 
 ```bash
-npm install links-queue-fastify
+npm install links-queue fastify
 ```
 
 ## Quick Start
 
 ```javascript
 import Fastify from 'fastify';
-import linksQueuePlugin from 'links-queue-fastify';
+import linksQueuePlugin from 'links-queue/fastify';
 
 const fastify = Fastify();
 await fastify.register(linksQueuePlugin, { mode: 'single-memory' });
@@ -57,7 +57,7 @@ For a full RESTful API, use the queue routes plugin:
 
 ```javascript
 import Fastify from 'fastify';
-import linksQueuePlugin, { createQueueRoutes } from 'links-queue-fastify';
+import linksQueuePlugin, { createQueueRoutes } from 'links-queue/fastify';
 
 const fastify = Fastify();
 await fastify.register(linksQueuePlugin);

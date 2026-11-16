@@ -1,11 +1,11 @@
-# links-queue-nestjs
+# links-queue/nestjs
 
 NestJS module for [Links Queue](https://github.com/link-foundation/links-queue).
 
 ## Installation
 
 ```bash
-npm install links-queue-nestjs
+npm install links-queue @nestjs/common@10 @nestjs/core@10
 ```
 
 ## Quick Start
@@ -14,7 +14,7 @@ npm install links-queue-nestjs
 
 ```typescript
 import { Module } from '@nestjs/common';
-import { LinksQueueModule } from 'links-queue-nestjs';
+import { LinksQueueModule } from 'links-queue/nestjs';
 
 @Module({
   imports: [LinksQueueModule.forRoot({ mode: 'single-memory' })],
@@ -26,7 +26,7 @@ export class AppModule {}
 
 ```typescript
 import { Injectable } from '@nestjs/common';
-import { LinksQueueService } from 'links-queue-nestjs';
+import { LinksQueueService } from 'links-queue/nestjs';
 
 @Injectable()
 export class TaskService {
@@ -84,7 +84,7 @@ Register specific queues in feature modules:
 
 ```typescript
 import { Module } from '@nestjs/common';
-import { LinksQueueModule } from 'links-queue-nestjs';
+import { LinksQueueModule } from 'links-queue/nestjs';
 
 @Module({
   imports: [
@@ -117,7 +117,7 @@ The `LinksQueueService` provides these methods:
 
 ```typescript
 import { Controller, Post, Get, Body, Param } from '@nestjs/common';
-import { LinksQueueService } from 'links-queue-nestjs';
+import { LinksQueueService } from 'links-queue/nestjs';
 
 @Controller('tasks')
 export class TasksController {
