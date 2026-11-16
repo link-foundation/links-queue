@@ -5,7 +5,7 @@ NestJS module for [Links Queue](https://github.com/link-foundation/links-queue).
 ## Installation
 
 ```bash
-npm install links-queue @nestjs/common @nestjs/core
+npm install links-queue @nestjs/common@10 @nestjs/core@10
 ```
 
 ## Quick Start
